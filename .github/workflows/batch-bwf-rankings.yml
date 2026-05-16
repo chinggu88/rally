@@ -35,9 +35,34 @@ jobs:
           python -c "import sys; print('python', sys.version)"
           python -c "from batch.jobs.bwf_rankings import main; print('imports ok')"
 
+      - name: Environment check
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          PYTHONPATH: .
+        run: |
+          python -u <<'PY'
+          import os, sys
+          url = os.environ.get('SUPABASE_URL', '')
+          key = os.environ.get('SUPABASE_SERVICE_KEY', '')
+          print(f"SUPABASE_URL set: {bool(url)}, length: {len(url)}, has_newline: {chr(10) in url}, has_trailing_space: {url != url.strip()}")
+          print(f"SUPABASE_SERVICE_KEY set: {bool(key)}, length: {len(key)}, has_newline: {chr(10) in key}, has_trailing_space: {key != key.strip()}")
+          from batch.shared.supabase_client import get_client
+          try:
+              client = get_client()
+              print("get_client() OK")
+              r = client.table('batch_logs').select('id').limit(1).execute()
+              print(f"DB query OK, rows: {len(r.data)}")
+          except Exception as e:
+              print(f"DB error: {type(e).__name__}: {e}", file=sys.stderr)
+              sys.exit(2)
+          PY
+
       - name: Run BWF rankings crawler
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           PYTHONPATH: .
-        run: python -u -m batch.jobs.bwf_rankings.main
+        run: |
+          python -u -m batch.jobs.bwf_rankings.main 2>&1
+          echo "exit_code: $?"
