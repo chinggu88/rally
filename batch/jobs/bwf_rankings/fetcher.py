@@ -44,24 +44,41 @@ def browser_page() -> Iterator[Page]:
             browser.close()
 
 
-def extract_api_token(page: Page) -> str:
-    page.goto(ENTRY_URL, wait_until="domcontentloaded", timeout=60_000)
+def extract_api_token(page: Page, attempts: int = 3) -> str:
+    last_error: Exception | None = None
+    for attempt in range(1, attempts + 1):
+        try:
+            # "commit" returns as soon as navigation is committed — avoids hangs
+            # while Cloudflare's challenge scripts keep the network busy.
+            page.goto(ENTRY_URL, wait_until="commit", timeout=90_000)
+            page.wait_for_selector(
+                "#rankings_landing_container", timeout=60_000, state="attached"
+            )
+            html = page.content()
+            m = re.search(r'token:\s*"([^"]+)"', html)
+            if not m:
+                raise RuntimeError("Could not extract API token from rankings page")
+            return m.group(1)
+        except Exception as e:
+            last_error = e
+            if attempt == attempts:
+                break
+            page.wait_for_timeout(3_000 * attempt)
+    title = ""
+    url = ""
+    snippet = ""
     try:
-        page.wait_for_selector("#rankings_landing_container", timeout=45_000)
-    except Exception:
-        # Dump page state to help diagnose Cloudflare challenges or geo-blocks.
         title = page.title()
         url = page.url
         snippet = page.content()[:1500]
-        raise RuntimeError(
-            f"Failed to load rankings page. url={url!r} title={title!r}\n"
-            f"--- first 1500 chars of HTML ---\n{snippet}"
-        )
-    html = page.content()
-    m = re.search(r'token:\s*"([^"]+)"', html)
-    if not m:
-        raise RuntimeError("Could not extract API token from rankings page")
-    return m.group(1)
+    except Exception:
+        pass
+    raise RuntimeError(
+        f"Failed to load rankings page after {attempts} attempts. "
+        f"url={url!r} title={title!r}\n"
+        f"last error: {type(last_error).__name__}: {last_error}\n"
+        f"--- first 1500 chars of HTML ---\n{snippet}"
+    )
 
 
 def _api_session(token: str) -> requests.Session:
