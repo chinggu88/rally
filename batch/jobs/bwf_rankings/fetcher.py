@@ -4,6 +4,7 @@ from typing import Any, Iterator
 
 import requests
 from playwright.sync_api import Page, sync_playwright
+from playwright_stealth import Stealth
 
 ENTRY_URL = "https://bwfbadminton.com/rankings/"
 USER_AGENT = (
@@ -17,13 +18,24 @@ RANK_ID = 2  # BWF World Rankings
 
 @contextmanager
 def browser_page() -> Iterator[Page]:
+    stealth = Stealth(init_scripts_only=True)
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
+        browser = p.chromium.launch(
+            headless=True,
+            args=[
+                "--disable-blink-features=AutomationControlled",
+                "--no-sandbox",
+            ],
+        )
         context = browser.new_context(
             user_agent=USER_AGENT,
             viewport={"width": 1440, "height": 900},
             locale="en-US",
+            extra_http_headers={
+                "Accept-Language": "en-US,en;q=0.9",
+            },
         )
+        stealth.apply_stealth_sync(context)
         page = context.new_page()
         try:
             yield page
@@ -34,7 +46,17 @@ def browser_page() -> Iterator[Page]:
 
 def extract_api_token(page: Page) -> str:
     page.goto(ENTRY_URL, wait_until="domcontentloaded", timeout=60_000)
-    page.wait_for_selector("#rankings_landing_container", timeout=30_000)
+    try:
+        page.wait_for_selector("#rankings_landing_container", timeout=45_000)
+    except Exception:
+        # Dump page state to help diagnose Cloudflare challenges or geo-blocks.
+        title = page.title()
+        url = page.url
+        snippet = page.content()[:1500]
+        raise RuntimeError(
+            f"Failed to load rankings page. url={url!r} title={title!r}\n"
+            f"--- first 1500 chars of HTML ---\n{snippet}"
+        )
     html = page.content()
     m = re.search(r'token:\s*"([^"]+)"', html)
     if not m:
