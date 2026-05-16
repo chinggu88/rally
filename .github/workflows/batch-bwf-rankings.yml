@@ -1,0 +1,35 @@
+name: Batch — BWF Rankings
+
+on:
+  schedule:
+    - cron: '0 0 * * 1'
+  workflow_dispatch:
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: 'batch/.python-version'
+          cache: 'pip'
+          cache-dependency-path: 'batch/requirements.txt'
+
+      - name: Install Python dependencies
+        working-directory: batch
+        run: pip install -r requirements.txt
+
+      - name: Install Playwright browser
+        working-directory: batch
+        run: playwright install --with-deps chromium
+
+      - name: Run BWF rankings crawler
+        working-directory: .
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          PYTHONPATH: .
+        run: python -m batch.jobs.bwf_rankings.main
