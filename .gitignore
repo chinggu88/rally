@@ -127,6 +127,17 @@ supabase/logs/
 supabase/.env
 supabase/seed.sql.bak
 
+# Python (batch/)
+batch/.venv/
+batch/**/__pycache__/
+batch/.pytest_cache/
+batch/.ruff_cache/
+batch/*.egg-info/
+
+# Batch debug dumps (may contain API tokens / large payloads)
+batch/tests/fixtures/entry_dump.html
+batch/tests/fixtures/api_*.json
+
 # Firebase (if used)
 **/google-services.json
 **/GoogleService-Info.plist
