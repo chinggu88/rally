@@ -9,6 +9,8 @@ jobs:
   crawl:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      PYTHONUNBUFFERED: "1"
     steps:
       - uses: actions/checkout@v4
 
@@ -26,10 +28,16 @@ jobs:
         working-directory: batch
         run: playwright install --with-deps chromium
 
+      - name: Import smoke test
+        env:
+          PYTHONPATH: .
+        run: |
+          python -c "import sys; print('python', sys.version)"
+          python -c "from batch.jobs.bwf_rankings import main; print('imports ok')"
+
       - name: Run BWF rankings crawler
-        working-directory: .
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           PYTHONPATH: .
-        run: python -m batch.jobs.bwf_rankings.main
+        run: python -u -m batch.jobs.bwf_rankings.main
