@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- Dark rounded-square background -->
+  <rect width="1024" height="1024" rx="224" ry="224" fill="#2A2D33"/>
+
+  <g fill="none" stroke="#3DFF7F" stroke-linecap="round" stroke-linejoin="round">
+
+    <!-- ===== Shuttlecock (positioned center, slightly upper-right) ===== -->
+    <!-- Cork (bottom rounded base) -->
+    <path d="M 470 760
+             Q 470 700 530 700
+             L 600 700
+             Q 660 700 660 760
+             L 660 770
+             Q 660 790 640 790
+             L 490 790
+             Q 470 790 470 770 Z" stroke-width="34"/>
+
+    <!-- Skirt - left edge going up-left -->
+    <line x1="475" y1="700" x2="380" y2="320" stroke-width="34"/>
+    <!-- Skirt - right edge going up-right -->
+    <line x1="655" y1="700" x2="800" y2="380" stroke-width="34"/>
+    <!-- Feather rim (top arc) -->
+    <path d="M 380 320
+             Q 480 230 600 230
+             Q 720 240 800 380" stroke-width="34"/>
+    <!-- Inner feather lines -->
+    <line x1="525" y1="700" x2="455" y2="265" stroke-width="28"/>
+    <line x1="565" y1="700" x2="565" y2="232" stroke-width="28"/>
+    <line x1="605" y1="700" x2="680" y2="252" stroke-width="28"/>
+    <line x1="635" y1="700" x2="745" y2="305" stroke-width="28"/>
+
+    <!-- ===== Stylized R letter, overlapping cork/lower-left ===== -->
+    <!-- Vertical stem -->
+    <line x1="305" y1="870" x2="305" y2="520" stroke-width="64"/>
+    <!-- Top horizontal + curved bowl -->
+    <path d="M 305 520
+             L 430 520
+             Q 530 520 530 615
+             Q 530 705 430 705
+             L 305 705" stroke-width="64"/>
+    <!-- Diagonal leg -->
+    <line x1="430" y1="705" x2="555" y2="870" stroke-width="64"/>
+  </g>
+</svg>
