@@ -1,95 +1,106 @@
 ```
-testuram/lib/
-├── main.dart                                    # 앱 진입점 + GetMaterialApp + InitialBinding
+rally/lib/
+├── main.dart                                              # 앱 진입점 — dotenv.load / Supabase.initialize / GetMaterialApp
 │
-├── app/                                         # [앱 메인] 애플리케이션 로직
+├── app/                                                   # [앱 메인] 애플리케이션 로직
 │   │
-│   ├── bindings/                                # [글로벌 바인딩] 앱 부팅 시 의존성 주입
-│   │   └── initial_binding.dart                 # ApiService / EasyloadingService 영구 등록
+│   ├── routes/                                            # [라우팅] GetX 네비게이션
+│   │   ├── app_pages.dart                                 # GetPage 매핑 (app/news/match/player/my_info/login/sign_up)
+│   │   └── app_routes.dart                                # 라우트 경로 상수 (APP / NEWS / MATCH / PLAYER / MY_INFO / LOGIN / SIGN_UP)
 │   │
-│   ├── routes/                                  # [라우팅] GetX 네비게이션
-│   │   ├── app_pages.dart                       # GetPage 매핑 (splash → user_info → onboarding → auth → report)
-│   │   └── app_routes.dart                      # 라우트 경로 상수
-│   │
-│   ├── modules/                                 # [모듈] 기능별 MVC 패턴 구현
-│   │   │
-│   │   ├── splash/                              # [스플래시] 사용자 상태에 따른 분기 라우팅
-│   │   │   ├── bindings/splash_binding.dart
-│   │   │   ├── controllers/splash_controller.dart
-│   │   │   └── views/splash_view.dart
-│   │   │
-│   │   ├── onboarding_intro/                    # [온보딩 인트로] 우주 테마 슬라이드 (2페이지)
-│   │   │   ├── bindings/onboarding_intro_binding.dart
-│   │   │   ├── controllers/onboarding_intro_controller.dart
-│   │   │   └── views/onboarding_intro_view.dart
-│   │   │
-│   │   ├── user_info/                           # [정보 수집] 단계별 폼 (이름·성별·생년월일·시간·지역)
-│   │   │   ├── bindings/user_info_binding.dart
-│   │   │   ├── controllers/user_info_controller.dart
-│   │   │   └── views/
-│   │   │       ├── user_info_view.dart
-│   │   │       └── widgets/
-│   │   │           ├── name_input_widget.dart
-│   │   │           ├── hanja_input_widget.dart
-│   │   │           ├── gender_select_widget.dart
-│   │   │           ├── birth_datetime_widget.dart
-│   │   │           └── birth_location_widget.dart
-│   │   │
-│   │   ├── onboarding/                          # [유람 좌표 분석] 분석 결과 화면 + 회원가입 유도 CTA
-│   │   │   ├── bindings/onboarding_binding.dart
-│   │   │   ├── controllers/onboarding_controller.dart
-│   │   │   └── views/onboarding_view.dart
-│   │   │
-│   │   ├── auth/                                # [회원가입] SNS 로그인 (카카오 / 구글) + 혼인 여부
-│   │   │   ├── bindings/auth_binding.dart
-│   │   │   ├── controllers/auth_controller.dart
-│   │   │   └── views/
-│   │   │       ├── auth_view.dart
-│   │   │       └── widgets/marital_status_widget.dart
-│   │   │
-│   │   └── report/                              # [종합 리포트] 메인 리포트 화면
-│   │       ├── bindings/report_binding.dart
-│   │       ├── controllers/report_controller.dart
-│   │       └── views/report_view.dart
-│   │
-│   ├── data/                                    # [데이터] 모델 + 레포지토리
+│   ├── data/                                              # [데이터 레이어] 모델 + 레포지토리 (Supabase Edge Function 연동)
 │   │   ├── models/
-│   │   │   ├── user_info_model.dart             # 온보딩 정보 수집 모델
-│   │   │   ├── social_auth_model.dart           # SNS 인증 응답 모델
-│   │   │   ├── yuram_coordinate_model.dart      # 유람 좌표 분류 결과
-│   │   │   └── report_model.dart                # 종합 리포트 + 섹션 모델
+│   │   │   ├── tournament_response.dart                   # BWF 대회 단일 응답 모델 (private 필드 + getter/setter)
+│   │   │   ├── get_tournaments_response.dart              # { year, count, tournaments } 래퍼 모델
+│   │   │   ├── player_response.dart                       # BWF 선수 단일 응답 모델 (private 필드 + getter/setter)
+│   │   │   └── get_players_response.dart                  # { category, count, players } 래퍼 모델
 │   │   │
 │   │   └── repositories/
-│   │       ├── user_info_repository.dart        # 사용자 정보 CRUD API
-│   │       ├── auth_repository.dart             # SNS 로그인 / 토큰 갱신 / 로그아웃 API
-│   │       └── report_repository.dart           # 좌표 분석 / 종합 리포트 조회 API
+│   │       ├── tournament_repository.dart                 # Edge Function `get-tournaments` 호출 (연도별 조회)
+│   │       └── player_repository.dart                     # Edge Function `get-players` 호출 (카테고리별 조회: MS/WS/MD/WD/XD)
 │   │
-│   └── core/                                    # [코어] 앱 전역 설정 및 유틸리티
-│       └── values/
-│           ├── app_colors.dart                  # 우주 테마 색상 팔레트
-│           └── app_text_styles.dart             # ScreenUtil 기반 텍스트 스타일
+│   └── modules/                                           # [모듈] 기능별 MVC 패턴 구현
+│       │
+│       ├── app/                                           # [앱 셸] 바텀네비를 호스팅하는 루트 화면
+│       │   ├── bindings/app_binding.dart                  # 바텀네비 전체 모듈 바인딩
+│       │   ├── controllers/app_controller.dart            # 탭 전환 상태 관리
+│       │   └── views/app_view.dart                        # 바텀네비 + 페이지 호스트
+│       │
+│       ├── news/                                          # [뉴스] 바텀네비 1번 탭 (placeholder)
+│       │   ├── bindings/news_binding.dart
+│       │   ├── controllers/news_controller.dart
+│       │   └── views/news_view.dart
+│       │
+│       ├── match/                                         # [경기] 국제 대회 리스트 (매거진) — TASK-004
+│       │   ├── bindings/match_binding.dart                # TournamentRepository + MatchController lazyPut
+│       │   ├── controllers/match_controller.dart          # 연도별 대회 fetch / 로딩·에러 상태 / 외부 링크 오픈
+│       │   └── views/match_view.dart                      # 매거진 카드 리스트 + 연도 선택 + Pull-to-refresh (Stitch 225c4429594e4cb3835b154cbc861919)
+│       │
+│       ├── player/                                        # [선수] BWF 랭킹 선수 리스트 (매거진) — TASK-005
+│       │   ├── bindings/player_binding.dart                # PlayerRepository + PlayerController lazyPut
+│       │   ├── controllers/player_controller.dart          # 카테고리별 선수 fetch / 로딩·에러 상태 / 카테고리 전환 / race-condition 가드
+│       │   └── views/player_view.dart                      # 매거진 카드 리스트 + 카테고리 칩(MS/WS/MD/WD/XD) + Pull-to-refresh (Stitch eeae55cab3614d408743636d325e3b88)
+│       │
+│       ├── my_info/                                       # [내 정보] 비로그인 상태 진입 화면 — TASK-001
+│       │   ├── bindings/my_info_binding.dart
+│       │   ├── controllers/my_info_controller.dart        # goToLogin / goToSignUp / isLoggedIn placeholder
+│       │   └── views/my_info_view.dart                    # 다크 + 라임 옐로우 안내 화면 (Stitch 8329646c315c48fdb5bfa15f9a643418)
+│       │
+│       ├── login/                                         # [로그인] 이메일/비밀번호 폼 — TASK-002
+│       │   ├── bindings/login_binding.dart
+│       │   ├── controllers/login_controller.dart          # TextEditingController 관리 + 이메일/비밀번호 유효성
+│       │   └── views/login_view.dart                      # Stitch a7cf71e767ad4610a93373028a9c3ab0
+│       │
+│       └── sign_up/                                       # [회원가입] 이메일 인증 화면 — TASK-003
+│           ├── bindings/sign_up_binding.dart
+│           ├── controllers/sign_up_controller.dart        # 이메일/인증코드 입력 + 타이머 placeholder
+│           └── views/sign_up_view.dart                    # Stitch 3616350c62da4e95906ab4d458eb7ebc
 │
-└── services/                                    # [글로벌 서비스] GetxService 기반 싱글톤
-    ├── api_service.dart                         # Dio 래퍼 (토큰 인터셉터 / GET·POST·PATCH·PUT·DELETE)
-    └── easyloading_service.dart                 # 로딩 / 토스트 / 정보 메시지
+├── services/                                              # [글로벌 서비스] GetxService 기반 싱글톤
+│   └── supabase_service.dart                              # Supabase 클라이언트 부팅 (.env의 URL/anon key 로드 + Get.put)
+│
+└── theme/                                                 # [디자인 토큰] 다크/라이트 ColorScheme + 타이포 + 스페이싱
+    ├── app_colors.dart                                    # ColorScheme.dark/light (액센트: 라임 옐로우 #C3F400)
+    ├── app_typography.dart                                # Chivo / Source Sans 3 기반 TextStyle 세트
+    ├── app_spacing.dart                                   # AppSpacing(base/container/stackGap) + AppRadius(sm~full)
+    └── app_theme.dart                                     # ThemeData 빌더 (Material 3 + 다크 우선)
 ```
 
 ## 화면 플로우
 
 ```
-[Splash]
+[AppView (바텀네비)]
    │
-   ├── 회원가입 완료(sign_up_done) ────────────► [Report]
-   │
-   ├── 정보 수집 완료(user_info_done) ─────────► [Onboarding] (유람 좌표) ─► [Auth] ─► [Report]
-   │
-   └── 신규 사용자 ─► [OnboardingIntro] ─► [UserInfo] ─► [Onboarding] ─► [Auth] ─► [Report]
+   ├── 뉴스(News)         — placeholder
+   ├── 경기(Match)         ─► BWF 국제 대회 리스트 (매거진, get-tournaments Edge Function)
+   ├── 선수(Player)        ─► BWF 랭킹 선수 리스트 (매거진, get-players Edge Function)
+   └── 내정보(MyInfo)
+            │
+            └── 로그인 버튼 ─► [LoginView] ─► "회원가입" ─► [SignUpView (이메일 인증)]
 ```
+
+## 데이터 레이어 / 외부 의존성
+
+- **API 호출 방식**: 모든 API는 Supabase Edge Function (`Supabase.instance.client.functions.invoke('<name>')`) 경유. Dio·http·PostgREST 직접 접근 금지.
+- **.env 키**: `SUPABASE_URL`, `SUPABASE_ANON_KEY` (rally 루트 `.env`). 누락 시 SupabaseService.initialize가 경고 로그만 남기고 정상 부팅.
+- **Edge Function 매핑**:
+  - `match` 모듈 ↔ `supabase/functions/get-tournaments`
+  - `player` 모듈 ↔ `supabase/functions/get-players`
 
 ## 주요 의존성
 
-- GetX (`get`) — 상태관리 / 라우팅 / DI
-- Dio (`dio`) — HTTP 클라이언트 (ApiService에서 래핑)
-- GetStorage (`get_storage`) — 로컬 저장소 (사용자 상태 / 토큰)
-- ScreenUtil (`flutter_screenutil`) — 반응형 (.w/.h/.sp/.r)
-- EasyLoading (`flutter_easyloading`) — 로딩 / 토스트
+- `get` ^4.6.6 — 상태관리 / 라우팅 / DI
+- `supabase_flutter` ^2.5.0 — Edge Function 호출 / 세션 JWT 자동 첨부
+- `flutter_dotenv` ^5.1.0 — `.env` 환경변수 로드
+- `cached_network_image` ^3.3.1 — 대회 로고 / 국기 캐시
+- `url_launcher` ^6.2.6 — 대회 상세 외부 브라우저 오픈
+
+## Stitch 매핑 (rally 프로젝트 ID: 307006344264476289)
+
+| View | Stitch 화면명 | screenId |
+|------|---------------|----------|
+| `match_view.dart` | 국제 대회 리스트 (매거진) | `225c4429594e4cb3835b154cbc861919` |
+| `player_view.dart` | 선수 리스트 (매거진) | `eeae55cab3614d408743636d325e3b88` |
+| `my_info_view.dart` | 내 정보 (매거진) | `8329646c315c48fdb5bfa15f9a643418` |
+| `login_view.dart` | 로그인 (Kinetic Court) | `a7cf71e767ad4610a93373028a9c3ab0` |
+| `sign_up_view.dart` | 회원가입 - 이메일 인증 | `3616350c62da4e95906ab4d458eb7ebc` |
