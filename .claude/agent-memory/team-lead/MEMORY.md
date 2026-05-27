@@ -1,0 +1,2 @@
+- [Task tool unavailable](environment_no_task_tool.md) — Task 서브에이전트 호출 도구가 이 세션에서 노출되지 않음. team-lead가 각 agent 가이드를 직접 따라 수행한다
+- [Edge Function module pattern](edge_function_module_pattern.md) — rally에서 Supabase Edge Function 매거진 화면을 추가할 때의 정형 패턴 (data 모델 2개 + 레포 1개 + 모듈 3파일 수정)
