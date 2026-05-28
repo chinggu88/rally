@@ -1,5 +1,10 @@
 from typing import Any
 
+# BWF detail page; the site auto-redirects to /player/{id}/{slug}/.
+# Mirrors PLAYER_DETAIL_URL in batch/jobs/bwf_players/fetcher.py — duplicated
+# intentionally so this module stays Playwright-free for tests/imports.
+PLAYER_DETAIL_URL = "https://bwfbadminton.com/player/{player_id}/"
+
 
 def transform_row(
     row: dict[str, Any], category: str, year: int, week: int
@@ -28,6 +33,9 @@ def transform_row(
 
     country_code, country_name = _country(row, p1, p2)
 
+    p1_detail_url = PLAYER_DETAIL_URL.format(player_id=p1_id) if p1_id else None
+    p2_detail_url = PLAYER_DETAIL_URL.format(player_id=p2_id) if p2_id else None
+
     return {
         "category": category,
         "rank": int(rank),
@@ -39,6 +47,9 @@ def transform_row(
         "points": float(points),
         "ranking_year": year,
         "ranking_week": week,
+        "player1_detail_url": p1_detail_url,
+        "player2_detail_url": p2_detail_url,
+        "rank_change": _to_int(row.get("rank_change")),
     }
 
 
