@@ -39,6 +39,13 @@ BWF 랭킹 페이지는 Vue.js로 동작하며 실제 데이터는 다음 API에
 | `member_id` | `player1.id` (복식은 `id1-id2`) |
 | `country_code` | `p1_country_model.code_iso3` |
 | `country_name` | `p1_country_model.name` |
+| `player1_detail_url` | `player1.id` → `https://bwfbadminton.com/player/{id}/` (없으면 NULL) |
+| `player2_detail_url` | `player2.id` → `https://bwfbadminton.com/player/{id}/` (단식이면 NULL) |
+| `rank_change` | `row.rank_change` (양수=상승, 음수=하락, 0=변동없음, NULL=신규/불명) |
+
+> 디테일 페이지 URL은 별도 크롤링 없이 `player_id`에서 파생 — BWF가 `/player/{id}/{slug}/`로 자동 리다이렉트합니다.
+>
+> `rank_change`는 BWF API가 직접 계산한 값(`rank_previous - rank`)으로, UI의 초록(상승)/빨강(하락) 인디케이터와 부호가 일치합니다. 별도 변환 없음.
 
 ## 로컬 실행
 
