@@ -11,6 +11,8 @@ import '../modules/my_info/views/my_info_view.dart';
 import '../modules/news/bindings/news_binding.dart';
 import '../modules/news/views/news_view.dart';
 import '../modules/player/bindings/player_binding.dart';
+import '../modules/player/bindings/player_detail_binding.dart';
+import '../modules/player/views/player_detail_view.dart';
 import '../modules/player/views/player_view.dart';
 import '../modules/sign_up/bindings/sign_up_binding.dart';
 import '../modules/sign_up/views/sign_up_view.dart';
@@ -39,6 +41,11 @@ abstract class AppPages {
       name: Routes.PLAYER,
       page: () => const PlayerView(),
       binding: PlayerBinding(),
+    ),
+    GetPage(
+      name: Routes.PLAYER_DETAIL,
+      page: () => const PlayerDetailView(),
+      binding: PlayerDetailBinding(),
     ),
     GetPage(
       name: Routes.MY_INFO,

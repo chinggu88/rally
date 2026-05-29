@@ -1,7 +1,9 @@
 // GET /functions/v1/get-players?category=MS
 // - category: MS | WS | MD | WD | XD (기본 MS)
-// - 응답: { category, count, players: [{ rank, player_name, country_code }] }
+// - 응답: { category, count, players: [{ rank, player_name, country_code, player1_id, player2_id }] }
 //         rank ASC 정렬
+//         player1_id / player2_id 는 bwf_players.id 참조 (단식은 player1_id만, 복식은 둘 다)
+//         상세 화면(get-player) 진입용 식별자
 // - 인증: 공개 (anon 키)
 import { handlePreflight } from "../_shared/cors.ts";
 import { serviceClient } from "../_shared/supabase.ts";
@@ -10,7 +12,8 @@ import { json, error } from "../_shared/response.ts";
 const VALID_CATEGORIES = ["MS", "WS", "MD", "WD", "XD"] as const;
 type Category = typeof VALID_CATEGORIES[number];
 
-const SELECT_COLUMNS = "rank, player_name, country_code";
+const SELECT_COLUMNS =
+  "rank, player_name, country_code, player1_id, player2_id";
 
 Deno.serve(async (req) => {
   const preflight = handlePreflight(req);

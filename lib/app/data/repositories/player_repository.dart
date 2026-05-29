@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../models/get_player_response.dart';
 import '../models/get_players_response.dart';
 
 /// BWF 랭킹 선수 관련 Supabase Edge Function 호출 레포지토리.
@@ -54,6 +55,61 @@ class PlayerRepository {
       rethrow;
     } catch (e) {
       log('PlayerRepository.getPlayers error: $e');
+      rethrow;
+    }
+  }
+
+  /// 단일 선수 상세 조회 — Edge Function: `get-player`
+  ///
+  /// [id] `bwf_players.id` (양수). `get-players` 응답의 `player1_id`/`player2_id`.
+  ///
+  /// 미존재(404)는 에러가 아니라 "데이터 없음"으로 간주하여
+  /// `player`가 null인 [GetPlayerResponse]를 반환한다.
+  /// 그 외 실패 시 `Exception('get-player failed: ...')` 를 throw 한다.
+  Future<GetPlayerResponse> getPlayer({required int id}) async {
+    try {
+      final res = await _client.functions.invoke(
+        'get-player',
+        method: HttpMethod.get,
+        queryParameters: <String, dynamic>{'id': '$id'},
+      );
+
+      // 미존재: 빈 응답(player=null)으로 정상 반환
+      if (res.status == 404) {
+        return GetPlayerResponse(player: null);
+      }
+
+      if (res.status != 200 || res.data == null) {
+        throw Exception(
+          'get-player failed: status=${res.status}, data=${res.data}',
+        );
+      }
+
+      final raw = res.data;
+      late final Map<String, dynamic> json;
+      if (raw is Map<String, dynamic>) {
+        json = raw;
+      } else if (raw is Map) {
+        json = Map<String, dynamic>.from(raw);
+      } else {
+        throw Exception(
+          'get-player failed: unexpected payload type ${raw.runtimeType}',
+        );
+      }
+
+      return GetPlayerResponse.fromJson(json);
+    } on FunctionException catch (e) {
+      // Edge Function이 404를 예외로 던지는 환경 대응 — 미존재로 흡수
+      if (e.status == 404) {
+        return GetPlayerResponse(player: null);
+      }
+      log(
+        'PlayerRepository.getPlayer FunctionException: '
+        'status=${e.status}, details=${e.details}',
+      );
+      rethrow;
+    } catch (e) {
+      log('PlayerRepository.getPlayer error: $e');
       rethrow;
     }
   }

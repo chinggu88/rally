@@ -4,6 +4,8 @@ import 'package:get/get.dart';
 
 import '../../../data/models/player_response.dart';
 import '../../../data/repositories/player_repository.dart';
+import '../../../routes/app_routes.dart';
+import 'player_detail_controller.dart';
 
 /// 선수(BWF 랭킹) 화면 컨트롤러.
 ///
@@ -151,13 +153,26 @@ class PlayerController extends GetxController {
     await fetchPlayers(category: category);
   }
 
-  /// 선수 카드 탭 시 호출 — 현재는 placeholder.
+  /// 선수 카드 탭 시 호출 — 상세 화면(`Routes.PLAYER_DETAIL`)으로 전이한다.
   ///
-  /// TODO(player-detail): 추후 별도 태스크로 추가될 `Routes.PLAYER_DETAIL`로 전이.
+  /// 상세 API(`get-player`)는 `bwf_players.id`(= `player1_id`/`player2_id`)로
+  /// 조회한다. 상세에 없는 랭킹 정보(rank/category)와 로드 전 폴백
+  /// (이름/국가)을 arguments로 함께 넘긴다.
   /// 참고 Stitch 화면: projects/307006344264476289/screens/b3ae5f6699f448e5bae6703091c35026
   void openPlayerDetail(PlayerResponse p) {
+    final detailId = p.detailId;
     log('PlayerController.openPlayerDetail: rank=${p.rank}, '
-        'name=${p.playerName}, country=${p.countryCode}');
-    // 현재는 무동작 (placeholder)
+        'name=${p.playerName}, country=${p.countryCode}, id=$detailId');
+
+    Get.toNamed(
+      Routes.PLAYER_DETAIL,
+      arguments: <String, dynamic>{
+        PlayerDetailController.argId: detailId,
+        PlayerDetailController.argRank: p.rank,
+        PlayerDetailController.argCategory: selectedCategory,
+        PlayerDetailController.argPlayerName: p.playerName,
+        PlayerDetailController.argCountryCode: p.countryCode,
+      },
+    );
   }
 }
