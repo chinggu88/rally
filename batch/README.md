@@ -52,3 +52,6 @@ GitHub Actions에서는 Repository Secrets로 주입됩니다.
 | 작업 | 스케줄 | 설명 |
 |---|---|---|
 | [`bwf_rankings`](jobs/bwf_rankings/README.md) | 매주 월 09:00 KST | BWF 세계 랭킹 5개 종목 크롤링 → `bwf_rankings` 테이블 upsert |
+| [`bwf_players`](jobs/bwf_players/README.md) | 수동 | 랭킹 선수 프로필 크롤링 → `bwf_players` 테이블 upsert |
+| `bwf_calendar` | 수동 | 올해 대회 캘린더(전 category) 크롤링 → `bwf_tournaments` upsert |
+| [`bwf_matches`](jobs/bwf_matches/README.md) | 매일 06:00 KST | 대회별 경기(대진표) 크롤링 → `bwf_matches` upsert (대회전/대회중/대회후 분류). **선행: `bwf_calendar`** |
