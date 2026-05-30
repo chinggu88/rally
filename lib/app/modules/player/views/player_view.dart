@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../theme/app_typography.dart';
 import '../../../data/models/player_response.dart';
+import '../../../utils/country_flag.dart';
 import '../controllers/player_controller.dart';
 
 /// 선수 화면 — Stitch: 선수 리스트 (매거진)
@@ -68,37 +69,11 @@ class PlayerView extends GetView<PlayerController> {
     return CustomScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       slivers: [
-        SliverToBoxAdapter(child: _buildHeader()),
+        const SliverToBoxAdapter(child: SizedBox(height: 12)),
         SliverToBoxAdapter(child: _buildCategoryChips()),
         const SliverToBoxAdapter(child: SizedBox(height: 12)),
         SliverToBoxAdapter(child: _buildStateArea(scheme)),
       ],
-    );
-  }
-
-  /// 상단 헤더 ("Players to Watch" + 부제) — Stitch 디자인 그대로
-  Widget _buildHeader() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Players to Watch',
-            style: AppTypography.headlineLg.copyWith(
-              color: Colors.white,
-              height: 1.15,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '세계 최정상 BWF 랭킹 선수들의 파워, 정밀함, 민첩성을 만나보세요.',
-            style: AppTypography.bodyMd.copyWith(
-              color: _subtleText,
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -232,9 +207,6 @@ class PlayerView extends GetView<PlayerController> {
           for (final p in list) ...[
             _PlayerCard(
               player: p,
-              categoryLabel: PlayerController.labelEnOf(
-                controller.selectedCategory,
-              ),
               onTap: () => controller.openPlayerDetail(p),
             ),
             const SizedBox(height: 12),
@@ -318,34 +290,40 @@ class _CategoryChip extends StatelessWidget {
 
 /// 선수 단일 카드 (매거진 스타일)
 ///
-/// - 좌측: 큰 랭킹 숫자 (`#1` 형식, 라임 옐로우 액센트)
-/// - 중앙: 카테고리 라벨 + 선수명 + 국가 코드
+/// - 좌측: 큰 랭킹 숫자 (`#1` 형식, 라임 옐로우 액센트 + 선수 사진 반투명 중첩)
+/// - 중앙: 선수명 + 국기/국가명
 /// - 우측: 화살표 (탭 진입 affordance)
 class _PlayerCard extends StatelessWidget {
   const _PlayerCard({
     required this.player,
-    required this.categoryLabel,
     required this.onTap,
   });
 
   final PlayerResponse player;
-  final String categoryLabel;
   final VoidCallback onTap;
 
   static const Color _accent = Color(0xFFC3F400);
-  static const Color _accentDark = Color(0xFF283500);
   static const Color _cardBg = Color(0xFF1C1B1B);
   static const Color _cardBorder = Color(0xFF2A2A2A);
   static const Color _subtleText = Color(0xFF9CA3A1);
+
+  // 순위 변동 색상
+  static const Color _upGreen = Color(0xFF4ADE80);
+  static const Color _downRed = Color(0xFFFF6B6B);
 
   @override
   Widget build(BuildContext context) {
     final rank = player.rank;
     final name = (player.playerName ?? '').trim();
     final country = (player.countryCode ?? '').trim();
+    final countryName = (player.countryName ?? '').trim();
     final displayName = name.isEmpty ? '—' : name;
-    final displayCountry = country.isEmpty ? '—' : country.toUpperCase();
+    final displayCountry = countryName.isNotEmpty
+        ? countryName
+        : (country.isEmpty ? '—' : country.toUpperCase());
+    final flag = flagEmoji(country);
     final rankLabel = rank != null ? '#$rank' : '#—';
+    final pointsText = _formatPoints(player.points);
 
     return Material(
       color: Colors.transparent,
@@ -362,67 +340,120 @@ class _PlayerCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // 좌측: 큰 랭킹 숫자 (라임 옐로우 액센트)
-              _buildRankBlock(rankLabel),
+              // 좌측: 선수 사진 (오버레이 없이 이미지만)
+              _buildAvatar(player.photoUrl),
               const SizedBox(width: 16),
-              // 중앙: 카테고리 + 이름 + 국가
+              // 중앙: 순위+이름 / 국가 / 포인트·변동
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // 1행: 카테고리 라벨 (Stitch 톤 — 라임 옐로우 uppercase)
-                    Text(
-                      categoryLabel.toUpperCase(),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTypography.labelLg.copyWith(
-                        color: _accent,
-                        fontSize: 11,
-                        letterSpacing: 0.8,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    // 2행: 선수명 (큰 폰트, 2줄 ellipsis)
-                    Text(
-                      displayName,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTypography.headlineMd.copyWith(
-                        color: Colors.white,
-                        fontSize: 20,
-                        height: 1.15,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    // 3행: 국가 코드
+                    // 1행: 랭킹 숫자 + 선수명
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
                       children: [
-                        Container(
-                          width: 14,
-                          height: 14,
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF353534),
-                            borderRadius: BorderRadius.circular(3),
-                          ),
-                          child: const Icon(
-                            Icons.flag_outlined,
-                            color: _subtleText,
-                            size: 10,
+                        Text(
+                          rankLabel,
+                          style: const TextStyle(
+                            fontFamily: AppTypography.chivo,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 18,
+                            height: 1.15,
+                            letterSpacing: -0.5,
+                            color: _accent,
                           ),
                         ),
-                        const SizedBox(width: 6),
-                        Text(
-                          displayCountry,
-                          style: AppTypography.labelLg.copyWith(
-                            color: _subtleText,
-                            fontSize: 12,
-                            letterSpacing: 0.5,
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            displayName,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTypography.headlineMd.copyWith(
+                              color: Colors.white,
+                              fontSize: 19,
+                              height: 1.15,
+                            ),
                           ),
                         ),
                       ],
                     ),
+                    const SizedBox(height: 6),
+                    // 2행: 국기 + 국가명
+                    Row(
+                      children: [
+                        if (flag.isNotEmpty)
+                          Text(
+                            flag,
+                            style: const TextStyle(fontSize: 14),
+                          )
+                        else
+                          Container(
+                            width: 14,
+                            height: 14,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF353534),
+                              borderRadius: BorderRadius.circular(3),
+                            ),
+                            child: const Icon(
+                              Icons.flag_outlined,
+                              color: _subtleText,
+                              size: 10,
+                            ),
+                          ),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            displayCountry,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTypography.labelLg.copyWith(
+                              color: _subtleText,
+                              fontSize: 12,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    // 3행: 랭킹 포인트 + 순위 변동
+                    if (pointsText.isNotEmpty || player.rankChange != null) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          if (pointsText.isNotEmpty) ...[
+                            const Icon(
+                              Icons.bolt,
+                              color: _accent,
+                              size: 14,
+                            ),
+                            const SizedBox(width: 3),
+                            Text(
+                              pointsText,
+                              style: AppTypography.labelLg.copyWith(
+                                color: Colors.white,
+                                fontSize: 12,
+                                letterSpacing: 0.2,
+                              ),
+                            ),
+                            Text(
+                              ' P',
+                              style: AppTypography.labelLg.copyWith(
+                                color: _subtleText,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
+                          if (pointsText.isNotEmpty &&
+                              player.rankChange != null)
+                            const SizedBox(width: 10),
+                          _buildRankChange(),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -440,29 +471,84 @@ class _PlayerCard extends StatelessWidget {
     );
   }
 
-  Widget _buildRankBlock(String rankLabel) {
-    return Container(
-      width: 64,
-      height: 64,
-      decoration: BoxDecoration(
-        color: _accent,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      alignment: Alignment.center,
-      child: FittedBox(
-        fit: BoxFit.scaleDown,
-        child: Text(
-          rankLabel,
-          style: const TextStyle(
-            fontFamily: AppTypography.chivo,
-            fontWeight: FontWeight.w800,
-            fontSize: 22,
-            height: 1.0,
-            letterSpacing: -0.5,
-            color: _accentDark,
-          ),
-        ),
+  /// 선수 사진 — 오버레이 없이 이미지만 (없으면 인물 아이콘 플레이스홀더).
+  Widget _buildAvatar(String? photoUrl) {
+    const double size = 64;
+    final hasPhoto = photoUrl != null && photoUrl.isNotEmpty;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: size,
+        height: size,
+        color: const Color(0xFF252423),
+        child: hasPhoto
+            ? Image.network(
+                photoUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => _avatarPlaceholder(),
+                loadingBuilder: (context, child, progress) {
+                  if (progress == null) return child;
+                  return _avatarPlaceholder();
+                },
+              )
+            : _avatarPlaceholder(),
       ),
     );
+  }
+
+  Widget _avatarPlaceholder() {
+    return const Center(
+      child: Icon(Icons.person, color: _subtleText, size: 30),
+    );
+  }
+
+  /// 순위 변동 칩 — ▲상승(초록) / ▼하락(빨강) / –변동없음. null이면 빈 위젯.
+  Widget _buildRankChange() {
+    final change = player.rankChange;
+    if (change == null) return const SizedBox.shrink();
+
+    if (player.isRankSame) {
+      return Text(
+        '–',
+        style: AppTypography.labelLg.copyWith(
+          color: _subtleText,
+          fontSize: 12,
+        ),
+      );
+    }
+
+    final up = player.isRankUp;
+    final color = up ? _upGreen : _downRed;
+    final icon = up ? Icons.arrow_drop_up : Icons.arrow_drop_down;
+    final magnitude = change.abs();
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, color: color, size: 18),
+        Text(
+          '$magnitude',
+          style: AppTypography.labelLg.copyWith(
+            color: color,
+            fontSize: 12,
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// 포인트를 천 단위 콤마로 포맷 (정수부만). 없으면 빈 문자열.
+  String _formatPoints(double? points) {
+    if (points == null || points <= 0) return '';
+    final s = points.round().toString();
+    final buf = StringBuffer();
+    for (int i = 0; i < s.length; i++) {
+      final remaining = s.length - i;
+      buf.write(s[i]);
+      if (remaining > 1 && remaining % 3 == 1) {
+        buf.write(',');
+      }
+    }
+    return buf.toString();
   }
 }
