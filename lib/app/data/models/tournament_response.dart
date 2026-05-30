@@ -1,3 +1,5 @@
+import '../../utils/bwf_image.dart';
+
 /// BWF 국제 대회 단일 항목 응답 모델
 ///
 /// Edge Function `get-tournaments`의 `tournaments[]` 원소에 1:1 매핑된다.
@@ -127,6 +129,40 @@ class TournamentResponse {
   bool? get hasLiveScores => _hasLiveScores;
   set hasLiveScores(bool? value) => _hasLiveScores = value;
 
+  /// 시작일 문자열을 DateTime으로 파싱 (실패 시 null).
+  DateTime? get startDateTime =>
+      _startDate == null ? null : DateTime.tryParse(_startDate!);
+
+  /// 종료일 문자열을 DateTime으로 파싱 (실패 시 null).
+  DateTime? get endDateTime =>
+      _endDate == null ? null : DateTime.tryParse(_endDate!);
+
+  /// 현재 진행 중(오늘이 시작일~종료일 사이, 양끝 포함) 여부.
+  ///
+  /// 날짜가 모두 없으면 판단할 수 없어 false를 반환한다.
+  /// 한쪽 날짜만 있으면 그 경계만으로 판단한다.
+  bool get isOngoing {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final start = startDateTime;
+    final end = endDateTime;
+    final startDay =
+        start == null ? null : DateTime(start.year, start.month, start.day);
+    final endDay = end == null ? null : DateTime(end.year, end.month, end.day);
+
+    if (startDay == null && endDay == null) return false;
+    if (startDay != null && today.isBefore(startDay)) return false;
+    if (endDay != null && today.isAfter(endDay)) return false;
+    return true;
+  }
+
+  /// 화면에 LIVE 뱃지를 표시해야 하는지 — 현재 진행 중이면서 라이브 스코어를 제공.
+  ///
+  /// `has_live_scores`는 "라이브 스코어 제공 가능" 여부(상시 true일 수 있음)이므로,
+  /// 실제 진행 기간([isOngoing])과 함께 판단해 종료/예정 대회가 LIVE로
+  /// 표시되는 것을 막는다.
+  bool get isLiveNow => isOngoing && _hasLiveScores == true;
+
   TournamentResponse.fromJson(Map<String, dynamic> json) {
     final tournamentIdValue = json['tournament_id'];
     if (tournamentIdValue is int) {
@@ -154,9 +190,9 @@ class TournamentResponse {
       _prizeMoneyUsd = null;
     }
     _detailUrl = json['detail_url'] as String?;
-    _flagUrl = json['flag_url'] as String?;
-    _logoUrl = json['logo_url'] as String?;
-    _catLogoUrl = json['cat_logo_url'] as String?;
+    _flagUrl = bwfImageUrl(json['flag_url'] as String?);
+    _logoUrl = bwfImageUrl(json['logo_url'] as String?);
+    _catLogoUrl = bwfImageUrl(json['cat_logo_url'] as String?);
     _status = json['status'] as String?;
     _hasLiveScores = json['has_live_scores'] as bool?;
   }

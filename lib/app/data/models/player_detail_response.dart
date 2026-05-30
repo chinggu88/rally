@@ -1,3 +1,5 @@
+import '../../utils/bwf_image.dart';
+
 /// 선수 상세 프로필 응답 모델
 ///
 /// Edge Function `get-player`가 반환하는 `player` 객체(`bwf_players` 테이블 1행)에
@@ -220,7 +222,7 @@ class PlayerDetailResponse {
     _birthday = json['birthday'] as String?;
     _heightCm = _asInt(json['height_cm']);
     _handedness = json['handedness'] as String?;
-    _photoUrl = json['photo_url'] as String?;
+    _photoUrl = bwfImageUrl(json['photo_url'] as String?);
     _bio = json['bio'] as String?;
     _coach = json['coach'] as String?;
     _birthplace = json['birthplace'] as String?;

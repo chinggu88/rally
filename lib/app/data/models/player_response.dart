@@ -1,3 +1,5 @@
+import '../../utils/bwf_image.dart';
+
 /// BWF 랭킹 선수 단일 항목 응답 모델
 ///
 /// Edge Function `get-players`의 `players[]` 원소에 1:1 매핑된다.
@@ -12,6 +14,19 @@ class PlayerResponse {
   /// 국가 3자 코드 (예: "DEN", "KOR", "CHN")
   String? _countryCode;
 
+  /// 국가 표기명 (예: "Korea", "Denmark") — 없으면 null.
+  String? _countryName;
+
+  /// 대표 선수(player1) 프로필 사진 URL — 없으면 null.
+  String? _photoUrl;
+
+  /// 랭킹 포인트 — DB: numeric(10,2). 없으면 null.
+  double? _points;
+
+  /// 직전 발표 대비 순위 변동 — DB: int (nullable).
+  /// 양수 = 상승(초록), 음수 = 하락(빨강), 0 = 변동 없음, null = 신규/미상.
+  int? _rankChange;
+
   /// 첫 번째 선수의 `bwf_players.id` — 상세 화면(get-player) 진입 키.
   /// 단식은 이 값만, 복식은 [_player2Id]와 함께 채워진다.
   int? _player1Id;
@@ -23,12 +38,20 @@ class PlayerResponse {
     int? rank,
     String? playerName,
     String? countryCode,
+    String? countryName,
+    String? photoUrl,
+    double? points,
+    int? rankChange,
     int? player1Id,
     int? player2Id,
   }) {
     _rank = rank;
     _playerName = playerName;
     _countryCode = countryCode;
+    _countryName = countryName;
+    _photoUrl = photoUrl;
+    _points = points;
+    _rankChange = rankChange;
     _player1Id = player1Id;
     _player2Id = player2Id;
   }
@@ -41,6 +64,27 @@ class PlayerResponse {
 
   String? get countryCode => _countryCode;
   set countryCode(String? value) => _countryCode = value;
+
+  String? get countryName => _countryName;
+  set countryName(String? value) => _countryName = value;
+
+  String? get photoUrl => _photoUrl;
+  set photoUrl(String? value) => _photoUrl = value;
+
+  double? get points => _points;
+  set points(double? value) => _points = value;
+
+  int? get rankChange => _rankChange;
+  set rankChange(int? value) => _rankChange = value;
+
+  /// 순위 상승 여부 (rank_change > 0)
+  bool get isRankUp => _rankChange != null && _rankChange! > 0;
+
+  /// 순위 하락 여부 (rank_change < 0)
+  bool get isRankDown => _rankChange != null && _rankChange! < 0;
+
+  /// 변동 없음 여부 (rank_change == 0)
+  bool get isRankSame => _rankChange == 0;
 
   int? get player1Id => _player1Id;
   set player1Id(int? value) => _player1Id = value;
@@ -55,6 +99,10 @@ class PlayerResponse {
     _rank = _asInt(json['rank']);
     _playerName = json['player_name'] as String?;
     _countryCode = json['country_code'] as String?;
+    _countryName = json['country_name'] as String?;
+    _photoUrl = bwfImageUrl(json['photo_url'] as String?);
+    _points = _asDouble(json['points']);
+    _rankChange = _asInt(json['rank_change']);
     _player1Id = _asInt(json['player1_id']);
     _player2Id = _asInt(json['player2_id']);
   }
@@ -64,6 +112,10 @@ class PlayerResponse {
     data['rank'] = _rank;
     data['player_name'] = _playerName;
     data['country_code'] = _countryCode;
+    data['country_name'] = _countryName;
+    data['photo_url'] = _photoUrl;
+    data['points'] = _points;
+    data['rank_change'] = _rankChange;
     data['player1_id'] = _player1Id;
     data['player2_id'] = _player2Id;
     return data;
@@ -73,6 +125,12 @@ class PlayerResponse {
     if (value is int) return value;
     if (value is num) return value.toInt();
     if (value is String) return int.tryParse(value);
+    return null;
+  }
+
+  static double? _asDouble(dynamic value) {
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value);
     return null;
   }
 }
