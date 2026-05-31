@@ -1,0 +1,2102 @@
+{
+  "tournament": {
+    "prize_money": "1,450,000",
+    "start_date": "2026-06-02 00:00:00",
+    "end_date": "2026-06-07 00:00:00",
+    "name": "POLYTRON Indonesia Open 2026",
+    "url": "https://bwfworldtour.bwfbadminton.com/tournament/5528/polytron-indonesia-open-2026/results/",
+    "id": 5528,
+    "code": "5A719D43-A131-43FC-9A7F-BAFBC0B551E8",
+    "has_live_scores": true,
+    "date": "02  - 07 Jun",
+    "location": "Jakarta, Indonesia",
+    "country": "Indonesia",
+    "flag_url": "https://img.bwfbadminton.com/image/upload/t_flags_small/v2/assets/flag-circle-svg-custom/INA.png",
+    "logo": "https://img.bwfbadminton.com/image/upload/v1779154822/assets/tournaments/logo/5A719D43-A131-43FC-9A7F-BAFBC0B551E8.png",
+    "cat_logo": "https://bwfbadminton.com/wp-content/themes/fansite-2020/assets/images/tournament/suffix_1000_white-01.svg",
+    "category": "HSBC BWF World Tour Super 1000",
+    "header_url_tpl": "https://img.bwfbadminton.com/image/upload/{transform}/v1768184928/assets/tournaments/header/5A719D43-A131-43FC-9A7F-BAFBC0B551E8.png",
+    "header_url": "https://img.bwfbadminton.com/image/upload/t_Fansite_Tournament_Card_Header_Wide/v1768184928/assets/tournaments/header/5A719D43-A131-43FC-9A7F-BAFBC0B551E8.png",
+    "header_url_mobile": "https://img.bwfbadminton.com/image/upload/t_Fansite_Tournament_Card_Header_Squared/v1768184928/assets/tournaments/header/5A719D43-A131-43FC-9A7F-BAFBC0B551E8.png",
+    "is_etihad": true,
+    "live_status": "future",
+    "status": {
+      "status": "0",
+      "code": "normal",
+      "label": "Normal"
+    },
+    "month": "June",
+    "monthNo": 6,
+    "order": 15
+  },
+  "draws": [
+    {
+      "value": "3",
+      "text": "MS",
+      "qualification": 0,
+      "type": 0,
+      "size": 32,
+      "slug": "ms",
+      "doubles": false,
+      "stage_name": "Main Draw",
+      "stage_type": 1,
+      "stage_order": 1
+    },
+    {
+      "value": "4",
+      "text": "WS",
+      "qualification": 0,
+      "type": 0,
+      "size": 32,
+      "slug": "ws",
+      "doubles": false,
+      "stage_name": "Main Draw",
+      "stage_type": 1,
+      "stage_order": 1
+    },
+    {
+      "value": "5",
+      "text": "MD",
+      "qualification": 0,
+      "type": 0,
+      "size": 32,
+      "slug": "md",
+      "doubles": true,
+      "stage_name": "Main Draw",
+      "stage_type": 1,
+      "stage_order": 1
+    },
+    {
+      "value": "6",
+      "text": "WD",
+      "qualification": 0,
+      "type": 0,
+      "size": 32,
+      "slug": "wd",
+      "doubles": true,
+      "stage_name": "Main Draw",
+      "stage_type": 1,
+      "stage_order": 1
+    },
+    {
+      "value": "7",
+      "text": "XD",
+      "qualification": 0,
+      "type": 0,
+      "size": 32,
+      "slug": "xd",
+      "doubles": true,
+      "stage_name": "Main Draw",
+      "stage_type": 1,
+      "stage_order": 1
+    }
+  ],
+  "args": {
+    "needles": [
+      "Naraoka",
+      "seed",
+      "player_name"
+    ],
+    "settle_ms": 8000
+  },
+  "strategy_a3_snoop": [
+    {
+      "phase": "request",
+      "host": "bwfworldtour.bwfbadminton.com",
+      "path": "/tournament/5528/polytron-indonesia-open-2026/players/",
+      "query": "",
+      "method": "GET",
+      "post_data": null,
+      "headers": {}
+    },
+    {
+      "phase": "request",
+      "host": "bwfbadminton.com",
+      "path": "/cdn-cgi/rum",
+      "query": "",
+      "method": "POST",
+      "post_data": "{\"memory\":{\"totalJSHeapSize\":64000000,\"usedJSHeapSize\":53500000,\"jsHeapSizeLimit\":3760000000},\"resources\":[],\"referrer\":\"\",\"eventType\":1,\"firstPaint\":2029.2999999523163,\"firstContentfulPaint\":2029.2999999523163,\"startTime\":1780219609923.4,\"versions\":{\"fl\":\"2024.11.0\",\"js\":\"2026.5.0\",\"timings\":2},\"pageloadId\":\"081702a4-6a51-498e-8aad-802b41b9e4fb\",\"location\":\"https://bwfbadminton.com/rankings/\",\"nt\":\"navigate\",\"timingsV2\":{\"nextHopProtocol\":\"h2\",\"domainLookupStart\":4.6000001430511475,\"domainLookupEnd\":15.400000095367432,\"connectStart\":15.400000095367432,\"connectEnd\":320.10000014305115,\"requestStart\":320.5,\"responseStart\":1316.4000000953674,\"responseEnd\":1325.2000000476837,\"domInteractive\":2396.100000143051,\"domComplete\":4116.600000143051,\"loadEventStart\":0,\"loadEventEnd\":0,\"firstInterimResponseStart\":0,\"transferSize\":20377,\"decodedBodySize\":169771},\"dt\":\"\",\"siteToken\":\"1df603e8c147496b9cf81eef6d5d8e92\",\"st\":2}",
+      "headers": {
+        "referer": "https://bwfbadminton.com/rankings/",
+        "content-type": "application/json"
+      }
+    },
+    {
+      "phase": "response",
+      "host": "bwfbadminton.com",
+      "path": "/cdn-cgi/challenge-platform/h/g/jsd/oneshot/8fc8ed1d8752/0.623738561015491:1780218019:nvVkJShV0NCOFtCtqPKJCr-CKypdTQxFZkOBv09L9Xk/a044f074b9ea3bb9",
+      "query": "",
+      "status": 200,
+      "content_type": "text/plain; charset=UTF-8",
+      "body_error": "Response.body: Protocol error (Network.getResponseBody): No resource with given identifier found"
+    },
+    {
+      "phase": "response",
+      "host": "extranet-lv.bwfbadminton.com",
+      "path": "/api/vue-rankingdata",
+      "query": "",
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "body_error": "Response.body: Protocol error (Network.getResponseBody): No resource with given identifier found"
+    },
+    {
+      "phase": "response",
+      "host": "extranet-lv.bwfbadminton.com",
+      "path": "/api/vue-rankingtable",
+      "query": "",
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "body_error": "Response.body: Protocol error (Network.getResponseBody): No resource with given identifier found"
+    },
+    {
+      "phase": "response",
+      "host": "extranet-lv.bwfbadminton.com",
+      "path": "/api/vue-rankingweek",
+      "query": "",
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "body_error": "Response.body: Protocol error (Network.getResponseBody): No resource with given identifier found"
+    },
+    {
+      "phase": "response",
+      "host": "bwfworldtour.bwfbadminton.com",
+      "path": "/tournament/5528/polytron-indonesia-open-2026/players/",
+      "query": "",
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "body_text_head": "<script type=\"text/javascript\">\n    if (typeof window.AnnouncementUtils === 'undefined') {\n        window.AnnouncementUtils = {\n            STORAGE_KEY: 'bwfSeenAnnouncements',\n            MAX_TOURNAMENTS_TO_KEEP: 10,\n\n            hashContent(string) {\n                let hash = 0;\n                for (let i = 0; i < string.length; i++) {\n                    const char = string.charCodeAt(i);\n                    hash = (hash << 5) - hash + char;\n                    hash &= hash;\n                ",
+      "needle_hits": [
+        "seed"
+      ]
+    },
+    {
+      "phase": "request",
+      "host": "bwfworldtour.bwfbadminton.com",
+      "path": "/cdn-cgi/rum",
+      "query": "",
+      "method": "POST",
+      "post_data": "{\"memory\":{\"totalJSHeapSize\":64000000,\"usedJSHeapSize\":53500000,\"jsHeapSizeLimit\":3760000000},\"resources\":[],\"referrer\":\"\",\"eventType\":1,\"firstPaint\":1033.7999999523163,\"firstContentfulPaint\":1033.7999999523163,\"startTime\":1780219613307.6,\"versions\":{\"fl\":\"2024.11.0\",\"js\":\"2026.5.0\",\"timings\":2},\"pageloadId\":\"e6c89d1f-a934-4fd1-9fbb-d6e867ff4b52\",\"location\":\"https://bwfworldtour.bwfbadminton.com/tournament/5528/polytron-indonesia-open-2026/players/\",\"nt\":\"navigate\",\"timingsV2\":{\"nextHopProtocol\":\"h2\",\"domainLookupStart\":0.2999999523162842,\"domainLookupEnd\":0.2999999523162842,\"connectStart\":0.2999999523162842,\"connectEnd\":0.2999999523162842,\"requestStart\":19.799999952316284,\"responseStart\":731,\"responseEnd\":731.5999999046326,\"domInteractive\":1559.4000000953674,\"domComplete\":1867.5999999046326,\"loadEventStart\":1867.7000000476837,\"loadEventEnd\":1868.0999999046326,\"firstInterimResponseStart\":0,\"transferSize\":16203,\"decodedBodySize\":95708},\"dt\":\"\",\"siteToken\":\"1df603e8c147496b9cf81eef6d5d8e92\",\"st\":2}",
+      "headers": {
+        "referer": "https://bwfworldtour.bwfbadminton.com/tournament/5528/polytron-indonesia-open-2026/players/",
+        "content-type": "application/json"
+      }
+    },
+    {
+      "phase": "request",
+      "host": "bwfworldtour.bwfbadminton.com",
+      "path": "/cdn-cgi/challenge-platform/h/g/jsd/oneshot/8fc8ed1d8752/0.623738561015491:1780218019:nvVkJShV0NCOFtCtqPKJCr-CKypdTQxFZkOBv09L9Xk/a044f087ff0f3bb9",
+      "query": "",
+      "method": "POST",
+      "post_data": "TQKZI$6aO2pDCaCuCHTCMCTjZnZpYZ6DCICbR1Cr2CNCtLmazKfOGCxC+zeLXCa6IGCp2G6C2Q6H3Cu21K$31QsCMZ9XsCbwmOKXCBsIN7CaJ6rSKqf0B$gCFHxiHdR-nKCbakRTrK4sPbK+CZKCpkTmK5rYZew6YYw3re-CQK6TaKUK0TNQysHlys2LWLpO0ZCnasmrZ6sCsY6nCCPXZOsCYPBEvmVCcZ6BOZCquWXUK$++gJ69rC6F3uZ-rePzCpa4GkrjW$ezCw+G2pQ+aR+A0X6wCrwI4XCduWT0kWu4CMsAZMm4LJCCVkXirgIJfds+FstCe0xhrCOb0nA-ce93QCPY+lbfsb+Tzf0o$-R1aTSvEb-Jfv5faqj4uYRztx9fTP+0LCYjNANpQVNyOystN2FpaFFyVga+0Gksg3aCcGElpV6j-tX1BuL1rGZCDRW4aGnxg1wEUVfbuhdGo9fKz7bzEHz6GbCpmXSPRhmBTadYfCGJGiu$0bYRPc$AYvd0Bj+1VZpp4zA6fcKjcLnPTPfXSfkudRfmtSAhTmsz0b1kLnn-PVBIVTeQEr1Gbml1UO-syUrOj5O4o$lhlzxh32GhpG0ZEPV0bYyaYFAohEDzACAgpA3wJoE0PIM6tIbViRoF4FcNfR43j1kYtMxwALjU2lWMzaAvF-KZsrNfCpSxvrZTVsNXrZgr2G9uEkcTiRhYPB9msEXkxcyW7wGrokguTDOWPaXGxBmVbI+djM6Phx5mgdJM4+QM7S3dhgYnVOl2BXlwGYz91QVFruk39ApCuLqOyeLIR0IsSbCe$BeD9LJ6Nsd-Evgz06XH-JClC16utuZCT4VmJmsGYN1cP1JCCEYL6X3XW14qdnMLKZ4m24huzAOZT$2CR+O2vC-qa0Zfe3azhIXqRRCsuz9Cyl9ZUsZKZZKVGBGg2CNNXsYXWL2RZNgl666KO13ZgDJoKseyFqLeGyWrgJh2gPZkGyKdA52aY1wQl1+XK+IZ22aLTwrcZ9CCTHQa9qzQthr$lC11S6+d7rrth6jcpRPICm9zmiFY4CXaLL6KmItqsgFULgAagejl16MvuFUCBeZJcaP1PNoFYQHnmHzmrs9p2S2JaD$kHTbrexAER+xjGKa90pXBQYUC3HzZ4QR+6XF11S6QpFKXc1vRKC6mc1zCbwg5oC-9EF6NghI4eVUpCYpzmjjjAVzWzU5ranI$sVrK+41GNmsqRO6fcRrXCGsSYwJC+KQJeL7+LCAv6oN2vUTZg0Xfj47jlFVaIWM23dD527zzOXFUqU4nZMbC7sjN9TlAp$uLEPrOMymhXDZMi7LgpQkNJC-A7tC+aaLV-RQ507rZ3iFjoxnfnij3rm5VxA3LK+1fBNe2qXsUDFU+BQTV3bJ5UK$-vgwDylC4$lpJirId+twAeZOpXKzICgWUPF4KxrtBJ-HF9DCrvA2BaXBaMvXeXtv++2IxTQQrUx6WUd2tUgv0oXb9u$TVB6V+o41QYbtTUReoNXH+YTk5UjCbNGMuB1RvWr6oUeVqKS-tG+tmXF-TpT0GGDVr7EzOwEvlX34edgAkP6XCjSCzKnBH1cDHVvFrrW0HiEOYb6fJ$mDq7H4D24ZB6KeHrYC6UaYsO0CLKe1YH4d9TGauBMMrZx9KNCN1raB+JFPCFoiMEgLipruvro1Y3QW6fpWp-DTB4Flrm-pESLB49Zt6EmZaZ$ZwLqU3gBXZEAfhqfu7v$3pA3LgdDTgfkKVbOaropCs$BRPal9ypehy+fPNIgGgUDOGf3LlgEesTBmQr2T6S2ubr6GIzI+Yz$g5TSZ$rwn0ss$aAvYrMbpQeF6bfz1pYJCrTr+gKopNeiCl5ZiaWdKjgImgL9ZCjwshKKaYRPZGHOjf6brzz31nJ6$yTQezZIPztKKqZb6HbTK6enpQJ$G6H2yky3QDRrrWCXKk3tEJ+ji746eYX2zEltsckRkXdsNpPH162-jzz-dK$utXtQXarMN2jH2-Q+JtZDm2$DNdOXMHIrjNYOYOOVf37$IxY90L-ner1Dnsj3LLe3r4fkeZA16pm2e$YcXhPj6LSBfDazwFK+huzSEFYw-uAD6ztFIVX1GehpeGLbYfhPUK$uqECZ2FeX$CyZ25X$$YmKjvGKGdvZCeQDhcVlnsauMOhMjCTLpZ17M2rTp2YIm9j-rewYVtEGMHfDSbf1sYzwZEuMGQaLelbpWMum+ofq64OARgDrgPelf6PeibQn0KZOCM52MFt0eiJiTsj3Dud-ifpNgpnAQOwZTubeFBuMQ9LxkQOHguDR914nZ5F757uew-bksPjb3yB67xGehs7$hg1HO6eBiIshQLopHRBPEE91BPCgOiaaWQWs46sml+hIunwHGLSBaVkTvdtEhgxVjAFLbrA69xVSwfLrkdSWvCHOFi+qIfuVbTHVeBeUvkhtXP4NEJEkh+wtJK5LkbHWqnluZ4yOEMDRucy1PxJPMDCNdeFsA3157uZZWwN0TEorOu44+bwxsnqsIL40y+u6KFV2kG+XucCE2sU4+SewKejb9tjipgZA6mPI+XObzeGciesC1UG-f+cY04rwtN3OGTfesb44Fv9ACZfsM10ZWuydv6Dq+QHflow5cKzbSDEMgoRnQSbWNQZk0$nlRUDNRjyA3Z1WDt0$ZyQuaqDndYai$q4f2cS1GewaUMJ3bc40AAy1cV4MLCCkwcSUL9xsgCCixP+VESwGCorrBz0iO$3ELzKaYfTDxral-i6IfZLCCFyRAxQE7ZfDhyRwO0jetjrJ9BO407+a5oi7rrcZWLEWrtveK4IU+FkpJVcQMR112qTB-f0z+1lvVoeOALIigP76h+ihz40L5FUDO4wkpilo-2wX$MYKV1Aqxof2pY2CV0UZoeEMFtjNeZkB+jKSlZ4olQuFcA0epZjFhMFQvbNR-57fdsvu94NsAkDoOEznAxtoRMAB4xhLKiAiDZAsypDxXj553nKqtUxShLoELjLwdePF+SwUA40R-zeDFP5A5nLRlB9S-thswI-zeUSAJlBnxuUkaXEvuzH4F0qnSukj0HzMxqOoCA7xP+XTZHxH6NguQkJg20tSzN940Bd96rrzzdmZz14f9rPEbW9DaqIdPFUrgpNP$2Ep$qE40gWI63F6XX$5Eg$6GgSJL2Fvh$qCYCmV522Zd-YjkEDZ05+LBuMW2SSvFLVNREWcTMiYPDkNiN$TPMY37++gPV4wWN0D9qw$fxsp0ZL+5e0WJlttApVO4y9pjm+PFkJ2Pk7Q-IFdDYpi030-rK51JZ$NOwEslyltSP0SMTyVmvweGOCQiiUh9iIz1ypYkZVLnZr9wZOTBxYTUJBThbOVx-jB3474f92-vxyc7uVdtqWleGN-tLzqxdnTFatO1TAbIQOCrYYq4WoI1nHWIYt9RXsHJtv7pgXF+cIupeAWxiiPByX9+ofTUkx-fpUHgigZe3xfX2YQLhfYmJYXu+XkxRfAU4JvpJdvCui66IdwpBGMIpBrr+UFHsUIITbkxpnfi6OXmKmpVGU2esmwCQuMG66BBlm3dWdtUoGbVWQ9gEOsQOe6UtiK+$uOeCgI9UfgebUwBARiA4HdivdmUBCwUkxPXjnfmAeG60iEptO+eBA+ehX7eCXVm0RIiC1LmpUGCNieBNijrurJXGJe++rteIiSuifxY3gvggfAeBUSrOexXr6i+$bkdqXFdfuzuax1ekifnbm5UgVVuzmf+kAWAzuXdbrvizmvXVd1mkdCBep6uWdCu3byUCYuQOrLVUHvxL+KnfrRevA7pXVcpvAYG5BFrEGrVbIQVEGvVOrRdfm2nEVhuNuaB2ndC+6HmkQEndmkAR+-mfuRVLxvARVKQVuR+q+xrf+YQOuGnZxiu+BlVirf+A+mCAuWAuBFUfr0ivQ0ijVOu7B7BvdonBxXu3r7GReiXtVVe0xvd4+C94zH16OBC1VMCDCUdkQzn9VZj9+WeLMXQZlU+DmNfSiPuAJnn4LZwd+bmkAmV3VwnfrfrVuPnhL0VwuWx0BeCHdElGiQQaA0Q2e2jlQ4grxtIDwQrNnN+jKDxvdHBaAEx76DwEjIBvdVRi+7mfuBVMVZQk+eBNeenLxGlDzWredim+lZxxeqredW+lj3dkdLQNujled+mCAAwMnnrulYQX+qreABmcwMxUmKw+LJ6Owfr$uugDrDwZVQl6jN+hYyjWx6MIuWdDd$wx9+ieG$M2xW$Re9wJVgMzlJn$w7j5umiji5AmfcwWr3xyULx2K3JymNbVrEewlhRB6bR2R0MEJPM7iPx36UjALhlhAyOVlFjhQhXXlqAQVo6L$+YYeErhLw9Z6qGi6K$GCIxPMjG1VUgkCpUnzzu7N7ChHIM2p-wN$iCpY$6rRMGyYh9BR6KzZ4pB+$OYCCpE0dPCMQZZMQ-VeLnlZrFypd3lAZfDLKeliLdlnflGwZOXj$4QALZg4Co24gdSjZ2VHL4Q-lS$vjWQe1PfZmiCMORRBaUlG99SyYjfpDHDWDN7haR2f2wsSG5SJaeldYdSUacfdA9aG9mnJ6jfcG0CwmwXw6wnn6mmm9vCh2-2-nCwLrBmtGMR-l3Qpa6EOX-LRLKZTZ$YpsPCdZ-yD2PCnlxu7nNGCUelHXSsWLzl3c0LkSWQWf3l3ta2WCgaFY4yLKOslEBgbCyDTZAuzl-AbCTYx$fj6nYGpza254rRvYyGBgWr0LsgBy3DZLduigf7N+QRhtp932tYZKVyStn2SRV2lY$4Aczc4CO19CuE7ECs+jBK0D4zXLPfmfQYzohVMEDaQS$YvfVy$YCCNZHCHCEbDG3CDfKD6qt1KpnFncV26cquCesIsBp26u0VrFU7HfLeU9P2TtKTT+n2nFymKDrcnB07dUdfPshP-bd1PgsOlO7WkMhaFBmrFslel2dkZjkMQelbdByraYdc9fneh2bnpqyGXTVcV2TwKD7iTHdChYn3Z2T1iOh7CrpPkOp7pmOmOp7U4bONQqpVcX-CEWptVmw+YVVGZlwcypn1+NLlwededFTYoG7gKrA2aZwqIlUmalvi-rXpH2YDHrUTr6+lAcyTDrt$lkHn4baC4wJFyOJgltpahYHGn2ItKbJT1sm7pYf1ieiqWbHYYTIBIBzqEu$GEcscV6XbyIn7Cp9F1n+MRqnKXImVTaEWK7UwBsBVWKVOlFrmYuxlw$CC+W4OMWaTP1AipIc9KrAb9X0t46KqIcVuR2Nqthkp-r97SnJqEIYO7DH7prEKr2Vjp6iKEl2c9STP6SVbLwnSKudIzIMksHngKGkBpKabcUktV6iGE$2wDIk3ZbJ2O2225gCe565FiFa65tEr62XC9Y5tVu$T2qCq5BwTBqIcqYqFBGqaOTC6Z6qn7MICWsWBqgqF2612WPqaOTW9W3ZKe7XuCqWnqtVr3sa6ZmfpWnWaOqCT-kwTc6gZ3gCuRmQqq7Cm3H33ZuvsVqImvgvaH9Yb$wIILcePQueg5gdWZOBKLle2BuESLIXXlGMHYr2TBmJt06dNdbMVWCoCZQLWkaycJGep5aYoqDMGROw7TcGVlO6GYARr0TcfDp5FYo6MY4GhccVTN6-qhjpcDqF9VGKbZv0DQGKqa6YIb3Z6JgMjmBeb3bhGaCikRFiBiaXyqGEpsqyqqpVbbgehk2TXPHXZrkwCZ0YbYMxCECLpd2xBZfagCOBcVvZFjTIIhIDcVOrbacspsGZ5gSmIpOrrEpIriVs1QErAVesTMFniwgCKrJIck75C0CrLEcsIXixOKKOal4suQuCTh1pnI7Cu$G56eWZOrOlJl5lzIVrkBHsc4mw9Q4sxlJLqlQrYE4s2ckQXlpxT0M$Ne7EWEGZZsZYuCTEJtNCLmSzHIgVL20smN220WOFgl+2d25EAVJCEYlDLUbWquHWeWC32XIGGU$zZoODSZkBaBmDd4CDxDA4WXYQdayBKhSaJCABbaOLhCLQABIGcsTqSYD0pWax+xPE0y4su$GT1lUHgMXQ-yJsTJ1llAKsqS1DfKhO-QQMOfny0YTyA5HKOy0$AldepVGMtJqnKnTH9FrauV-$QgxpG$QI9QlDROzic6ie+tg0mg4s2R0emYKx2qk$-yvNpVTBG$AZ0njDd$-yQOzuWR4sIpHRQ99RoRoTVB9REqVRv$LkIaZJeTrXzG4s2ZmRyCsVrfyBC41eILpVmc7prTe0KT2TGTTuWZp+LcXQHeOkaOqZEAz21YZYTYiYZCXa4nelOa-WDyRCb$iOzjgMlTGDpYrEK3mh3N6loRwAxuxptVpuAUXOGXTeKXmD6jzldhGhuA-+yRCY7pOxqMbDhQfXxXhCsrvUYwGX4rA0TkGXRqB5gfvZIOvhbpe5bEwOsA6DlJtVpo-1VFmcTDbOFEho5hccEWNlXsJi+c5cLFCSRWU5+SdpuQpsOlRSQsIVOKGJBc0uQnuuduxi6lfDJ2E2LOpDAAip6tAKmt-2RSy$4to2rY2BBsb4z45YKX+2Tjhyct0dFkFrfcQMrsd-StQMbuzvT4z6R0e64Lc7L1-ox6x5$1Qtn591y$Q1oCI7uQ0KCwCMO0cgQhm6xON6o9Lhbg41R0T9oTaLJVTtv1AqfeK4QMGZ1Y-eG4v9oCTzzzv1AcJ0aSsVc0ObAKcLGMgaCmlXGaJkPod5H0FaL4db4L2iuQJR0kr-+yH$-IIPbrIpbae$af46gCp-uhqDMlu1znzwFnQlbnRIVrGFGhre6i6XTrGLCYTBrd-DOdLUsXqCR5B-GpuuRWcVp-pVGUlr0Vb+AebmyMUDu6opuyQ6mDufRYInow4FjvIRRlt+J1fE2NKdJwYVX17O+hCcA6rTumwkcmLrKSxQ5XW7m+dmdf1OlMhQNNFeYNbMeU50-pCPLTIGb$WLnaOTd74TdTRuk5Cw6TxGr4zOQWbmRTEhLhGhQh5x265YVdohQMb2pJfTDVTTQhLFvrxhdhA9oTnFR53hRtBoWQiFznohdaKXIYPn2EZhveVM+FdaqbbBa---zwk-oQyVTwRTyppLe-5le-Q05Fe-RTAFziIH2N-GR-xGKa6KZYIGIwT3r-d-5hxB2dMZSKcBTcIHKarhbhdE$XcBfFxHdh1--PpH-F1pxBTFNHEaGoLJzFQHdh-xYMHVcJQIxxnhQ9v2swGFAQxxG+MFAtp0FI442YhI4rEYGFJ9FVc4INzXrM1ivHEpRTds2VGVcJyBRVKoZh5KdrGFJiJLen29xB5N5iQBxGKuyaEXIBAF4gdQcb0GANAxyI+0Tx5spsK6pRAos5VeAe-Jgeo-0hN9FQpFvJvIAuu-4JTpc4KMJQCE$ed2T2TMyMRJAM5splClOeReOYqB0xrVbx-ex7OYbrm+zkJVpB-e-BdPTexGmNOVjLuRqj$ezxPKbGTeEqxGKq-NmKuR6qv4cEKqAXccOe5OOdQPEUrWQWuLqBsM4WAK67heMyrecW5reMKkxM-e54mg3WpIxDOeoLxTU5RMzNAuuLxYEhJVI30xOYT3E2Oev5z0fF0ymvZpPktU5P6qQmCmP69CU5mvMyp3QlC14-kP5h-9R9f-X6rR6RfFo1UMhktETqhMOL7ND-a6AP7cUhRKrXy$t9CQwMVJbAxyBlPqrQGY2dKe99tLWmBWIRKrDpNcK5KZtB0TdDO2tqCLL6BEVmNnKVJwKJ$K27$YLasr6KMcPoQm2pKVrFKKuEjNXGp96mGVLGXYruGp0SmEHCVXbp$Kpe4O5kCYVqGJDp4Oghu1MdgPfCwBuIwmNXOHiXxPzCpZEMh$Z-B7Lx6MjFL3Vz++jYk6X06UeQbgKtar2WH+nX2JjnZ6L1VY-3ODR$uJTOlfMuuOQqjG9pZKtsPOTrpnC6prZQYzKPlqACdOy1A4tK9lIo9yaYC1YWmGPPQNkhs1VYMQWZOzQMCi7hMH9wgrLd1DS1BisY6imuU0EhuS$rz6dpCeLysy3YojpLO3npp717NPXTh$3nB6uGPF9VFhwEYDh11vLbVaE5n$t6v67Ne9$YpEnsUiZHFbHwEbcmMOfQmLRf6TPAeepOZUL4SqXzoe5Od1NiuXPX5SrC0TXMoeVnkgtr9ZbfYKdNSXrJVE6EoOL$26OKsVMCV9qLWsCimr63ObOkYX6ZUoDCNQi17NcrISRFON6iCOMu5M$I0Or$h1saeV3yCsUy6zlzG2QuMkDN$CTVYI2-lU0mB7VLofpanulqLpTaHrzZ7+c-kvVUdbZqCrhNRKqLy$llwZB4$CeNBhLZGCX1DD6OrUbzxCuyngGf24X+NuRMKzzccroOehd2yy2AI9RS$AFuDdXNbKpNg+WUi9+d7En+Go6G0ACSkbE7a6D6o$iXYH+VmAKmr4Nk9BZfZTY2yuxYwChMmE9gRS$1pVV2VRAmDCl+SY3KZVzsauTNeb$AXzFubXj26R0ZmluI32PFuwZl69rbViV2Lj2O02UcAVRDnPrTi0N2zgVy$Uuc-r7$Dzpv+f2o2xuh$JZ2DnCpgCmmD6kCBkranrO3n$lLotJaxcHwRNYscAEY3Lcym1GharSENcKGZY6imL61Y6Pw1QgeejCR4jfeaYDjqeudJaOKjZO+E5uO64l0QA1hyefdGac1vCf0hampGv9JCPiKq$lkerZ6xZtYbyS7Tj1o$W+cVUbj$e+6C23zlrxy3Z6He0YFcOnubl1TJrtYwsIyH5wQIZjU$fQVC1lhQMYl4YOOYrqQp$lNulNuzdMr$96qLlEHjlrNa9m+oOQZCiugkpRON5iCKKcbTN22VQT1Z1LyQVBHfi5rMVG$zbQZqSmIr0R96bZr17fiilVjbCwbX2BrF+g2BkhlcsKvXBbKlH+H2cZXvzWUGo$uHl71JPLrl02MuT$1ResgFXM2l3ziztlvCmUcjBKaBb0x6RYncjVSgq9RVNatz2aw4giQbLY$nV6yZCH5bzYiRYmqr6SCoCbwcGtwJ61uTSbeQmKlVEmVs0mQqli+pwGNeyONuhMKz15HGMv1BX6E3G9YujH4HsUEsx9mKlspLrdruOPzZPk6pqFK72HaX2X6QZ9zA9sTkbixuEA-H4UpCY+Fse26-Hu4Z9syDOOVI4Njl3iafIypf6cL5+3i+6CBk2A5sv2Pat2n92-VZ6-U4Nt2tVmjZbXLoPE1ZGZML9ZHF7hEZHwew2Xhg1Ey$gA9LrSM1PVbaDaGD02SJvHYVB-2CmmsTVeNvOqElunmHCnRLHGfOpYOBNwNk67Z3QlZC6cSOW93j4$PZT9bSjWYMoLxubwNIGuY0IUiEpjiNHblm2GnBK35XW$ObERv7GkcjBTOt1ER1oh29ReHGC+lELVU2D$3Q5DOj6-RBaC7+-Omw0rDbKx3Crfjy6HYl4SpFAhBewwr6mnZlc7ts2jHj6rUyS3usUz5VU2X9v6Ko+OLQ6N1a2UD5FfOovB7Rsj-ldxjB2yXGzSzdMnoPdkhwXD7XvFTUmxTeZPXgAHDjoBs0ABATvnlJViU4CNwQXVdA0KKeeTvpxC9yLa1on2E6MVpe4nDWJwxItdD6adys5cgwwJMXdadlLio3NOozSJjlnDilkX$-MrDud+XASVlmiMWZyXpa-S7G5hdtJXZpC+A+MqFpCnisoBHENrJTlRT2dz3rC6qIS$Q-ACEqYtYJTxwoJ6dKaHQuWIRpW-TdsWHt3x$-wwg0dxQ++$5T0loJp4ZyJkSLO-jPCSruyicHBIAltXsdpywbSsmxfpJMUkDNWhvT1UtRajMG34tWNqAWJDjA434gq0C7L0lukDW4VqqKALGmXfMsYGqqtmRRBn0TCMhqITwa0-Zn27eXqIf6O-xdoOjoPxKA+Nw7dTDfduDeKkkbSnpVc1BRl+gpRy+mCCjSYhQgiJYmYpa1FLhKsUTsmPG24VKiVOx$WnpDkb1dClkNZA4XOhlCDwqMXGsjtYioFtIsPnO0mc2tDuXSO6OGsyZBmzKnrcxH$L9xDPHrVXyZjGpmm$Lumkr6CyHKUWr6GKViDszTS4WL9YcXrgMCVUCji3fC1bhZPYWmVBpztKOy7gGJK0a2bPQXpNDI7CCryNiLfsdbGU$jODCmJbwXoFc2VBFbnlWqXNlX6GgxjMrT1Ng0BcEha4$mkUNPFiVlHPhXKzfn02qjFheIWj5L6o0CYo2rdOCppBC$wcxe7NmOb7HVz9rZR$4umbWmr69wdZ+nIFk+Zb94OFYKhitbC6LZSVtsT7TYoDJiNUR4Cn3UlppVsGtzlxaL2ahZmtPln+RlahPC7XkbJcdRdUGZj4pmEz6eCgTSyOXrSl0w4LnYC62rdNzXjelPNWDhQ9LpqzqL7JlC567+EJwVGSm$l99CT69ZMyOXqLG9szEulBrNm7pR26YiXZpYaZtrGyQ4aJw6GyZ3$DbkXylPgB66r$WJxC1$P5M+oqgDdxxGOPpBk6ugUB6e6ntHGEwtRUdPS2dt+RZw7m7f9tKsygGRbwDueMPzUPn$lCCYYaN-CgoRpCoqhe211hwPGD+n2iqBeQ6vZPs5PwES6OODACpguciOwiQuLqKwvtIMDfP7qa$lUIPf+hrW1jYgo6DyJM4peHIzQUCrxnkXj4NPOx4EQUH$w7MM3PiO1x7G$l7NspsK0Wye+FfUbNpD1Rszsdi5w+Z90KGXZgN$kYNscVa9B56Cf0rpkmi-Zp3KJXuirsIKKnpgbPlt2TP0i9CIBuLTkpqu$CFt4q9KmoD6MELVUvHHRV+SJpxwEjtGtShmRS1$JDc1DgQuO5-fYzn0V2tF7OJ-ZifpVoVb-iOPkkBisb6$tFkXqAOBi90FL3C9F6ZeTbd0bM90cTCumpah0oVpGftfPknZvcpMb-kd0bH+OB0uPBN$LpluFi50Icg09w9vPxiDLMyHyrz6WkYB$ZBAfpgsNqPuUJsiKz-g1WE$viDLruoJWcXZ0qi$SRtgp+Z0adGCOTnAAzVnm3kJffTel7mS9XLoK+ATiC6N92ckRvYrXhuDG6HR0nqfZjlYONV1DmAcKUCTux2Obh-14GkAyAd$9-pJBXBDTwLFGszWMk3yi03+wzNIer5G+nVbMt7X1XAjX2XVBhTHHIOCjWGM0esJfD6hEoj6UVKfDJ+Vmj$WUTTFjXZCvHe1qf4UgZmND9Sf1OBd0qjjLq5zVg6BDL3irOnOKqGYBPU4wpAcmDS6z+GX$7yPtTmg51sFTyyDNCElg5UGZjJQ5$OSX3PG+ywuR9Hn6hT7h9W0fjx2mWe$so6rh3QKhXnrg0Vpp04XcyK19HJ0pzCWCWuc0HC03rBPq-YKb4mLYpiZKYAWGOch3f6CTC4ledb7UIg1+fCVBPBtCJ+X+6EnCrhl2jN6VEn0hR+rs9wwYBTP0h$$zyg19viW1gT4FgnVYMIeq$CbIll9K-qSoG2NsuaKBjHCpP6Hizzl5qlUL65hJ4ZBrle3UY45hpvhlRx-XxP1Nk$KUhsGSO-DjPvgYCPofusirj7naowQZPeVXERxdE9U4FbZVnOtix6+GgD2MPVXHBWhZFTcAwCJUEisUTU$YFiFkrnY$CwCSOmx7ucjRsy71ucyYXW$yCgawVKSUXBpC1PoVA$xY22PPwQ$FF2y5EYLOnGP1g6hOTZKTj2Lz0XAgu0KxeVX5usKAeh9Onyte7ddODpcztCo6DZ11oArVrkY0ajiXYKbl63yT59OX2EcGRG5fA-+9H912JpPZtfnwA1hEgppPOGs6KKRT7YzrsaZtitBw11ufULnlq0jahtwuOc9pRiqPh1J5CZOQ7SXpnMWLHnxUm1hKNHZJbKvIyrRShS$4q2QKDXQDGFYeeUCHe66ueDCceBeb97ss$eDqWkF6DpWB5VFDT4X-uR5lVqVr4-YmqUy0ern-4k7u6xexkk+QQMD3XbFes6rAz-j4x3gBUxoBx4CDbYRGqX55sT5ZqlTg+owkE6UayYHHAK3i55s2e-cggMB-H555HEr94xvP7ccJMAqVeFKCR0Cxs$6iSuIpoq2XifGfqV3aDCIrmiOynumD6SopDuMp-bZp+6-v3EZkEmlqV1s-PkWWTP1LxVr21oK-uErtzRplmVpDzzk0le-zN4fC3Y+qEYJEpe4EZo$eUBPKup56jwSWGV51LR2X0guC$5+YVb1pFAWdSX6XfDXkmyaFmUfY-ZYeZKKpq37OL0Igpe1gMpouIKaC49ZpSspV27JP00mnYgZYKqQpYokgrn7y11Fp2$OOFpFUEyGiTXxxKFBcoEh5tVuy2CKyp6ecugCr0Acs$-Q+KpPDqP56u7r2Ew16efRwVJiZV9XNcz2gc5OO-flzKy-Gw1nuCOpCT$YErg25APbc9llqCVHgwuOYvavKEraG2lZmbflx9evS0BJYBbJ91GrVJ-Bmu+U3isVBNbDj-elyGsCX-XwA2yxT+R9NXA2nXYbYAbz$WfUzM$cLLAb-VtKR-OjI0xcbiCgK5s7VT9Bo-Otlh6imq5xzTNqleVynE09DIS+OOeiha3C9YTFVF9OQvEW2QcNErNoQ-1nzaX3uTjiLhSDMD$QvuhZMzziskHLBFFYSlYbVdmRO$SJs-FEkPwOca2UrHni6i0SYMA$4D+rcEQoIGOyn-gPaX2aYEMCg$cTE9LIGZ6gB3fB9u+1lKuTsqbqad9fYp2PZ2JKJ3C1ZKGJm1gVxf3uIFUHPXr$hMueLgoeNe7DX6gK167ZfI73+yY-sYzYrwatDcBmL9Pzi6r7tx+Vr9HGjcrSHYKNZ5lo+MDFoUUsElL0TKQJZYsIUeALc2zAPhhfsceN9S90m44pyriXoNFTdCqH7+-TBxm2$B6gTFKN6mAa31r6jNQFa77uV0ZzdzCDXblmXJHkMzvHzLkmfvgN2tjVJPa42yReVoIhkHuniBrYOJcyYaJTY6EglPpcnjALUn124y3+PGfiG-2Gk7aUSkszjd4XJsMsmy5I-JsUEa4hJY0XvCu+IU1DKw2XTZz0+QzMQTIkeqbHpAZdAavEpMq+OUJahnnM$MPiPpEwAcSdnaMXPy+dn7257PNqg2Px5n72$2Etnb6deV1Qgy+pFKx5ZlxHMtlh2ns99PFYapZmKS4FCgiYkJVOpSM02MQH6YFOsVOJN6KTQHlb-Vn1KK1vmBVw+Y9FY6d5O$D6xNDzzOQrg-YX7ol+m1GTr6yVCk6uYHmweyebHMX-rCQD$QRff+6O9zTmSydpYIswuuIC7XEd+BVDeyoChSi$yOrKAoQo-XBHladZB0dN9I7z-X2kOW0SiiVkRDgzdpqqPzdI7zUg0b3VsD6VdKw$zCUBzwWOfsO+0$QfKlSlH-IPa+2gn3P2eO01HKMg0D3RuokqX-2OAYGcDJEL2UOOP6j3CcZK$BQYb-b$7NgnZKuN$kk5ewLvZ32PQxyH4Kra2QUmSpBE3CCw3+pp2LpXP2x2KCB2b7vLQRKLrs9$Bn7JIu9ltUapn6kjYCOPMmcX6tLw7oYDEcCgrou+0kBfjP$hfPt1g+9gCelqNqPV9slCZjrPzKCwVAWN6CZVQmGI0njLT0uiY0-f4mmuWF7sXy6SCYTn$WTkdikPy+xWCVCT7qXXHbGAPt7h-7niUib1prnZ+2K4hIOIVYR7hIgMusdgCb1EuEk9LqjEU5Tt6wLDTEBQta1D-GtEnX1srFEKZK-KUVUdvimskGcG+6Wc+F7VTjbhG+9egjwsKyYK$Fam2XorQUlqetGttlQ56HtT4GYfcwcr5sUVBrjxtBzEXI1IdM+sQkJfC6jU6QULWfZL-H$MpSV2+sQauh1aofZEAiVI-adShCU0NFu7ZUWbWO5-zVULsAEOyCc6N0QUWXLN+Sp6iJJJg+sQIaPhIMzHsQWQ2-2zhXo-iHPLsxinj$5jpBoT4GtG3sczT7ZjGKwhV7hWohd1hh0mNpn6hLodfQU0mDmfthJMzHXD+x6JVpWknTBToN4mn$6pfCr7DPur4e3VO95KG2FyV6dahE95AENEncy736qWPWrPnXDo$p9pejJ0nVL9KwfCMNDCTxayBr4XNVei7CZ7MyuC6VEuL5LL4URUxty9uiJshHc+VlrtkTocJiCbjC+GB04kpATy+cvmURhtC9mDigt5CD3du2btBuIR+iti1JuqKjiKS29qJE2NWrCj0l76YifaNYVv5kZpRbBuCdfz9ZpMBpPxu4$6BlL5Dgaro1g6-cqmRq9jKSNo9anBi9XlubvhNpFVPU4keeaPrUY$CbM22n2IJuYqXeogcPnqchYxOD9RowLBu3NBGChfxkrA1HfSs9hIwPc$J$Hr1NcAgeqQFGjm3dc9kgeAZsrynLFH1aoVe2IjTfFd$9a7esph1JJeD$WuWSkp0SSLxQFGFE474K9xLvJkAMuapnD9AL4d1Sn9CCEGVCoBiSMhATlxKZd$Jt+p74HiJFdXJT$Mf2vVaNXZpiR5549Ne$4I14Vyu6nF46Losz-zqrd$lvfOfbzRYza30FmPNNi1yQdpImkjQ7Pub9XuvZSQkKhs5$lXZagqY-huRCzGYZe93mgQuZgwqVXpHDTWQDnawuld$+0LoCJOPbzgNmmlDmxy7ESCdk3ph6esO$-YGoNA6nsmmENX4ukpROPDW4o$sSmTYGn0ulNjSf$y5uAt6mcNTOKavErjcwLrZ0HMZIsvf3+Xms1JYUiZ$2VPq5GMkY9KetZilUBfZ9G3FvmGOLUaMelbdbkjBZSdHDoJAeGnOMowLF$wJ0fIDviHlnaQz7k$qa4$xkcMM5yYwrvwBopO7C7L7+Tigl+KK3Mx2PWaO-uphDZMT0e0T$7cchxUM7HMcA0OyS+YZZGdwKiMmVpCYcQom3fA3e9ar62ko9pYc+lMb6H0lNfKlfyOB2$Pp+Og3g26m$eXr-Gdl6wgvlf3nm3GvGCdoydulpUay-RIK3RAEAddxZwLVPRmPvOFBoZ57jbX21m3Ksh-dM9P-GQehxMPkiLbP-7HdahRbksifNlUJPFsaXjA-L0xzCw3S$OC-Nr0d+-pZRxibURqPQpSmecXqfabBP-G-nMcSwk05COk+4lwF9po6CIQxrwodDW4ZeIUrcujfNO2EAEBEdCKEgVjwtZJsFjbufglzS1Z3DGZfZ7JFJL1xK-Jsir1J3TopyUn+KfEA1f2Arl7P+nGP72UK1A5S5sYGPY3f3YdTJBZ1VHJBFGCS5URmhxo-Gf02NCCxRErcxNaNW2ZajZ0QcxROAKzdD4CPCDjUfLnHlaSmt62Q5aIbm0gn2sw-Pp5BWIYx$s+ZuQ3zPPHld$3Ir$ebiRFJK64fbxtQbZM2e5gs-jPWKSNqS17jBzATIah65W35n2rY4TCfGCt55NEP-gypWtIW9J5xRtcN1P24VtOQ+99kBYgYNsCkWQPnO2$96pqDBsbDMWEdg2W6yqN2DGd23bVxKlR+NUMCfvjFylC+o1GZN00LIpzKjSBx$h0CXK6n4sgT3iCYO09sCzhkEuDt+NP1KZda2MVSIz69ka3IYaSp7GDu+fh+gu-OgErRxRCDBK5$BREmsZARvKdlJiMAWNDUFvlzQqQCtR5tF3ebQwFBWK2PRoJMSda1Mzd2yNa9KdRrtolTuQwmHbp1jaj53SPhy-0Chh6Ca-L1YfNMSm4xC2NKmQs0lTHl2kDN2g5uY$fkZVQOwwTpvLX3-$iMWp4rfLvd3Hl4hcoMphTX4bJ+f+FkD+-ACoEhl1haiob1NChP9KT-u2u62DpZwwZMkl2j6rYjgTwZrN7gNumwpKLaECCCwj1g6tZmVkXInss1lCVLKaFJGScoZW1tZPgYrGDOxazZZb2Lq1MTAfgx3yCqXkXKZCjyCCG+7mKujpCX$CCCB$j4IXOCr5jxzTvhCHtYZr5UamOuZC4ZXYDCCCbYH3UM5L9z1VJCpkl3YoC7CIEuLCVCiWwO2oBZCj-H9qQr5Ld1v6XCZ4Pl+FaYTtsWOK6JWbq$xQI7rO4zX3Dq4ez6eE6-Cflc2QM2hQoHcscXu5Lc9lZP6VvoCDlcMR5rOCj+KCR5jZGh4OCs6X3d5fxJFxSvRQMWiqhxzDZ44kCWWq5zCe-Q6vCvY3NfaeABr1-s4Q3OqUeRNx9-yC235qMezTxz-6hO3RCVM5Bywvlv5L3C3kJHxjvDK2Gclu2KVCCOE56SByiNRWVKCvfS9upuONY2CjCRSHZb6u1a4KoJLK9Id+uCZT0ZKg54c-YEU+YYAQmMZNZwzNOaZMY5WyDmMAHqP+qjZRrjClCyvkHjuafu22tg1y46csRX7LlW6e$MGVL-d9yD4saCtN5RZZHyh4g$kj3wY$lYVr69NOJCDvXt1sKZ6-pkwDCEC+yiB4YOKvXCyCgCGWyZC4ZvYlrBdIMyoNNKQs2VBq-sM-$YYD1Kg2sJbp$ON452QMFtHc6N6Lm-Vlr6LZZgspvSkZLon0ibtWvQ6wY2woe0EfGJNEzplu2CC6$kzrXP9Lsc6cyYCOyZFLBRcyZ3KYbmyNxySvY3JSygG3XuWbkRTfCf1ZY+ez-6lCtCuWKZD7hpuhW3InjDCWXOZu-yETPZu-yPvpCeKppQ2GuWbwY3jHKVdZCCm-tCXCC",
+      "headers": {
+        "referer": "",
+        "content-type": "text/plain;charset=UTF-8"
+      }
+    },
+    {
+      "phase": "response",
+      "host": "bwfworldtour.bwfbadminton.com",
+      "path": "/cdn-cgi/rum",
+      "query": "",
+      "status": 204,
+      "content_type": "text/plain",
+      "body_text_head": ""
+    },
+    {
+      "phase": "response",
+      "host": "bwfworldtour.bwfbadminton.com",
+      "path": "/cdn-cgi/challenge-platform/h/g/jsd/oneshot/8fc8ed1d8752/0.623738561015491:1780218019:nvVkJShV0NCOFtCtqPKJCr-CKypdTQxFZkOBv09L9Xk/a044f087ff0f3bb9",
+      "query": "",
+      "status": 200,
+      "content_type": "text/plain; charset=UTF-8",
+      "body_text_head": ""
+    },
+    {
+      "phase": "request",
+      "host": "bwfworldtour.bwfbadminton.com",
+      "path": "/tournament/5528/polytron-indonesia-open-2026/entries/",
+      "query": "",
+      "method": "GET",
+      "post_data": null,
+      "headers": {}
+    },
+    {
+      "phase": "request",
+      "host": "bwfworldtour.bwfbadminton.com",
+      "path": "/cdn-cgi/rum",
+      "query": "",
+      "method": "POST",
+      "post_data": null,
+      "headers": {
+        "referer": "https://bwfworldtour.bwfbadminton.com/tournament/5528/polytron-indonesia-open-2026/players/",
+        "content-type": "application/json"
+      }
+    },
+    {
+      "phase": "response",
+      "host": "bwfworldtour.bwfbadminton.com",
+      "path": "/tournament/5528/polytron-indonesia-open-2026/entries/",
+      "query": "",
+      "status": 403,
+      "content_type": "text/html; charset=UTF-8",
+      "body_text_head": "<!DOCTYPE html>\n<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if IE 7]>    <html class=\"no-js ie7 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if IE 8]>    <html class=\"no-js ie8 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if gt IE 8]><!--> <html class=\"no-js\" lang=\"en-US\"> <!--<![endif]-->\n<head>\n<title>Attention Required! | Cloudflare</title>\n<meta charset=\"UTF-8\" />\n<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />\n<meta http-equiv=\"X-UA-Compatible\" "
+    },
+    {
+      "phase": "request",
+      "host": "bwfworldtour.bwfbadminton.com",
+      "path": "/cdn-cgi/rum",
+      "query": "",
+      "method": "POST",
+      "post_data": "{\"memory\":{\"totalJSHeapSize\":64000000,\"usedJSHeapSize\":53500000,\"jsHeapSizeLimit\":3760000000},\"resources\":[],\"referrer\":\"\",\"eventType\":1,\"firstPaint\":494.90000009536743,\"firstContentfulPaint\":494.90000009536743,\"startTime\":1780219633588.4,\"versions\":{\"fl\":\"2024.11.0\",\"js\":\"2026.5.0\",\"timings\":2},\"pageloadId\":\"6e32ca6c-ffda-4a97-be17-0c283fb72068\",\"location\":\"https://bwfworldtour.bwfbadminton.com/tournament/5528/polytron-indonesia-open-2026/entries/\",\"nt\":\"navigate\",\"timingsV2\":{\"nextHopProtocol\":\"h2\",\"domainLookupStart\":0,\"domainLookupEnd\":0,\"connectStart\":0,\"connectEnd\":0,\"requestStart\":0.7999999523162842,\"responseStart\":174,\"responseEnd\":174.40000009536743,\"domInteractive\":477.2000000476837,\"domComplete\":615.7000000476837,\"loadEventStart\":615.7000000476837,\"loadEventEnd\":615.7999999523163,\"firstInterimResponseStart\":0,\"transferSize\":2390,\"decodedBodySize\":5343},\"dt\":\"\",\"siteToken\":\"1df603e8c147496b9cf81eef6d5d8e92\",\"st\":2}",
+      "headers": {
+        "referer": "https://bwfworldtour.bwfbadminton.com/tournament/5528/polytron-indonesia-open-2026/entries/",
+        "content-type": "application/json"
+      }
+    },
+    {
+      "phase": "response",
+      "host": "bwfworldtour.bwfbadminton.com",
+      "path": "/cdn-cgi/rum",
+      "query": "",
+      "status": 204,
+      "content_type": "text/plain",
+      "body_text_head": ""
+    },
+    {
+      "phase": "request",
+      "host": "bwfworldtour.bwfbadminton.com",
+      "path": "/tournament/5528/polytron-indonesia-open-2026/",
+      "query": "",
+      "method": "GET",
+      "post_data": null,
+      "headers": {}
+    },
+    {
+      "phase": "request",
+      "host": "bwfworldtour.bwfbadminton.com",
+      "path": "/cdn-cgi/rum",
+      "query": "",
+      "method": "POST",
+      "post_data": null,
+      "headers": {
+        "referer": "https://bwfworldtour.bwfbadminton.com/tournament/5528/polytron-indonesia-open-2026/entries/",
+        "content-type": "application/json"
+      }
+    },
+    {
+      "phase": "response",
+      "host": "bwfworldtour.bwfbadminton.com",
+      "path": "/tournament/5528/polytron-indonesia-open-2026/",
+      "query": "",
+      "status": 403,
+      "content_type": "text/html; charset=UTF-8",
+      "body_text_head": "<!DOCTYPE html>\n<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if IE 7]>    <html class=\"no-js ie7 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if IE 8]>    <html class=\"no-js ie8 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if gt IE 8]><!--> <html class=\"no-js\" lang=\"en-US\"> <!--<![endif]-->\n<head>\n<title>Attention Required! | Cloudflare</title>\n<meta charset=\"UTF-8\" />\n<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />\n<meta http-equiv=\"X-UA-Compatible\" "
+    },
+    {
+      "phase": "request",
+      "host": "bwfworldtour.bwfbadminton.com",
+      "path": "/cdn-cgi/rum",
+      "query": "",
+      "method": "POST",
+      "post_data": "{\"memory\":{\"totalJSHeapSize\":64000000,\"usedJSHeapSize\":53500000,\"jsHeapSizeLimit\":3760000000},\"resources\":[],\"referrer\":\"\",\"eventType\":1,\"firstPaint\":338.89999985694885,\"firstContentfulPaint\":338.89999985694885,\"startTime\":1780219646410.5,\"versions\":{\"fl\":\"2024.11.0\",\"js\":\"2026.5.0\",\"timings\":2},\"pageloadId\":\"c5a648dc-8bd6-4091-bdee-40d915138747\",\"location\":\"https://bwfworldtour.bwfbadminton.com/tournament/5528/polytron-indonesia-open-2026/\",\"nt\":\"navigate\",\"timingsV2\":{\"nextHopProtocol\":\"h2\",\"domainLookupStart\":0.09999990463256836,\"domainLookupEnd\":0.09999990463256836,\"connectStart\":0.09999990463256836,\"connectEnd\":0.09999990463256836,\"requestStart\":0.8999998569488525,\"responseStart\":147,\"responseEnd\":147.70000004768372,\"domInteractive\":302.7000000476837,\"domComplete\":442.39999985694885,\"loadEventStart\":442.39999985694885,\"loadEventEnd\":442.5,\"firstInterimResponseStart\":0,\"transferSize\":2392,\"decodedBodySize\":5343},\"dt\":\"\",\"siteToken\":\"1df603e8c147496b9cf81eef6d5d8e92\",\"st\":2}",
+      "headers": {
+        "referer": "https://bwfworldtour.bwfbadminton.com/tournament/5528/polytron-indonesia-open-2026/",
+        "content-type": "application/json"
+      }
+    },
+    {
+      "phase": "response",
+      "host": "bwfworldtour.bwfbadminton.com",
+      "path": "/cdn-cgi/rum",
+      "query": "",
+      "status": 204,
+      "content_type": "text/plain",
+      "body_text_head": ""
+    }
+  ],
+  "summary": {
+    "unique_endpoints": [
+      {
+        "host": "bwfworldtour.bwfbadminton.com",
+        "path": "/tournament/5528/polytron-indonesia-open-2026/players/",
+        "method": "GET",
+        "hits": 1,
+        "sample_post": "",
+        "sample_status": 200,
+        "response_keys": null,
+        "needle_hits": [
+          "seed"
+        ]
+      },
+      {
+        "host": "bwfworldtour.bwfbadminton.com",
+        "path": "/cdn-cgi/rum",
+        "method": "POST",
+        "hits": 3,
+        "sample_post": "{\"memory\":{\"totalJSHeapSize\":64000000,\"usedJSHeapSize\":53500000,\"jsHeapSizeLimit\":3760000000},\"resources\":[],\"referrer\":\"\",\"eventType\":1,\"firstPaint\":1033.7999999523163,\"firstContentfulPaint\":1033.799",
+        "sample_status": 204,
+        "response_keys": null,
+        "needle_hits": []
+      },
+      {
+        "host": "bwfbadminton.com",
+        "path": "/cdn-cgi/challenge-platform/h/g/jsd/oneshot/8fc8ed1d8752/0.623738561015491:1780218019:nvVkJShV0NCOFtCtqPKJCr-CKypdTQxFZkOBv09L9Xk/a044f074b9ea3bb9",
+        "method": "GET",
+        "hits": 1,
+        "sample_post": "",
+        "sample_status": 200,
+        "response_keys": null,
+        "needle_hits": []
+      },
+      {
+        "host": "extranet-lv.bwfbadminton.com",
+        "path": "/api/vue-rankingdata",
+        "method": "GET",
+        "hits": 1,
+        "sample_post": "",
+        "sample_status": 200,
+        "response_keys": null,
+        "needle_hits": []
+      },
+      {
+        "host": "extranet-lv.bwfbadminton.com",
+        "path": "/api/vue-rankingtable",
+        "method": "GET",
+        "hits": 1,
+        "sample_post": "",
+        "sample_status": 200,
+        "response_keys": null,
+        "needle_hits": []
+      },
+      {
+        "host": "extranet-lv.bwfbadminton.com",
+        "path": "/api/vue-rankingweek",
+        "method": "GET",
+        "hits": 1,
+        "sample_post": "",
+        "sample_status": 200,
+        "response_keys": null,
+        "needle_hits": []
+      },
+      {
+        "host": "bwfworldtour.bwfbadminton.com",
+        "path": "/cdn-cgi/challenge-platform/h/g/jsd/oneshot/8fc8ed1d8752/0.623738561015491:1780218019:nvVkJShV0NCOFtCtqPKJCr-CKypdTQxFZkOBv09L9Xk/a044f087ff0f3bb9",
+        "method": "POST",
+        "hits": 1,
+        "sample_post": "TQKZI$6aO2pDCaCuCHTCMCTjZnZpYZ6DCICbR1Cr2CNCtLmazKfOGCxC+zeLXCa6IGCp2G6C2Q6H3Cu21K$31QsCMZ9XsCbwmOKXCBsIN7CaJ6rSKqf0B$gCFHxiHdR-nKCbakRTrK4sPbK+CZKCpkTmK5rYZew6YYw3re-CQK6TaKUK0TNQysHlys2LWLpO0ZCnasmr",
+        "sample_status": 200,
+        "response_keys": null,
+        "needle_hits": []
+      },
+      {
+        "host": "bwfworldtour.bwfbadminton.com",
+        "path": "/tournament/5528/polytron-indonesia-open-2026/entries/",
+        "method": "GET",
+        "hits": 1,
+        "sample_post": "",
+        "sample_status": 403,
+        "response_keys": null,
+        "needle_hits": []
+      },
+      {
+        "host": "bwfworldtour.bwfbadminton.com",
+        "path": "/tournament/5528/polytron-indonesia-open-2026/",
+        "method": "GET",
+        "hits": 1,
+        "sample_post": "",
+        "sample_status": 403,
+        "response_keys": null,
+        "needle_hits": []
+      }
+    ],
+    "smoking_guns": [
+      {
+        "host": "bwfworldtour.bwfbadminton.com",
+        "path": "/tournament/5528/polytron-indonesia-open-2026/players/",
+        "method": "GET",
+        "hits": 1,
+        "sample_post": "",
+        "sample_status": 200,
+        "response_keys": null,
+        "needle_hits": [
+          "seed"
+        ]
+      }
+    ]
+  },
+  "strategy_b3_richer": [
+    {
+      "path": "/api/vue-tournament-players",
+      "body": {
+        "tmtId": 5528
+      },
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "body_preview": {
+        "results": null,
+        "drawCount": null
+      }
+    },
+    {
+      "path": "/api/vue-tournament-players",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "entries"
+      },
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "body_preview": {
+        "results": null,
+        "drawCount": null
+      }
+    },
+    {
+      "path": "/api/vue-tournament-players",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "players"
+      },
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "body_preview": {
+        "results": null,
+        "drawCount": null
+      }
+    },
+    {
+      "path": "/api/vue-tournament-players",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "draw"
+      },
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "body_preview": {
+        "results": null,
+        "drawCount": null
+      }
+    },
+    {
+      "path": "/api/vue-tournament-players",
+      "body": {
+        "tmtId": 5528,
+        "eventName": "MS"
+      },
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "body_preview": {
+        "results": null,
+        "drawCount": null
+      }
+    },
+    {
+      "path": "/api/vue-tournament-players",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "entries",
+        "eventName": "MS"
+      },
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "body_preview": {
+        "results": null,
+        "drawCount": null
+      }
+    },
+    {
+      "path": "/api/vue-tournament-players",
+      "body": {
+        "tmtId": 5528,
+        "page": 1,
+        "drawCount": 1,
+        "searchKey": "",
+        "pageKey": "1000"
+      },
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "body_preview": {
+        "results": null,
+        "drawCount": 1
+      }
+    },
+    {
+      "path": "/api/vue-tournament-players",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "entries",
+        "page": 1,
+        "drawCount": 1,
+        "searchKey": "",
+        "pageKey": "1000"
+      },
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "body_preview": {
+        "results": null,
+        "drawCount": 1
+      }
+    },
+    {
+      "path": "/api/vue-tournament-players",
+      "body": {
+        "tmtId": 5528,
+        "catId": 1
+      },
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "body_preview": {
+        "results": null,
+        "drawCount": null
+      }
+    },
+    {
+      "path": "/api/vue-tournament-players",
+      "body": {
+        "tmtId": 5528,
+        "catId": 1,
+        "tmtTab": "entries"
+      },
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "body_preview": {
+        "results": null,
+        "drawCount": null
+      }
+    },
+    {
+      "path": "/api/vue-tournament-players",
+      "body": {
+        "tmtId": 5528,
+        "drawId": "3"
+      },
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "body_preview": {
+        "results": null,
+        "drawCount": null
+      }
+    },
+    {
+      "path": "/api/vue-tournament-players",
+      "body": {
+        "tmtId": 5528,
+        "drawId": "3",
+        "tmtTab": "entries"
+      },
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "body_preview": {
+        "results": null,
+        "drawCount": null
+      }
+    },
+    {
+      "path": "/api/vue-tournament-players",
+      "body": {
+        "tmtId": 5528,
+        "drawId": "3",
+        "tmtTab": "draw"
+      },
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "body_preview": {
+        "results": null,
+        "drawCount": null
+      }
+    },
+    {
+      "path": "/api/vue-tournament-entries",
+      "body": {
+        "tmtId": 5528
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-entries",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-entries",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "players"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-entries",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "draw"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-entries",
+      "body": {
+        "tmtId": 5528,
+        "eventName": "MS"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-entries",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "entries",
+        "eventName": "MS"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-entries",
+      "body": {
+        "tmtId": 5528,
+        "page": 1,
+        "drawCount": 1,
+        "searchKey": "",
+        "pageKey": "1000"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-entries",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "entries",
+        "page": 1,
+        "drawCount": 1,
+        "searchKey": "",
+        "pageKey": "1000"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-entries",
+      "body": {
+        "tmtId": 5528,
+        "catId": 1
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-entries",
+      "body": {
+        "tmtId": 5528,
+        "catId": 1,
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-entries",
+      "body": {
+        "tmtId": 5528,
+        "drawId": "3"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-entries",
+      "body": {
+        "tmtId": 5528,
+        "drawId": "3",
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-entries",
+      "body": {
+        "tmtId": 5528,
+        "drawId": "3",
+        "tmtTab": "draw"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-entry-list",
+      "body": {
+        "tmtId": 5528
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-entry-list",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-entry-list",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "players"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-entry-list",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "draw"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-entry-list",
+      "body": {
+        "tmtId": 5528,
+        "eventName": "MS"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-entry-list",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "entries",
+        "eventName": "MS"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-entry-list",
+      "body": {
+        "tmtId": 5528,
+        "page": 1,
+        "drawCount": 1,
+        "searchKey": "",
+        "pageKey": "1000"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-entry-list",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "entries",
+        "page": 1,
+        "drawCount": 1,
+        "searchKey": "",
+        "pageKey": "1000"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-entry-list",
+      "body": {
+        "tmtId": 5528,
+        "catId": 1
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-entry-list",
+      "body": {
+        "tmtId": 5528,
+        "catId": 1,
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-entry-list",
+      "body": {
+        "tmtId": 5528,
+        "drawId": "3"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-entry-list",
+      "body": {
+        "tmtId": 5528,
+        "drawId": "3",
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-entry-list",
+      "body": {
+        "tmtId": 5528,
+        "drawId": "3",
+        "tmtTab": "draw"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-data",
+      "body": {
+        "tmtId": 5528
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-data",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-data",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "players"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-data",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "draw"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-data",
+      "body": {
+        "tmtId": 5528,
+        "eventName": "MS"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-data",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "entries",
+        "eventName": "MS"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-data",
+      "body": {
+        "tmtId": 5528,
+        "page": 1,
+        "drawCount": 1,
+        "searchKey": "",
+        "pageKey": "1000"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-data",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "entries",
+        "page": 1,
+        "drawCount": 1,
+        "searchKey": "",
+        "pageKey": "1000"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-data",
+      "body": {
+        "tmtId": 5528,
+        "catId": 1
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-data",
+      "body": {
+        "tmtId": 5528,
+        "catId": 1,
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-data",
+      "body": {
+        "tmtId": 5528,
+        "drawId": "3"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-data",
+      "body": {
+        "tmtId": 5528,
+        "drawId": "3",
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-data",
+      "body": {
+        "tmtId": 5528,
+        "drawId": "3",
+        "tmtTab": "draw"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-summary",
+      "body": {
+        "tmtId": 5528
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-summary",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-summary",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "players"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-summary",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "draw"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-summary",
+      "body": {
+        "tmtId": 5528,
+        "eventName": "MS"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-summary",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "entries",
+        "eventName": "MS"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-summary",
+      "body": {
+        "tmtId": 5528,
+        "page": 1,
+        "drawCount": 1,
+        "searchKey": "",
+        "pageKey": "1000"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-summary",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "entries",
+        "page": 1,
+        "drawCount": 1,
+        "searchKey": "",
+        "pageKey": "1000"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-summary",
+      "body": {
+        "tmtId": 5528,
+        "catId": 1
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-summary",
+      "body": {
+        "tmtId": 5528,
+        "catId": 1,
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-summary",
+      "body": {
+        "tmtId": 5528,
+        "drawId": "3"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-summary",
+      "body": {
+        "tmtId": 5528,
+        "drawId": "3",
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-summary",
+      "body": {
+        "tmtId": 5528,
+        "drawId": "3",
+        "tmtTab": "draw"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-info",
+      "body": {
+        "tmtId": 5528
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-info",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-info",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "players"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-info",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "draw"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-info",
+      "body": {
+        "tmtId": 5528,
+        "eventName": "MS"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-info",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "entries",
+        "eventName": "MS"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-info",
+      "body": {
+        "tmtId": 5528,
+        "page": 1,
+        "drawCount": 1,
+        "searchKey": "",
+        "pageKey": "1000"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-info",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "entries",
+        "page": 1,
+        "drawCount": 1,
+        "searchKey": "",
+        "pageKey": "1000"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-info",
+      "body": {
+        "tmtId": 5528,
+        "catId": 1
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-info",
+      "body": {
+        "tmtId": 5528,
+        "catId": 1,
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-info",
+      "body": {
+        "tmtId": 5528,
+        "drawId": "3"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-info",
+      "body": {
+        "tmtId": 5528,
+        "drawId": "3",
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-info",
+      "body": {
+        "tmtId": 5528,
+        "drawId": "3",
+        "tmtTab": "draw"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-tab",
+      "body": {
+        "tmtId": 5528
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-tab",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-tab",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "players"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-tab",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "draw"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-tab",
+      "body": {
+        "tmtId": 5528,
+        "eventName": "MS"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-tab",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "entries",
+        "eventName": "MS"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-tab",
+      "body": {
+        "tmtId": 5528,
+        "page": 1,
+        "drawCount": 1,
+        "searchKey": "",
+        "pageKey": "1000"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-tab",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "entries",
+        "page": 1,
+        "drawCount": 1,
+        "searchKey": "",
+        "pageKey": "1000"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-tab",
+      "body": {
+        "tmtId": 5528,
+        "catId": 1
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-tab",
+      "body": {
+        "tmtId": 5528,
+        "catId": 1,
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-tab",
+      "body": {
+        "tmtId": 5528,
+        "drawId": "3"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-tab",
+      "body": {
+        "tmtId": 5528,
+        "drawId": "3",
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-tab",
+      "body": {
+        "tmtId": 5528,
+        "drawId": "3",
+        "tmtTab": "draw"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-tab-data",
+      "body": {
+        "tmtId": 5528
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-tab-data",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-tab-data",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "players"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-tab-data",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "draw"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-tab-data",
+      "body": {
+        "tmtId": 5528,
+        "eventName": "MS"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-tab-data",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "entries",
+        "eventName": "MS"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-tab-data",
+      "body": {
+        "tmtId": 5528,
+        "page": 1,
+        "drawCount": 1,
+        "searchKey": "",
+        "pageKey": "1000"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-tab-data",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "entries",
+        "page": 1,
+        "drawCount": 1,
+        "searchKey": "",
+        "pageKey": "1000"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-tab-data",
+      "body": {
+        "tmtId": 5528,
+        "catId": 1
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-tab-data",
+      "body": {
+        "tmtId": 5528,
+        "catId": 1,
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-tab-data",
+      "body": {
+        "tmtId": 5528,
+        "drawId": "3"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-tab-data",
+      "body": {
+        "tmtId": 5528,
+        "drawId": "3",
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-tab-data",
+      "body": {
+        "tmtId": 5528,
+        "drawId": "3",
+        "tmtTab": "draw"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-entries-data",
+      "body": {
+        "tmtId": 5528
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-entries-data",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-entries-data",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "players"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-entries-data",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "draw"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-entries-data",
+      "body": {
+        "tmtId": 5528,
+        "eventName": "MS"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-entries-data",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "entries",
+        "eventName": "MS"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-entries-data",
+      "body": {
+        "tmtId": 5528,
+        "page": 1,
+        "drawCount": 1,
+        "searchKey": "",
+        "pageKey": "1000"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-entries-data",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "entries",
+        "page": 1,
+        "drawCount": 1,
+        "searchKey": "",
+        "pageKey": "1000"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-entries-data",
+      "body": {
+        "tmtId": 5528,
+        "catId": 1
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-entries-data",
+      "body": {
+        "tmtId": 5528,
+        "catId": 1,
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-entries-data",
+      "body": {
+        "tmtId": 5528,
+        "drawId": "3"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-entries-data",
+      "body": {
+        "tmtId": 5528,
+        "drawId": "3",
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-entries-data",
+      "body": {
+        "tmtId": 5528,
+        "drawId": "3",
+        "tmtTab": "draw"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-players-data",
+      "body": {
+        "tmtId": 5528
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-players-data",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-players-data",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "players"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-players-data",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "draw"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-players-data",
+      "body": {
+        "tmtId": 5528,
+        "eventName": "MS"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-players-data",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "entries",
+        "eventName": "MS"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-players-data",
+      "body": {
+        "tmtId": 5528,
+        "page": 1,
+        "drawCount": 1,
+        "searchKey": "",
+        "pageKey": "1000"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-players-data",
+      "body": {
+        "tmtId": 5528,
+        "tmtTab": "entries",
+        "page": 1,
+        "drawCount": 1,
+        "searchKey": "",
+        "pageKey": "1000"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-players-data",
+      "body": {
+        "tmtId": 5528,
+        "catId": 1
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-players-data",
+      "body": {
+        "tmtId": 5528,
+        "catId": 1,
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-players-data",
+      "body": {
+        "tmtId": 5528,
+        "drawId": "3"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-players-data",
+      "body": {
+        "tmtId": 5528,
+        "drawId": "3",
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    },
+    {
+      "path": "/api/vue-tournament-players-data",
+      "body": {
+        "tmtId": 5528,
+        "drawId": "3",
+        "tmtTab": "draw"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      }
+    }
+  ]
+}

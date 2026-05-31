@@ -1,17 +1,19 @@
 ---
 name: edge-function-module-pattern
-description: rally에서 Supabase Edge Function 매거진 화면 모듈을 추가할 때의 정형 패턴 (TASK-004/005에서 두 번 검증됨)
+description: rally에서 Supabase Edge Function 매거진 화면 모듈을 추가할 때의 정형 패턴 (TASK-004/005/006에서 세 번 검증됨)
 metadata:
   type: project
 ---
 
-rally는 Supabase Edge Function을 호출하는 매거진 스타일 리스트 화면을 모듈별로 추가한다. TASK-004(match → get-tournaments)와 TASK-005(player → get-players)에서 동일 패턴이 확인되었고, 다음 모듈 추가 시에도 그대로 재사용한다.
+rally는 Supabase Edge Function을 호출하는 매거진 스타일 리스트 화면을 모듈별로 추가한다. TASK-004(match → get-tournaments), TASK-005(player → get-players), TASK-006(match/participants → get-tournament-participants)에서 동일 패턴이 확인되었고, 다음 모듈 추가 시에도 그대로 재사용한다.
 
 **파일 4종 1세트:**
 - `lib/app/data/models/<entity>_response.dart` — 단일 항목 (private field + getter/setter + fromJson/toJson, MODEL_GUIDE 컨벤션)
 - `lib/app/data/models/get_<entities>_response.dart` — `{ <filterKey>, count, <entities> }` 래퍼
 - `lib/app/data/repositories/<entity>_repository.dart` — `Supabase.instance.client.functions.invoke('<edge-fn-name>', method: HttpMethod.get, queryParameters: ...)`
 - `lib/app/modules/<module>/{controllers,bindings,views}/` 3개 파일 수정 (placeholder가 이미 있음)
+
+TASK-006처럼 **기존 모듈에 하위 화면을 추가**할 때는 레포지토리에 새 메서드만 append하고 (`getTournamentParticipants` 같은 식), bindings/controllers/views 3개를 **신규 파일**로 생성한다. 라우트 상수도 추가하고 부모 화면(예: tournament_detail_view)의 CTA `onCta`를 새 라우트 `Get.toNamed`로 연결한다.
 
 **Controller 패턴:**
 - `RxList<T> items`, `RxBool isLoading`, `RxnString errorMessage`, `Rx<...> selectedFilter` 4종 상태
