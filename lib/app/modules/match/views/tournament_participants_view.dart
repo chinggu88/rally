@@ -64,7 +64,7 @@ class TournamentParticipantsView
         icon: const Icon(Icons.arrow_back, color: Colors.white),
         onPressed: () => Get.back<void>(),
       ),
-      title: Obx(() {
+      title: Builder(builder: (_) {
         final name = (controller.tournamentName ?? '').trim();
         return Text(
           name.isEmpty ? '참가 선수' : name,

@@ -175,24 +175,69 @@ class TournamentDetailController extends GetxController {
   /// 경기 결과 존재 여부
   bool get hasMatches => _matches.isNotEmpty;
 
+  /// 라운드 탭 고정 우선순위 (R32 → R16 → QF → SF → Final).
+  ///
+  /// 인덱스가 작을수록 먼저 노출된다. 목록에 없는 라운드(예: R128/R64/예선/기타)는
+  /// `_roundRank`가 큰 값을 돌려주므로 뒤로 밀린다.
+  static const List<String> _roundOrder = <String>[
+    'R128',
+    'R64',
+    'R32',
+    'R16',
+    'QF',
+    'SF',
+    'Final',
+  ];
+
+  /// 원본 라운드명을 표준 키로 정규화한다 (`_shortRound`와 정합).
+  static String _normalizeRoundKey(String raw) {
+    final r = raw.trim();
+    if (r.isEmpty) return '기타';
+    final lower = r.toLowerCase();
+
+    final roundOf = RegExp(r'(?:round of|1/)\s*(\d+)').firstMatch(lower);
+    if (roundOf != null) return 'R${roundOf.group(1)}';
+
+    if (lower.contains('final') &&
+        !lower.contains('semi') &&
+        !lower.contains('quarter')) {
+      return 'Final';
+    }
+    if (lower.contains('semi')) return 'SF';
+    if (lower.contains('quarter')) return 'QF';
+    if (lower.contains('qualif')) return '예선';
+    return r;
+  }
+
+  static int _roundRank(String key) {
+    final idx = _roundOrder.indexOf(key);
+    return idx < 0 ? _roundOrder.length : idx;
+  }
+
   /// 주어진 경기 목록을 라운드명 기준으로 그룹핑한다.
   ///
-  /// 입력이 `match_time` 오름차순이면 첫 등장 순서(=시간순)를 보존해
-  /// 이른 라운드부터 결승까지 순서대로 묶는다.
+  /// R32 → R16 → QF → SF → Final 고정 우선순위로 정렬한다. 우선순위에 없는
+  /// 라운드는 뒤쪽에 첫 등장 순서대로 붙는다.
   List<TournamentMatchRound> _groupByRound(
     List<TournamentMatchResponse> source,
   ) {
     final map = <String, List<TournamentMatchResponse>>{};
     final order = <String>[];
     for (final m in source) {
-      final raw = (m.roundName ?? '').trim();
-      final key = raw.isEmpty ? '기타' : raw;
+      final key = _normalizeRoundKey(m.roundName ?? '');
       if (!map.containsKey(key)) {
         map[key] = <TournamentMatchResponse>[];
         order.add(key);
       }
       map[key]!.add(m);
     }
+    order.sort((a, b) {
+      final ra = _roundRank(a);
+      final rb = _roundRank(b);
+      if (ra != rb) return ra.compareTo(rb);
+      // 동일 rank(주로 둘 다 '기타' 등)는 첫 등장 순서 유지.
+      return 0;
+    });
     return [
       for (final k in order) TournamentMatchRound(name: k, matches: map[k]!),
     ];
