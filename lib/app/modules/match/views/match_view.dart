@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -392,7 +394,7 @@ class _TournamentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = tournament;
-    final isLive = t.hasLiveScores == true;
+    final isLive = t.isLiveNow;
     final tourLevel = (t.tourLevel ?? '').trim();
     final country = (t.country ?? '').trim();
     final name = (t.name ?? '대회명 미정').trim();
@@ -656,29 +658,40 @@ class _TournamentCard extends StatelessWidget {
         ),
       );
     }
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(8),
-      child: CachedNetworkImage(
-        imageUrl: url,
-        width: size,
-        height: size,
-        fit: BoxFit.cover,
-        placeholder: (context, _) => Container(
-          width: size,
-          height: size,
-          color: _cardBorder,
-        ),
-        errorWidget: (context, _, __) => Container(
-          width: size,
-          height: size,
-          color: _cardBorder,
-          alignment: Alignment.center,
-          child: const Icon(
-            Icons.sports_tennis,
-            color: _subtleText,
-            size: 24,
-          ),
-        ),
+    // 대회 로고는 가로로 긴/투명 배경 PNG가 많아 cover로 자르면 안 된다.
+    // 밝은 타일 위에 contain + 패딩으로 전체 로고가 보이도록 한다.
+    // (진단: CachedNetworkImage 대신 Image.network + 에러 로깅)
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      padding: const EdgeInsets.all(6),
+      child: Image.network(
+        url,
+        fit: BoxFit.contain,
+        loadingBuilder: (context, child, progress) {
+          if (progress == null) return child;
+          return const Center(
+            child: SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          );
+        },
+        errorBuilder: (context, error, stack) {
+          log('MatchView._buildLogo image error: url=$url error=$error');
+          return const Center(
+            child: Icon(
+              Icons.emoji_events_outlined,
+              color: _subtleText,
+              size: 22,
+            ),
+          );
+        },
       ),
     );
   }

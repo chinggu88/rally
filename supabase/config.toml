@@ -393,3 +393,27 @@ entrypoint = "./functions/hello-test/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/hello-test/*.html" ]
+
+# 공개 조회용 함수들 — JWT 검증 비활성화.
+# 이 프로젝트 anon 키의 iat가 실서버 시계 기준 미래라, verify_jwt=true이면
+# "JWT issued at future"(500)로 거부된다. 내부에서 service_role로 RLS를 우회하므로
+# 게이트웨이 JWT 검증은 끈다. (예: get-tournament 500 에러 해결)
+[functions.get-tournaments]
+enabled = true
+verify_jwt = false
+
+[functions.get-tournament]
+enabled = true
+verify_jwt = false
+
+[functions.get-tournament-matches]
+enabled = true
+verify_jwt = false
+
+[functions.get-players]
+enabled = true
+verify_jwt = false
+
+[functions.get-player]
+enabled = true
+verify_jwt = false

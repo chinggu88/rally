@@ -1,18 +1,40 @@
 import '../../utils/bwf_image.dart';
 
-/// BWF 국제 대회 단일 항목 응답 모델
+/// 대회 진행 단계 — 상세 화면의 3가지 상태(경기 전/중/완료)를 구분한다.
+enum TournamentPhase {
+  /// 경기 전 (개막 예정)
+  before,
+
+  /// 경기 중 (대회 진행 / 라이브)
+  live,
+
+  /// 경기 완료 (종료)
+  completed,
+}
+
+/// 대회 상세 응답 모델
 ///
-/// Edge Function `get-tournaments`의 `tournaments[]` 원소에 1:1 매핑된다.
-/// 모든 필드는 서버에서 누락될 수 있으므로 nullable로 선언한다.
-class TournamentResponse {
+/// Edge Function `get-tournament`가 반환하는 `tournament` 객체
+/// (`bwf_tournaments` 테이블 1행)에 1:1 매핑된다. PK(`id`)·`tournament_id`·
+/// `name`을 제외하면 서버에서 누락될 수 있으므로 모두 nullable로 선언한다.
+class TournamentDetailResponse {
+  /// bwf_tournaments PK (bigint)
+  int? _id;
+
   /// 대회 고유 ID (BWF tournament id) — DB: integer not null
   int? _tournamentId;
+
+  /// 대회 코드
+  String? _code;
 
   /// 대회 공식 명칭
   String? _name;
 
-  /// 투어 등급 (예: BWF World Tour Super 1000)
+  /// 투어 등급 (예: SUPER_1000)
   String? _tourLevel;
+
+  /// 카테고리 ID
+  int? _categoryId;
 
   /// 대회 시작일 (YYYY-MM-DD)
   String? _startDate;
@@ -29,10 +51,10 @@ class TournamentResponse {
   /// 개최 도시/장소
   String? _location;
 
-  /// 총 상금 (USD) — DB: numeric(12,2), 소수점 포함 가능
+  /// 총 상금 (USD) — DB: numeric(12,2)
   double? _prizeMoneyUsd;
 
-  /// 상세 페이지 외부 URL
+  /// 상세 페이지 외부 URL (BWF 공식)
   String? _detailUrl;
 
   /// 국가 국기 이미지 URL
@@ -50,10 +72,22 @@ class TournamentResponse {
   /// 라이브 스코어 제공 여부
   bool? _hasLiveScores;
 
-  TournamentResponse({
+  /// 시즌 연도
+  int? _year;
+
+  /// 원본 크롤 데이터 (jsonb)
+  Map<String, dynamic>? _raw;
+
+  /// 레코드 크롤 시각 (ISO datetime 문자열)
+  String? _crawledAt;
+
+  TournamentDetailResponse({
+    int? id,
     int? tournamentId,
+    String? code,
     String? name,
     String? tourLevel,
+    int? categoryId,
     String? startDate,
     String? endDate,
     String? dateLabel,
@@ -66,10 +100,16 @@ class TournamentResponse {
     String? catLogoUrl,
     String? status,
     bool? hasLiveScores,
+    int? year,
+    Map<String, dynamic>? raw,
+    String? crawledAt,
   }) {
+    _id = id;
     _tournamentId = tournamentId;
+    _code = code;
     _name = name;
     _tourLevel = tourLevel;
+    _categoryId = categoryId;
     _startDate = startDate;
     _endDate = endDate;
     _dateLabel = dateLabel;
@@ -82,16 +122,28 @@ class TournamentResponse {
     _catLogoUrl = catLogoUrl;
     _status = status;
     _hasLiveScores = hasLiveScores;
+    _year = year;
+    _raw = raw;
+    _crawledAt = crawledAt;
   }
+
+  int? get id => _id;
+  set id(int? value) => _id = value;
 
   int? get tournamentId => _tournamentId;
   set tournamentId(int? value) => _tournamentId = value;
+
+  String? get code => _code;
+  set code(String? value) => _code = value;
 
   String? get name => _name;
   set name(String? value) => _name = value;
 
   String? get tourLevel => _tourLevel;
   set tourLevel(String? value) => _tourLevel = value;
+
+  int? get categoryId => _categoryId;
+  set categoryId(int? value) => _categoryId = value;
 
   String? get startDate => _startDate;
   set startDate(String? value) => _startDate = value;
@@ -129,6 +181,15 @@ class TournamentResponse {
   bool? get hasLiveScores => _hasLiveScores;
   set hasLiveScores(bool? value) => _hasLiveScores = value;
 
+  int? get year => _year;
+  set year(int? value) => _year = value;
+
+  Map<String, dynamic>? get raw => _raw;
+  set raw(Map<String, dynamic>? value) => _raw = value;
+
+  String? get crawledAt => _crawledAt;
+  set crawledAt(String? value) => _crawledAt = value;
+
   /// 시작일 문자열을 DateTime으로 파싱 (실패 시 null).
   DateTime? get startDateTime =>
       _startDate == null ? null : DateTime.tryParse(_startDate!);
@@ -137,71 +198,38 @@ class TournamentResponse {
   DateTime? get endDateTime =>
       _endDate == null ? null : DateTime.tryParse(_endDate!);
 
-  /// 현재 진행 중(오늘이 시작일~종료일 사이, 양끝 포함) 여부.
-  ///
-  /// 날짜가 모두 없으면 판단할 수 없어 false를 반환한다.
-  /// 한쪽 날짜만 있으면 그 경계만으로 판단한다.
-  bool get isOngoing {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final start = startDateTime;
-    final end = endDateTime;
-    final startDay =
-        start == null ? null : DateTime(start.year, start.month, start.day);
-    final endDay = end == null ? null : DateTime(end.year, end.month, end.day);
-
-    if (startDay == null && endDay == null) return false;
-    if (startDay != null && today.isBefore(startDay)) return false;
-    if (endDay != null && today.isAfter(endDay)) return false;
-    return true;
-  }
-
-  /// 화면에 LIVE 뱃지를 표시해야 하는지 — 현재 진행 중이면서 라이브 스코어를 제공.
-  ///
-  /// `has_live_scores`는 "라이브 스코어 제공 가능" 여부(상시 true일 수 있음)이므로,
-  /// 실제 진행 기간([isOngoing])과 함께 판단해 종료/예정 대회가 LIVE로
-  /// 표시되는 것을 막는다.
-  bool get isLiveNow => isOngoing && _hasLiveScores == true;
-
-  TournamentResponse.fromJson(Map<String, dynamic> json) {
-    final tournamentIdValue = json['tournament_id'];
-    if (tournamentIdValue is int) {
-      _tournamentId = tournamentIdValue;
-    } else if (tournamentIdValue is num) {
-      _tournamentId = tournamentIdValue.toInt();
-    } else if (tournamentIdValue is String) {
-      _tournamentId = int.tryParse(tournamentIdValue);
-    } else {
-      _tournamentId = null;
-    }
+  TournamentDetailResponse.fromJson(Map<String, dynamic> json) {
+    _id = _asInt(json['id']);
+    _tournamentId = _asInt(json['tournament_id']);
+    _code = json['code'] as String?;
     _name = json['name'] as String?;
     _tourLevel = json['tour_level'] as String?;
+    _categoryId = _asInt(json['category_id']);
     _startDate = json['start_date'] as String?;
     _endDate = json['end_date'] as String?;
     _dateLabel = json['date_label'] as String?;
     _country = json['country'] as String?;
     _location = json['location'] as String?;
-    final prize = json['prize_money_usd'];
-    if (prize is num) {
-      _prizeMoneyUsd = prize.toDouble();
-    } else if (prize is String) {
-      _prizeMoneyUsd = double.tryParse(prize);
-    } else {
-      _prizeMoneyUsd = null;
-    }
+    _prizeMoneyUsd = _asDouble(json['prize_money_usd']);
     _detailUrl = json['detail_url'] as String?;
     _flagUrl = bwfImageUrl(json['flag_url'] as String?);
     _logoUrl = bwfImageUrl(json['logo_url'] as String?);
     _catLogoUrl = bwfImageUrl(json['cat_logo_url'] as String?);
     _status = json['status'] as String?;
     _hasLiveScores = json['has_live_scores'] as bool?;
+    _year = _asInt(json['year']);
+    _raw = _asMap(json['raw']);
+    _crawledAt = json['crawled_at'] as String?;
   }
 
   Map<String, dynamic> toJson() {
     final data = <String, dynamic>{};
+    data['id'] = _id;
     data['tournament_id'] = _tournamentId;
+    data['code'] = _code;
     data['name'] = _name;
     data['tour_level'] = _tourLevel;
+    data['category_id'] = _categoryId;
     data['start_date'] = _startDate;
     data['end_date'] = _endDate;
     data['date_label'] = _dateLabel;
@@ -214,6 +242,28 @@ class TournamentResponse {
     data['cat_logo_url'] = _catLogoUrl;
     data['status'] = _status;
     data['has_live_scores'] = _hasLiveScores;
+    data['year'] = _year;
+    data['raw'] = _raw;
+    data['crawled_at'] = _crawledAt;
     return data;
+  }
+
+  static int? _asInt(dynamic value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    if (value is String) return int.tryParse(value);
+    return null;
+  }
+
+  static double? _asDouble(dynamic value) {
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value);
+    return null;
+  }
+
+  static Map<String, dynamic>? _asMap(dynamic value) {
+    if (value is Map<String, dynamic>) return value;
+    if (value is Map) return Map<String, dynamic>.from(value);
+    return null;
   }
 }
