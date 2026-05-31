@@ -313,11 +313,6 @@ class _ParticipantCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final country = (participant.country ?? '').trim();
-    final flag = flagEmoji(country);
-    final firstRound = (participant.firstRound ?? '').trim();
-    final isDoubles = participant.isDoubles;
-
     return Container(
       decoration: BoxDecoration(
         color: _cardBg,
@@ -325,71 +320,253 @@ class _ParticipantCard extends StatelessWidget {
         border: Border.all(color: _cardBorder),
       ),
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              _buildSeedBadge(participant.seed),
-              const SizedBox(width: 12),
-              _buildAvatar(participant.photoUrl),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (isDoubles)
-                      _buildDoublesNames(
-                        participant.player1Name,
-                        participant.player2Name,
-                      )
-                    else
-                      Text(
-                        participant.displayName,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTypography.headlineMd.copyWith(
-                          color: Colors.white,
-                          fontSize: 17,
-                          height: 1.2,
-                        ),
-                      ),
-                    const SizedBox(height: 6),
-                    _buildCountryRow(flag, country),
-                  ],
-                ),
+      child: participant.isDoubles ? _buildDoublesBody() : _buildSinglesBody(),
+    );
+  }
+
+  Widget _buildSinglesBody() {
+    final country = (participant.country ?? '').trim();
+    final flag = flagEmoji(country);
+    final firstRound = (participant.firstRound ?? '').trim();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            _buildSeedBadge(participant.seed),
+            const SizedBox(width: 12),
+            _buildAvatar(participant.photoUrl),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    participant.displayName,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.headlineMd.copyWith(
+                      color: Colors.white,
+                      fontSize: 17,
+                      height: 1.2,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  _buildCountryRow(flag, country),
+                ],
               ),
-            ],
-          ),
-          if (firstRound.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Divider(height: 1, color: _cardBorder.withValues(alpha: 0.8)),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                const Icon(
-                  Icons.flag_outlined,
-                  color: _subtleText,
-                  size: 14,
-                ),
-                const SizedBox(width: 6),
+            ),
+          ],
+        ),
+        if (firstRound.isNotEmpty) _buildFirstRoundFooter(firstRound),
+      ],
+    );
+  }
+
+  /// 복식 — PlayerView 복식 카드와 정합되는 2행 레이아웃.
+  /// 좌측: 시드 배지(단식과 동일). 중앙: 두 선수 각각 한 줄.
+  Widget _buildDoublesBody() {
+    final country = (participant.country ?? '').trim();
+    final flag = flagEmoji(country);
+    final firstRound = (participant.firstRound ?? '').trim();
+    final displayCountry = country.isEmpty ? '—' : country.toUpperCase();
+
+    final p1 = _formatDoublesName(participant.player1Name);
+    final p2 = _formatDoublesName(participant.player2Name);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            _buildSeedBadge(participant.seed),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildDoublesPlayerRow(
+                    photoUrl: participant.photoUrl,
+                    firstName: p1.first,
+                    lastName: p1.last,
+                    flag: flag,
+                    country: displayCountry,
+                  ),
+                  const SizedBox(height: 10),
+                  _buildDoublesPlayerRow(
+                    photoUrl: participant.photoUrl2,
+                    firstName: p2.first,
+                    lastName: p2.last,
+                    flag: flag,
+                    country: displayCountry,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        if (firstRound.isNotEmpty) _buildFirstRoundFooter(firstRound),
+      ],
+    );
+  }
+
+  /// 카드 하단 "시작 라운드" 행 — divider + 라벨 + 라운드 칩.
+  Widget _buildFirstRoundFooter(String firstRound) {
+    return Column(
+      children: [
+        const SizedBox(height: 12),
+        Divider(height: 1, color: _cardBorder.withValues(alpha: 0.8)),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            const Icon(
+              Icons.flag_outlined,
+              color: _subtleText,
+              size: 14,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              '시작 라운드',
+              style: AppTypography.labelLg.copyWith(
+                color: _subtleText,
+                fontSize: 11,
+                letterSpacing: 0.6,
+              ),
+            ),
+            const Spacer(),
+            _buildRoundChip(firstRound),
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// 복식 한 선수 행 — 원형 아바타 + first(small/muted) + LASTNAME(accent) + 국기/국가.
+  Widget _buildDoublesPlayerRow({
+    required String? photoUrl,
+    required String firstName,
+    required String lastName,
+    required String flag,
+    required String country,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        _buildRoundAvatar(photoUrl, size: 36),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (firstName.isNotEmpty)
                 Text(
-                  '시작 라운드',
+                  firstName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: AppTypography.labelLg.copyWith(
                     color: _subtleText,
                     fontSize: 11,
-                    letterSpacing: 0.6,
+                    letterSpacing: 0.4,
+                    height: 1.0,
                   ),
                 ),
-                const Spacer(),
-                _buildRoundChip(firstRound),
-              ],
-            ),
-          ],
-        ],
+              const SizedBox(height: 2),
+              Text(
+                lastName.isEmpty ? '—' : lastName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontFamily: AppTypography.chivo,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 14,
+                  color: _accent,
+                  letterSpacing: 0.2,
+                  height: 1.1,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Row(
+                children: [
+                  if (flag.isNotEmpty) ...[
+                    Text(flag, style: const TextStyle(fontSize: 11)),
+                    const SizedBox(width: 4),
+                  ],
+                  Flexible(
+                    child: Text(
+                      country,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.labelLg.copyWith(
+                        color: _subtleText,
+                        fontSize: 11,
+                        letterSpacing: 0.3,
+                        height: 1.0,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRoundAvatar(String? photoUrl, {required double size}) {
+    final hasPhoto = photoUrl != null && photoUrl.isNotEmpty;
+    return ClipOval(
+      child: Container(
+        width: size,
+        height: size,
+        color: const Color(0xFF252423),
+        child: hasPhoto
+            ? CachedNetworkImage(
+                imageUrl: photoUrl,
+                fit: BoxFit.cover,
+                alignment: const Alignment(0, -0.4),
+                placeholder: (_, __) => _avatarPlaceholder(),
+                errorWidget: (_, __, ___) => _avatarPlaceholder(),
+              )
+            : _avatarPlaceholder(),
       ),
+    );
+  }
+
+  /// BWF 표기 "Dechapol PUAVARANUKROH" → first="DECHAPOL" / last="PUAVARANUKROH".
+  /// 대문자 토큰을 성으로, 그 외를 이름으로 본다. 토큰 구분이 어려우면
+  /// 마지막 토큰을 성으로 사용한다.
+  ({String first, String last}) _formatDoublesName(String? full) {
+    final s = (full ?? '').trim();
+    if (s.isEmpty) return (first: '', last: '');
+    final tokens = s.split(RegExp(r'\s+'));
+    final upperTokens = <String>[];
+    final otherTokens = <String>[];
+    for (final t in tokens) {
+      final letters = t.replaceAll(RegExp(r'[^A-Za-z]'), '');
+      if (letters.isNotEmpty && letters == letters.toUpperCase()) {
+        upperTokens.add(t);
+      } else {
+        otherTokens.add(t);
+      }
+    }
+    if (upperTokens.isNotEmpty && otherTokens.isNotEmpty) {
+      return (
+        first: otherTokens.join(' ').toUpperCase(),
+        last: upperTokens.join(' ').toUpperCase(),
+      );
+    }
+    if (tokens.length == 1) {
+      return (first: '', last: tokens.first.toUpperCase());
+    }
+    return (
+      first: tokens.sublist(0, tokens.length - 1).join(' ').toUpperCase(),
+      last: tokens.last.toUpperCase(),
     );
   }
 
@@ -449,39 +626,6 @@ class _ParticipantCard extends StatelessWidget {
       color: const Color(0xFF252423),
       alignment: Alignment.center,
       child: const Icon(Icons.person, color: _subtleText, size: 26),
-    );
-  }
-
-  /// 복식 — 두 선수를 한 줄씩 표시 ("/" 구분이 아닌 명확한 2행).
-  Widget _buildDoublesNames(String? p1, String? p2) {
-    final left = (p1 ?? '').trim().isEmpty ? '—' : p1!.trim();
-    final right = (p2 ?? '').trim().isEmpty ? '—' : p2!.trim();
-
-    final nameStyle = AppTypography.headlineMd.copyWith(
-      color: Colors.white,
-      fontSize: 15,
-      height: 1.2,
-    );
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          left,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: nameStyle,
-        ),
-        const SizedBox(height: 2),
-        Text(
-          right,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: nameStyle.copyWith(
-            color: Colors.white.withValues(alpha: 0.88),
-          ),
-        ),
-      ],
     );
   }
 
