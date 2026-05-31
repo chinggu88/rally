@@ -199,6 +199,7 @@ class PlayerView extends GetView<PlayerController> {
 
   /// 선수 카드 리스트 (rank 오름차순)
   Widget _buildPlayerList(List<PlayerResponse> list) {
+    final isDoubles = _isDoublesCategory(controller.selectedCategory);
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
       child: Column(
@@ -207,6 +208,7 @@ class PlayerView extends GetView<PlayerController> {
           for (final p in list) ...[
             _PlayerCard(
               player: p,
+              isDoubles: isDoubles,
               onTap: () => controller.openPlayerDetail(p),
             ),
             const SizedBox(height: 12),
@@ -215,6 +217,9 @@ class PlayerView extends GetView<PlayerController> {
       ),
     );
   }
+
+  static bool _isDoublesCategory(String code) =>
+      code == 'MD' || code == 'WD' || code == 'XD';
 }
 
 /// 카테고리 선택 칩 (선택 시 라임 옐로우 fill)
@@ -296,10 +301,15 @@ class _CategoryChip extends StatelessWidget {
 class _PlayerCard extends StatelessWidget {
   const _PlayerCard({
     required this.player,
+    required this.isDoubles,
     required this.onTap,
   });
 
   final PlayerResponse player;
+
+  /// 복식(MD/WD/XD) 카테고리 여부. true면 좌측에 두 선수 아바타를 겹쳐 표시.
+  final bool isDoubles;
+
   final VoidCallback onTap;
 
   static const Color _accent = Color(0xFFC3F400);
@@ -313,6 +323,11 @@ class _PlayerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (isDoubles) return _buildDoublesCard();
+    return _buildSinglesCard();
+  }
+
+  Widget _buildSinglesCard() {
     final rank = player.rank;
     final name = (player.playerName ?? '').trim();
     final country = (player.countryCode ?? '').trim();
@@ -340,7 +355,7 @@ class _PlayerCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // 좌측: 선수 사진 (오버레이 없이 이미지만)
+              // 좌측: 선수 사진
               _buildAvatar(player.photoUrl),
               const SizedBox(width: 16),
               // 중앙: 순위+이름 / 국가 / 포인트·변동
@@ -493,6 +508,256 @@ class _PlayerCard extends StatelessWidget {
               )
             : _avatarPlaceholder(),
       ),
+    );
+  }
+
+  /// 복식(MD/WD/XD) 카드 — 두 선수가 각자 한 줄(원형 아바타 + 이름 + 국가).
+  ///
+  /// 좌측에 단식과 동일한 `#N` 라임 옐로우 랭킹 라벨, 우측 세로 중앙에
+  /// 큰 포인트 + 순위 변동.
+  Widget _buildDoublesCard() {
+    final rank = player.rank;
+    final country = (player.countryCode ?? '').trim();
+    final countryName = (player.countryName ?? '').trim();
+    final displayCountry = countryName.isNotEmpty
+        ? countryName
+        : (country.isEmpty ? '—' : country.toUpperCase());
+    final flag = flagEmoji(country);
+    final pointsText = _formatPoints(player.points);
+    final rankLabel = rank != null ? '#$rank' : '#—';
+
+    final names = _splitDoublesNames(player.playerName);
+    final p1Display = _formatDoublesName(names.$1);
+    final p2Display = _formatDoublesName(names.$2);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          decoration: BoxDecoration(
+            color: _cardBg,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: _cardBorder),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // 좌측: 단식과 동일한 #N 라벨
+              Text(
+                rankLabel,
+                style: const TextStyle(
+                  fontFamily: AppTypography.chivo,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 18,
+                  height: 1.15,
+                  letterSpacing: -0.5,
+                  color: _accent,
+                ),
+              ),
+              const SizedBox(width: 12),
+              // 중앙: 두 선수의 행
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildDoublesPlayerRow(
+                      photoUrl: player.photoUrl,
+                      firstName: p1Display.first,
+                      lastName: p1Display.last,
+                      flag: flag,
+                      country: displayCountry,
+                    ),
+                    const SizedBox(height: 10),
+                    _buildDoublesPlayerRow(
+                      photoUrl: player.photoUrl2,
+                      firstName: p2Display.first,
+                      lastName: p2Display.last,
+                      flag: flag,
+                      country: displayCountry,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              // 우측: 포인트 + 순위 변동 (세로 중앙)
+              _buildDoublesTrailing(pointsText),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 복식 카드 한 선수의 행 — 원형 아바타 + "First / LASTNAME / 국가".
+  Widget _buildDoublesPlayerRow({
+    required String? photoUrl,
+    required String firstName,
+    required String lastName,
+    required String flag,
+    required String country,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        _buildRoundAvatar(photoUrl, size: 36),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (firstName.isNotEmpty)
+                Text(
+                  firstName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.labelLg.copyWith(
+                    color: _subtleText,
+                    fontSize: 11,
+                    letterSpacing: 0.4,
+                    height: 1.0,
+                  ),
+                ),
+              const SizedBox(height: 2),
+              Text(
+                lastName.isEmpty ? '—' : lastName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontFamily: AppTypography.chivo,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 14,
+                  color: _accent,
+                  letterSpacing: 0.2,
+                  height: 1.1,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Row(
+                children: [
+                  if (flag.isNotEmpty) ...[
+                    Text(flag, style: const TextStyle(fontSize: 11)),
+                    const SizedBox(width: 4),
+                  ],
+                  Flexible(
+                    child: Text(
+                      country,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.labelLg.copyWith(
+                        color: _subtleText,
+                        fontSize: 11,
+                        letterSpacing: 0.3,
+                        height: 1.0,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// 복식 카드 우측 — 큰 포인트 숫자 + 순위 변동 보조 라인.
+  Widget _buildDoublesTrailing(String pointsText) {
+    final hasPoints = pointsText.isNotEmpty;
+    final hasChange = player.rankChange != null;
+    if (!hasPoints && !hasChange) return const SizedBox.shrink();
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        if (hasPoints)
+          Text(
+            pointsText,
+            style: const TextStyle(
+              fontFamily: AppTypography.chivo,
+              fontWeight: FontWeight.w800,
+              fontSize: 16,
+              color: Colors.white,
+              height: 1.1,
+              letterSpacing: -0.2,
+            ),
+          ),
+        if (hasChange) ...[
+          const SizedBox(height: 4),
+          _buildRankChange(),
+        ],
+      ],
+    );
+  }
+
+  /// 원형 아바타 (얼굴이 상단에 위치하는 경향을 고려해 상단 정렬).
+  Widget _buildRoundAvatar(String? photoUrl, {required double size}) {
+    final hasPhoto = photoUrl != null && photoUrl.isNotEmpty;
+    return ClipOval(
+      child: Container(
+        width: size,
+        height: size,
+        color: const Color(0xFF252423),
+        child: hasPhoto
+            ? Image.network(
+                photoUrl,
+                fit: BoxFit.cover,
+                alignment: const Alignment(0, -0.4),
+                errorBuilder: (_, __, ___) => _avatarPlaceholder(),
+                loadingBuilder: (context, child, progress) {
+                  if (progress == null) return child;
+                  return _avatarPlaceholder();
+                },
+              )
+            : _avatarPlaceholder(),
+      ),
+    );
+  }
+
+  /// `"FIRST LASTNAME / FIRST LASTNAME"` → 두 부분으로 분리. 슬래시가 없으면 두 번째는 빈 문자열.
+  (String, String) _splitDoublesNames(String? raw) {
+    final s = (raw ?? '').trim();
+    if (s.isEmpty) return ('', '');
+    final parts = s.split(RegExp(r'\s*/\s*'));
+    final first = parts.isNotEmpty ? parts[0].trim() : '';
+    final second = parts.length > 1 ? parts[1].trim() : '';
+    return (first, second);
+  }
+
+  /// BWF 표기 "Dechapol PUAVARANUKROH" → first="DECHAPOL" / last="PUAVARANUKROH".
+  /// 대문자 토큰을 성으로, 그 외를 이름으로 본다. 토큰 구분이 어려우면
+  /// 마지막 토큰을 성으로 사용한다.
+  ({String first, String last}) _formatDoublesName(String full) {
+    final s = full.trim();
+    if (s.isEmpty) return (first: '', last: '');
+    final tokens = s.split(RegExp(r'\s+'));
+    final upperTokens = <String>[];
+    final otherTokens = <String>[];
+    for (final t in tokens) {
+      final letters = t.replaceAll(RegExp(r'[^A-Za-z]'), '');
+      if (letters.isNotEmpty && letters == letters.toUpperCase()) {
+        upperTokens.add(t);
+      } else {
+        otherTokens.add(t);
+      }
+    }
+    if (upperTokens.isNotEmpty && otherTokens.isNotEmpty) {
+      return (
+        first: otherTokens.join(' ').toUpperCase(),
+        last: upperTokens.join(' ').toUpperCase(),
+      );
+    }
+    // 폴백: 마지막 토큰을 성으로.
+    if (tokens.length == 1) {
+      return (first: '', last: tokens.first.toUpperCase());
+    }
+    return (
+      first: tokens.sublist(0, tokens.length - 1).join(' ').toUpperCase(),
+      last: tokens.last.toUpperCase(),
     );
   }
 

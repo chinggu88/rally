@@ -20,6 +20,9 @@ class PlayerResponse {
   /// 대표 선수(player1) 프로필 사진 URL — 없으면 null.
   String? _photoUrl;
 
+  /// 복식 파트너(player2) 프로필 사진 URL — 단식은 항상 null.
+  String? _photoUrl2;
+
   /// 랭킹 포인트 — DB: numeric(10,2). 없으면 null.
   double? _points;
 
@@ -40,6 +43,7 @@ class PlayerResponse {
     String? countryCode,
     String? countryName,
     String? photoUrl,
+    String? photoUrl2,
     double? points,
     int? rankChange,
     int? player1Id,
@@ -50,6 +54,7 @@ class PlayerResponse {
     _countryCode = countryCode;
     _countryName = countryName;
     _photoUrl = photoUrl;
+    _photoUrl2 = photoUrl2;
     _points = points;
     _rankChange = rankChange;
     _player1Id = player1Id;
@@ -70,6 +75,9 @@ class PlayerResponse {
 
   String? get photoUrl => _photoUrl;
   set photoUrl(String? value) => _photoUrl = value;
+
+  String? get photoUrl2 => _photoUrl2;
+  set photoUrl2(String? value) => _photoUrl2 = value;
 
   double? get points => _points;
   set points(double? value) => _points = value;
@@ -101,6 +109,7 @@ class PlayerResponse {
     _countryCode = json['country_code'] as String?;
     _countryName = json['country_name'] as String?;
     _photoUrl = bwfImageUrl(json['photo_url'] as String?);
+    _photoUrl2 = bwfImageUrl(json['photo_url2'] as String?);
     _points = _asDouble(json['points']);
     _rankChange = _asInt(json['rank_change']);
     _player1Id = _asInt(json['player1_id']);
@@ -114,6 +123,7 @@ class PlayerResponse {
     data['country_code'] = _countryCode;
     data['country_name'] = _countryName;
     data['photo_url'] = _photoUrl;
+    data['photo_url2'] = _photoUrl2;
     data['points'] = _points;
     data['rank_change'] = _rankChange;
     data['player1_id'] = _player1Id;

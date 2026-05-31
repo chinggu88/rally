@@ -1,11 +1,12 @@
 // GET /functions/v1/get-players?category=MS
 // - category: MS | WS | MD | WD | XD (기본 MS)
-// - 응답: { category, count, players: [{ rank, player_name, country_code, country_name, points, rank_change, player1_id, player2_id, photo_url }] }
+// - 응답: { category, count, players: [{ rank, player_name, country_code, country_name, points, rank_change, player1_id, player2_id, photo_url, photo_url2 }] }
 //         rank ASC 정렬
 //         points = 랭킹 포인트(numeric), rank_change = 직전 발표 대비 순위 변동(+상승/-하락/0/null)
 //         player1_id / player2_id 는 member_id("123" 또는 "123-456")에서 파싱한 bwf_players.id
 //         (단식은 player1_id만, 복식은 둘 다) — 상세 화면(get-player) 진입용 식별자
-//         photo_url 은 player1_id 가 가리키는 bwf_players.photo_url (대표 1인)
+//         photo_url   = player1_id 가 가리키는 bwf_players.photo_url
+//         photo_url2  = player2_id 가 가리키는 bwf_players.photo_url (복식 전용, 단식은 null)
 // - 인증: 공개 (anon 키)
 import { handlePreflight } from "../_shared/cors.ts";
 import { serviceClient } from "../_shared/supabase.ts";
@@ -74,10 +75,12 @@ Deno.serve(async (req) => {
       };
     });
 
-    // 대표(player1) id 목록으로 bwf_players.photo_url 일괄 조회
+    // player1 + player2 id 합집합으로 bwf_players.photo_url 일괄 조회
     const ids = [
       ...new Set(
-        rows.map((r) => r.player1_id).filter((v): v is number => v != null),
+        rows
+          .flatMap((r) => [r.player1_id, r.player2_id])
+          .filter((v): v is number => v != null),
       ),
     ];
     const photoById = new Map<number, string | null>();
@@ -96,6 +99,9 @@ Deno.serve(async (req) => {
       ...r,
       photo_url: r.player1_id != null
         ? (photoById.get(r.player1_id) ?? null)
+        : null,
+      photo_url2: r.player2_id != null
+        ? (photoById.get(r.player2_id) ?? null)
         : null,
     }));
 

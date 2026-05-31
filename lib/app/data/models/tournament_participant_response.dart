@@ -39,6 +39,9 @@ class TournamentParticipantResponse {
   /// `bwfImageUrl`로 Cloudflare 호스트가 Cloudinary로 치환된다.
   String? _photoUrl;
 
+  /// 복식 파트너(player2) 프로필 사진 URL — 단식은 항상 null.
+  String? _photoUrl2;
+
   TournamentParticipantResponse({
     String? eventName,
     int? player1Id,
@@ -49,6 +52,7 @@ class TournamentParticipantResponse {
     int? seed,
     String? firstRound,
     String? photoUrl,
+    String? photoUrl2,
   }) {
     _eventName = eventName;
     _player1Id = player1Id;
@@ -59,6 +63,7 @@ class TournamentParticipantResponse {
     _seed = seed;
     _firstRound = firstRound;
     _photoUrl = photoUrl;
+    _photoUrl2 = photoUrl2;
   }
 
   String? get eventName => _eventName;
@@ -87,6 +92,9 @@ class TournamentParticipantResponse {
 
   String? get photoUrl => _photoUrl;
   set photoUrl(String? value) => _photoUrl = value;
+
+  String? get photoUrl2 => _photoUrl2;
+  set photoUrl2(String? value) => _photoUrl2 = value;
 
   /// 복식 여부 — `player2_id`가 채워져 있으면 true.
   bool get isDoubles => _player2Id != null;
@@ -119,6 +127,7 @@ class TournamentParticipantResponse {
     _seed = _asInt(json['seed']);
     _firstRound = json['first_round'] as String?;
     _photoUrl = bwfImageUrl(json['photo_url'] as String?);
+    _photoUrl2 = bwfImageUrl(json['photo_url2'] as String?);
   }
 
   Map<String, dynamic> toJson() {
@@ -132,6 +141,7 @@ class TournamentParticipantResponse {
     data['seed'] = _seed;
     data['first_round'] = _firstRound;
     data['photo_url'] = _photoUrl;
+    data['photo_url2'] = _photoUrl2;
     return data;
   }
 

@@ -6,7 +6,8 @@
 //     event_name, player1_id, player2_id,
 //     player1_name, player2_name,
 //     country, seed, first_round,
-//     photo_url   // player1_id 가 가리키는 bwf_players.photo_url (대표 1인)
+//     photo_url,   // player1_id 가 가리키는 bwf_players.photo_url
+//     photo_url2   // player2_id 가 가리키는 bwf_players.photo_url (복식 전용, 단식은 null)
 //   }
 //   정렬: seed ASC nulls last → player1_name ASC
 //   단식은 player2_* / 복식은 둘 다 채워짐.
@@ -81,11 +82,14 @@ Deno.serve(async (req) => {
 
     const rows = data ?? [];
 
-    // 대표(player1) id 목록으로 bwf_players.photo_url 일괄 조회
+    // player1 + player2 id 합집합으로 bwf_players.photo_url 일괄 조회
     const ids = [
       ...new Set(
         rows
-          .map((r) => r.player1_id as number | null)
+          .flatMap((r) => [
+            r.player1_id as number | null,
+            r.player2_id as number | null,
+          ])
           .filter((v): v is number => v != null),
       ),
     ];
@@ -112,6 +116,9 @@ Deno.serve(async (req) => {
       first_round: r.first_round,
       photo_url: r.player1_id != null
         ? (photoById.get(r.player1_id as number) ?? null)
+        : null,
+      photo_url2: r.player2_id != null
+        ? (photoById.get(r.player2_id as number) ?? null)
         : null,
     }));
 
