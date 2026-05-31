@@ -6,6 +6,8 @@ import '../../../../theme/app_colors.dart';
 import '../../../../theme/app_typography.dart';
 import '../../../data/models/tournament_detail_response.dart';
 import '../../../data/models/tournament_match_response.dart';
+import '../../../routes/app_routes.dart';
+import '../controllers/tournament_participants_controller.dart';
 import '../controllers/tournament_detail_controller.dart';
 
 /// 대회 상세 화면 — 날짜 탭 기반(요약 + 일자별 결과 + PODIUM).
@@ -147,10 +149,21 @@ class TournamentDetailView extends GetView<TournamentDetailController> {
 
   // ── Tab Chips ─────────────────────────────────────────────────────────
 
+  /// 라운드 데이터가 비어 있을 때 노출할 고정 라운드 칩 라벨.
+  /// 대진이 확정되기 전에도 사용자에게 진행 흐름(R32→Final)을 미리 보여준다.
+  static const List<String> _placeholderRoundTitles = <String>[
+    'R32',
+    'R16',
+    'QF',
+    'SF',
+    'Final',
+  ];
+
   Widget _buildTabChips(ColorScheme scheme) {
     final rounds = controller.matchRounds;
     final hasPodium = controller.hasPodium;
     final selected = controller.selectedTabIndex;
+    final useFixedRounds = rounds.isEmpty;
 
     // 칩 디스크립터 구성: [요약] [라운드...] [PODIUM?]
     final chips = <Widget>[];
@@ -164,16 +177,29 @@ class TournamentDetailView extends GetView<TournamentDetailController> {
       onTap: () => controller.changeTab(0),
     ));
 
-    // 라운드
-    for (final r in rounds) {
-      index += 1;
-      final i = index;
-      chips.add(_TabChip(
-        kind: _TabChipKind.round,
-        title: _shortRound(r.name),
-        selected: selected == i,
-        onTap: () => controller.changeTab(i),
-      ));
+    // 라운드 — 실제 데이터가 있으면 그대로, 없으면 고정 라벨로 미리보기
+    if (useFixedRounds) {
+      for (final title in _placeholderRoundTitles) {
+        index += 1;
+        final i = index;
+        chips.add(_TabChip(
+          kind: _TabChipKind.round,
+          title: title,
+          selected: selected == i,
+          onTap: () => controller.changeTab(i),
+        ));
+      }
+    } else {
+      for (final r in rounds) {
+        index += 1;
+        final i = index;
+        chips.add(_TabChip(
+          kind: _TabChipKind.round,
+          title: _shortRound(r.name),
+          selected: selected == i,
+          onTap: () => controller.changeTab(i),
+        ));
+      }
     }
 
     // PODIUM
@@ -366,7 +392,23 @@ class TournamentDetailView extends GetView<TournamentDetailController> {
       headline: headline,
       subtitle: sub,
       ctaLabel: '대진표 보기',
-      onCta: _hasDetailUrl ? controller.openExternalDetail : null,
+      onCta: controller.tournamentId != null ? _openParticipants : null,
+    );
+  }
+
+  /// 참가 선수(대진표) 화면으로 진입 — `Routes.MATCH_PARTICIPANTS`.
+  ///
+  /// `tournament_id`가 없으면 호출되지 않도록 CTA에서 null 가드한다.
+  void _openParticipants() {
+    final id = controller.tournamentId;
+    if (id == null) return;
+    final name = controller.fallback?.name ?? controller.detail?.name;
+    Get.toNamed<void>(
+      Routes.MATCH_PARTICIPANTS,
+      arguments: <String, dynamic>{
+        TournamentParticipantsController.argTournamentId: id,
+        TournamentParticipantsController.argTournamentName: name,
+      },
     );
   }
 
