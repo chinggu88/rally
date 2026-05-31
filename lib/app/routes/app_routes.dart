@@ -5,6 +5,7 @@ abstract class Routes {
   static const NEWS = '/news';
   static const MATCH = '/match';
   static const MATCH_DETAIL = '/match/detail';
+  static const MATCH_PARTICIPANTS = '/match/participants';
   static const PLAYER = '/player';
   static const PLAYER_DETAIL = '/player/detail';
   static const MY_INFO = '/my-info';

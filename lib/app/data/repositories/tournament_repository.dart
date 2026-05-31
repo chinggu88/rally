@@ -3,9 +3,11 @@ import 'dart:developer';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/get_tournament_matches_response.dart';
+import '../models/get_tournament_participants_response.dart';
 import '../models/get_tournament_response.dart';
 import '../models/get_tournaments_response.dart';
 import '../models/tournament_match_response.dart';
+import '../models/tournament_participant_response.dart';
 
 /// BWF 국제 대회 관련 Supabase Edge Function 호출 레포지토리.
 ///
@@ -180,6 +182,79 @@ class TournamentRepository {
       rethrow;
     } catch (e) {
       log('TournamentRepository.getTournamentMatches error: $e');
+      rethrow;
+    }
+  }
+
+  /// 대회 참가 선수 목록 조회 — Edge Function: `get-tournament-participants`
+  ///
+  /// [tournamentId] `bwf_tournaments.tournament_id` (BWF tournament id, 양수).
+  /// [eventName] 종목 코드 — `MS | WS | MD | WD | XD`.
+  ///
+  /// 참가자가 없거나 미존재(404)는 에러가 아니라 "데이터 없음"으로 간주해
+  /// 빈 목록을 가진 [GetTournamentParticipantsResponse]를 반환한다.
+  /// 그 외 실패 시 `Exception('get-tournament-participants failed: ...')` throw.
+  Future<GetTournamentParticipantsResponse> getTournamentParticipants({
+    required int tournamentId,
+    required String eventName,
+  }) async {
+    try {
+      final res = await _client.functions.invoke(
+        'get-tournament-participants',
+        method: HttpMethod.get,
+        queryParameters: <String, dynamic>{
+          'tournament_id': '$tournamentId',
+          'event_name': eventName,
+        },
+      );
+
+      // 데이터 없음: 빈 목록으로 정상 반환
+      if (res.status == 404) {
+        return GetTournamentParticipantsResponse(
+          tournamentId: tournamentId,
+          eventName: eventName,
+          count: 0,
+          participants: const <TournamentParticipantResponse>[],
+        );
+      }
+
+      if (res.status != 200 || res.data == null) {
+        throw Exception(
+          'get-tournament-participants failed: '
+          'status=${res.status}, data=${res.data}',
+        );
+      }
+
+      final raw = res.data;
+      late final Map<String, dynamic> json;
+      if (raw is Map<String, dynamic>) {
+        json = raw;
+      } else if (raw is Map) {
+        json = Map<String, dynamic>.from(raw);
+      } else {
+        throw Exception(
+          'get-tournament-participants failed: '
+          'unexpected payload type ${raw.runtimeType}',
+        );
+      }
+
+      return GetTournamentParticipantsResponse.fromJson(json);
+    } on FunctionException catch (e) {
+      if (e.status == 404) {
+        return GetTournamentParticipantsResponse(
+          tournamentId: tournamentId,
+          eventName: eventName,
+          count: 0,
+          participants: const <TournamentParticipantResponse>[],
+        );
+      }
+      log(
+        'TournamentRepository.getTournamentParticipants FunctionException: '
+        'status=${e.status}, details=${e.details}',
+      );
+      rethrow;
+    } catch (e) {
+      log('TournamentRepository.getTournamentParticipants error: $e');
       rethrow;
     }
   }

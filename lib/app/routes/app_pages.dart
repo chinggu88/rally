@@ -6,8 +6,10 @@ import '../modules/login/bindings/login_binding.dart';
 import '../modules/login/views/login_view.dart';
 import '../modules/match/bindings/match_binding.dart';
 import '../modules/match/bindings/tournament_detail_binding.dart';
+import '../modules/match/bindings/tournament_participants_binding.dart';
 import '../modules/match/views/match_view.dart';
 import '../modules/match/views/tournament_detail_view.dart';
+import '../modules/match/views/tournament_participants_view.dart';
 import '../modules/my_info/bindings/my_info_binding.dart';
 import '../modules/my_info/views/my_info_view.dart';
 import '../modules/news/bindings/news_binding.dart';
@@ -43,6 +45,11 @@ abstract class AppPages {
       name: Routes.MATCH_DETAIL,
       page: () => const TournamentDetailView(),
       binding: TournamentDetailBinding(),
+    ),
+    GetPage(
+      name: Routes.MATCH_PARTICIPANTS,
+      page: () => const TournamentParticipantsView(),
+      binding: TournamentParticipantsBinding(),
     ),
     GetPage(
       name: Routes.PLAYER,
