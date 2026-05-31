@@ -1,11 +1,11 @@
 import 'dart:developer';
 
-import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../data/models/tournament_response.dart';
 import '../../../data/repositories/tournament_repository.dart';
+import '../../../routes/app_routes.dart';
+import 'tournament_detail_controller.dart';
 
 /// 경기(국제 대회) 화면 컨트롤러.
 ///
@@ -39,8 +39,8 @@ class MatchController extends GetxController {
   int get selectedYear => _selectedYear.value;
   set selectedYear(int val) => _selectedYear.value = val;
 
-  /// 외부 링크 중복 오픈 방지 플래그 (탭 더블탭 가드)
-  bool _isOpeningExternal = false;
+  /// 상세 진입 중복 가드 (탭 더블탭 방지)
+  bool _isOpeningDetail = false;
 
   @override
   void onInit() {
@@ -110,44 +110,32 @@ class MatchController extends GetxController {
   /// 이전 연도로 이동한다.
   Future<void> goPreviousYear() => changeYear(selectedYear - 1);
 
-  /// 대회 상세 페이지를 외부 브라우저로 연다.
+  /// 대회 상세 화면(인앱)으로 이동한다.
   ///
-  /// [t] 탭된 대회 항목. `detail_url`이 비어있으면 무동작한다.
+  /// [t] 탭된 대회 항목. `tournament_id`로 상세를 조회하며, 리스트에서 받은
+  /// 항목 자체를 폴백 컨텍스트로 함께 넘겨 상세 로드 전에도 화면을 그린다.
   Future<void> openTournamentDetail(TournamentResponse t) async {
-    if (_isOpeningExternal) return;
+    if (_isOpeningDetail) return;
 
-    final urlString = t.detailUrl;
-    if (urlString == null || urlString.isEmpty) {
-      // TODO: 추후 In-App 대회 상세 화면이 생기면 Get.toNamed(...)로 교체
-      log('MatchController.openTournamentDetail: detailUrl empty, '
-          'tournamentId=${t.tournamentId}');
-      return;
-    }
-
-    final uri = Uri.tryParse(urlString);
-    if (uri == null) {
-      log('MatchController.openTournamentDetail: invalid url=$urlString');
+    final id = t.tournamentId;
+    if (id == null) {
+      log('MatchController.openTournamentDetail: tournamentId is null');
       return;
     }
 
     try {
-      _isOpeningExternal = true;
-      final canOpen = await canLaunchUrl(uri);
-      if (!canOpen) {
-        log('MatchController.openTournamentDetail: cannot launch $uri');
-        return;
-      }
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+      _isOpeningDetail = true;
+      await Get.toNamed<void>(
+        Routes.MATCH_DETAIL,
+        arguments: <String, dynamic>{
+          TournamentDetailController.argTournamentId: id,
+          TournamentDetailController.argFallback: t,
+        },
+      );
     } catch (e) {
       log('MatchController.openTournamentDetail error: $e');
     } finally {
-      // 약간의 텀을 두는 대신 다음 frame까지만 가드한다
-      if (kReleaseMode) {
-        _isOpeningExternal = false;
-      } else {
-        // 디버그 빌드도 동일 처리
-        _isOpeningExternal = false;
-      }
+      _isOpeningDetail = false;
     }
   }
 }
