@@ -1,0 +1,1900 @@
+{
+  "tournament": {
+    "prize_money": "1,000,000",
+    "start_date": "2026-05-26 00:00:00",
+    "end_date": "2026-05-31 00:00:00",
+    "name": "KFF Singapore Badminton Open 2026",
+    "url": "https://bwfworldtour.bwfbadminton.com/tournament/5649/kff-singapore-badminton-open-2026/results/",
+    "id": 5649,
+    "code": "034085E6-A6C1-4D5D-AACF-1CA3EDB1C582",
+    "has_live_scores": true,
+    "date": "26  - 31 May",
+    "location": "Singapore, Singapore",
+    "country": "Singapore",
+    "flag_url": "https://img.bwfbadminton.com/image/upload/t_flags_small/v2/assets/flag-circle-svg-custom/SGP.png",
+    "logo": "https://img.bwfbadminton.com/image/upload/v1772584408/assets/tournaments/logo/034085E6-A6C1-4D5D-AACF-1CA3EDB1C582.png",
+    "cat_logo": "https://bwfbadminton.com/wp-content/themes/fansite-2020/assets/images/tournament/suffix_750_white-01.svg",
+    "category": "HSBC BWF World Tour Super 750",
+    "header_url_tpl": "https://img.bwfbadminton.com/image/upload/{transform}/v1767678344/assets/tournaments/header/034085E6-A6C1-4D5D-AACF-1CA3EDB1C582.png",
+    "header_url": "https://img.bwfbadminton.com/image/upload/t_Fansite_Tournament_Card_Header_Wide/v1767678344/assets/tournaments/header/034085E6-A6C1-4D5D-AACF-1CA3EDB1C582.png",
+    "header_url_mobile": "https://img.bwfbadminton.com/image/upload/t_Fansite_Tournament_Card_Header_Squared/v1767678344/assets/tournaments/header/034085E6-A6C1-4D5D-AACF-1CA3EDB1C582.png",
+    "is_etihad": true,
+    "live_status": "live",
+    "status": {
+      "status": "0",
+      "code": "normal",
+      "label": "Normal"
+    },
+    "month": "May",
+    "monthNo": 5,
+    "order": 14
+  },
+  "draws": [
+    {
+      "value": "3",
+      "text": "MS",
+      "qualification": 0,
+      "type": 0,
+      "size": 32,
+      "slug": "ms",
+      "doubles": false,
+      "stage_name": "Main Draw",
+      "stage_type": 1,
+      "stage_order": 1
+    },
+    {
+      "value": "4",
+      "text": "WS",
+      "qualification": 0,
+      "type": 0,
+      "size": 32,
+      "slug": "ws",
+      "doubles": false,
+      "stage_name": "Main Draw",
+      "stage_type": 1,
+      "stage_order": 1
+    },
+    {
+      "value": "5",
+      "text": "MD",
+      "qualification": 0,
+      "type": 0,
+      "size": 32,
+      "slug": "md",
+      "doubles": true,
+      "stage_name": "Main Draw",
+      "stage_type": 1,
+      "stage_order": 1
+    },
+    {
+      "value": "6",
+      "text": "WD",
+      "qualification": 0,
+      "type": 0,
+      "size": 32,
+      "slug": "wd",
+      "doubles": true,
+      "stage_name": "Main Draw",
+      "stage_type": 1,
+      "stage_order": 1
+    },
+    {
+      "value": "7",
+      "text": "XD",
+      "qualification": 0,
+      "type": 0,
+      "size": 32,
+      "slug": "xd",
+      "doubles": true,
+      "stage_name": "Main Draw",
+      "stage_type": 1,
+      "stage_order": 1
+    }
+  ],
+  "strategy_a2_snoop": [],
+  "strategy_b2_richer": [
+    {
+      "path": "/api/vue-tournament-players",
+      "body": {
+        "tmtId": 5649
+      },
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "body_preview": {
+        "results": null,
+        "drawCount": null
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-players",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "entries"
+      },
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "body_preview": {
+        "results": null,
+        "drawCount": null
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-players",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "players"
+      },
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "body_preview": {
+        "results": null,
+        "drawCount": null
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-players",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "draw"
+      },
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "body_preview": {
+        "results": null,
+        "drawCount": null
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-players",
+      "body": {
+        "tmtId": 5649,
+        "eventName": "MS"
+      },
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "body_preview": {
+        "results": null,
+        "drawCount": null
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-players",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "entries",
+        "eventName": "MS"
+      },
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "body_preview": {
+        "results": null,
+        "drawCount": null
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-players",
+      "body": {
+        "tmtId": 5649,
+        "page": 1,
+        "drawCount": 1,
+        "searchKey": "",
+        "pageKey": "1000"
+      },
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "body_preview": {
+        "results": null,
+        "drawCount": 1
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-players",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "entries",
+        "page": 1,
+        "drawCount": 1,
+        "searchKey": "",
+        "pageKey": "1000"
+      },
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "body_preview": {
+        "results": null,
+        "drawCount": 1
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-players",
+      "body": {
+        "tmtId": 5649,
+        "catId": 1
+      },
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "body_preview": {
+        "results": null,
+        "drawCount": null
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-players",
+      "body": {
+        "tmtId": 5649,
+        "catId": 1,
+        "tmtTab": "entries"
+      },
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "body_preview": {
+        "results": null,
+        "drawCount": null
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-players",
+      "body": {
+        "tmtId": 5649,
+        "drawId": "3"
+      },
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "body_preview": {
+        "results": null,
+        "drawCount": null
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-players",
+      "body": {
+        "tmtId": 5649,
+        "drawId": "3",
+        "tmtTab": "entries"
+      },
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "body_preview": {
+        "results": null,
+        "drawCount": null
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-players",
+      "body": {
+        "tmtId": 5649,
+        "drawId": "3",
+        "tmtTab": "draw"
+      },
+      "status": 200,
+      "content_type": "text/html; charset=UTF-8",
+      "body_preview": {
+        "results": null,
+        "drawCount": null
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-entries",
+      "body": {
+        "tmtId": 5649
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-entries",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-entries",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "players"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-entries",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "draw"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-entries",
+      "body": {
+        "tmtId": 5649,
+        "eventName": "MS"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-entries",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "entries",
+        "eventName": "MS"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-entries",
+      "body": {
+        "tmtId": 5649,
+        "page": 1,
+        "drawCount": 1,
+        "searchKey": "",
+        "pageKey": "1000"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-entries",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "entries",
+        "page": 1,
+        "drawCount": 1,
+        "searchKey": "",
+        "pageKey": "1000"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-entries",
+      "body": {
+        "tmtId": 5649,
+        "catId": 1
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-entries",
+      "body": {
+        "tmtId": 5649,
+        "catId": 1,
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-entries",
+      "body": {
+        "tmtId": 5649,
+        "drawId": "3"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-entries",
+      "body": {
+        "tmtId": 5649,
+        "drawId": "3",
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-entries",
+      "body": {
+        "tmtId": 5649,
+        "drawId": "3",
+        "tmtTab": "draw"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-entry-list",
+      "body": {
+        "tmtId": 5649
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-entry-list",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-entry-list",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "players"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-entry-list",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "draw"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-entry-list",
+      "body": {
+        "tmtId": 5649,
+        "eventName": "MS"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-entry-list",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "entries",
+        "eventName": "MS"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-entry-list",
+      "body": {
+        "tmtId": 5649,
+        "page": 1,
+        "drawCount": 1,
+        "searchKey": "",
+        "pageKey": "1000"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-entry-list",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "entries",
+        "page": 1,
+        "drawCount": 1,
+        "searchKey": "",
+        "pageKey": "1000"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-entry-list",
+      "body": {
+        "tmtId": 5649,
+        "catId": 1
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-entry-list",
+      "body": {
+        "tmtId": 5649,
+        "catId": 1,
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-entry-list",
+      "body": {
+        "tmtId": 5649,
+        "drawId": "3"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-entry-list",
+      "body": {
+        "tmtId": 5649,
+        "drawId": "3",
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-entry-list",
+      "body": {
+        "tmtId": 5649,
+        "drawId": "3",
+        "tmtTab": "draw"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-data",
+      "body": {
+        "tmtId": 5649
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-data",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-data",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "players"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-data",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "draw"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-data",
+      "body": {
+        "tmtId": 5649,
+        "eventName": "MS"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-data",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "entries",
+        "eventName": "MS"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-data",
+      "body": {
+        "tmtId": 5649,
+        "page": 1,
+        "drawCount": 1,
+        "searchKey": "",
+        "pageKey": "1000"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-data",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "entries",
+        "page": 1,
+        "drawCount": 1,
+        "searchKey": "",
+        "pageKey": "1000"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-data",
+      "body": {
+        "tmtId": 5649,
+        "catId": 1
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-data",
+      "body": {
+        "tmtId": 5649,
+        "catId": 1,
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-data",
+      "body": {
+        "tmtId": 5649,
+        "drawId": "3"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-data",
+      "body": {
+        "tmtId": 5649,
+        "drawId": "3",
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-data",
+      "body": {
+        "tmtId": 5649,
+        "drawId": "3",
+        "tmtTab": "draw"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-summary",
+      "body": {
+        "tmtId": 5649
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-summary",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-summary",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "players"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-summary",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "draw"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-summary",
+      "body": {
+        "tmtId": 5649,
+        "eventName": "MS"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-summary",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "entries",
+        "eventName": "MS"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-summary",
+      "body": {
+        "tmtId": 5649,
+        "page": 1,
+        "drawCount": 1,
+        "searchKey": "",
+        "pageKey": "1000"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-summary",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "entries",
+        "page": 1,
+        "drawCount": 1,
+        "searchKey": "",
+        "pageKey": "1000"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-summary",
+      "body": {
+        "tmtId": 5649,
+        "catId": 1
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-summary",
+      "body": {
+        "tmtId": 5649,
+        "catId": 1,
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-summary",
+      "body": {
+        "tmtId": 5649,
+        "drawId": "3"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-summary",
+      "body": {
+        "tmtId": 5649,
+        "drawId": "3",
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-summary",
+      "body": {
+        "tmtId": 5649,
+        "drawId": "3",
+        "tmtTab": "draw"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-info",
+      "body": {
+        "tmtId": 5649
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-info",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-info",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "players"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-info",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "draw"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-info",
+      "body": {
+        "tmtId": 5649,
+        "eventName": "MS"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-info",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "entries",
+        "eventName": "MS"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-info",
+      "body": {
+        "tmtId": 5649,
+        "page": 1,
+        "drawCount": 1,
+        "searchKey": "",
+        "pageKey": "1000"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-info",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "entries",
+        "page": 1,
+        "drawCount": 1,
+        "searchKey": "",
+        "pageKey": "1000"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-info",
+      "body": {
+        "tmtId": 5649,
+        "catId": 1
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-info",
+      "body": {
+        "tmtId": 5649,
+        "catId": 1,
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-info",
+      "body": {
+        "tmtId": 5649,
+        "drawId": "3"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-info",
+      "body": {
+        "tmtId": 5649,
+        "drawId": "3",
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-info",
+      "body": {
+        "tmtId": 5649,
+        "drawId": "3",
+        "tmtTab": "draw"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-tab",
+      "body": {
+        "tmtId": 5649
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-tab",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-tab",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "players"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-tab",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "draw"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-tab",
+      "body": {
+        "tmtId": 5649,
+        "eventName": "MS"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-tab",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "entries",
+        "eventName": "MS"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-tab",
+      "body": {
+        "tmtId": 5649,
+        "page": 1,
+        "drawCount": 1,
+        "searchKey": "",
+        "pageKey": "1000"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-tab",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "entries",
+        "page": 1,
+        "drawCount": 1,
+        "searchKey": "",
+        "pageKey": "1000"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-tab",
+      "body": {
+        "tmtId": 5649,
+        "catId": 1
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-tab",
+      "body": {
+        "tmtId": 5649,
+        "catId": 1,
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-tab",
+      "body": {
+        "tmtId": 5649,
+        "drawId": "3"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-tab",
+      "body": {
+        "tmtId": 5649,
+        "drawId": "3",
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-tab",
+      "body": {
+        "tmtId": 5649,
+        "drawId": "3",
+        "tmtTab": "draw"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-tab-data",
+      "body": {
+        "tmtId": 5649
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-tab-data",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-tab-data",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "players"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-tab-data",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "draw"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-tab-data",
+      "body": {
+        "tmtId": 5649,
+        "eventName": "MS"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-tab-data",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "entries",
+        "eventName": "MS"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-tab-data",
+      "body": {
+        "tmtId": 5649,
+        "page": 1,
+        "drawCount": 1,
+        "searchKey": "",
+        "pageKey": "1000"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-tab-data",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "entries",
+        "page": 1,
+        "drawCount": 1,
+        "searchKey": "",
+        "pageKey": "1000"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-tab-data",
+      "body": {
+        "tmtId": 5649,
+        "catId": 1
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-tab-data",
+      "body": {
+        "tmtId": 5649,
+        "catId": 1,
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-tab-data",
+      "body": {
+        "tmtId": 5649,
+        "drawId": "3"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-tab-data",
+      "body": {
+        "tmtId": 5649,
+        "drawId": "3",
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-tab-data",
+      "body": {
+        "tmtId": 5649,
+        "drawId": "3",
+        "tmtTab": "draw"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-entries-data",
+      "body": {
+        "tmtId": 5649
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-entries-data",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-entries-data",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "players"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-entries-data",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "draw"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-entries-data",
+      "body": {
+        "tmtId": 5649,
+        "eventName": "MS"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-entries-data",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "entries",
+        "eventName": "MS"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-entries-data",
+      "body": {
+        "tmtId": 5649,
+        "page": 1,
+        "drawCount": 1,
+        "searchKey": "",
+        "pageKey": "1000"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-entries-data",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "entries",
+        "page": 1,
+        "drawCount": 1,
+        "searchKey": "",
+        "pageKey": "1000"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-entries-data",
+      "body": {
+        "tmtId": 5649,
+        "catId": 1
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-entries-data",
+      "body": {
+        "tmtId": 5649,
+        "catId": 1,
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-entries-data",
+      "body": {
+        "tmtId": 5649,
+        "drawId": "3"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-entries-data",
+      "body": {
+        "tmtId": 5649,
+        "drawId": "3",
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-entries-data",
+      "body": {
+        "tmtId": 5649,
+        "drawId": "3",
+        "tmtTab": "draw"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-players-data",
+      "body": {
+        "tmtId": 5649
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-players-data",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-players-data",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "players"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-players-data",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "draw"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-players-data",
+      "body": {
+        "tmtId": 5649,
+        "eventName": "MS"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-players-data",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "entries",
+        "eventName": "MS"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-players-data",
+      "body": {
+        "tmtId": 5649,
+        "page": 1,
+        "drawCount": 1,
+        "searchKey": "",
+        "pageKey": "1000"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-players-data",
+      "body": {
+        "tmtId": 5649,
+        "tmtTab": "entries",
+        "page": 1,
+        "drawCount": 1,
+        "searchKey": "",
+        "pageKey": "1000"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-players-data",
+      "body": {
+        "tmtId": 5649,
+        "catId": 1
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-players-data",
+      "body": {
+        "tmtId": 5649,
+        "catId": 1,
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-players-data",
+      "body": {
+        "tmtId": 5649,
+        "drawId": "3"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-players-data",
+      "body": {
+        "tmtId": 5649,
+        "drawId": "3",
+        "tmtTab": "entries"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    },
+    {
+      "path": "/api/vue-tournament-players-data",
+      "body": {
+        "tmtId": 5649,
+        "drawId": "3",
+        "tmtTab": "draw"
+      },
+      "status": 404,
+      "content_type": "application/json",
+      "body_preview": {
+        "message": ""
+      },
+      "has_data": false
+    }
+  ]
+}
