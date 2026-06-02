@@ -23,8 +23,6 @@ from dotenv import load_dotenv
 
 from batch.jobs.bwf_matches.fetcher import (
     api_session,
-    browser_page,
-    extract_api_token,
     fetch_draw_matches,
     fetch_tournament_draws,
     fetch_year_calendar,
@@ -162,10 +160,7 @@ def run(year: int | None = None, dry_run: bool = False, tournament_id: int | Non
     written = 0
 
     try:
-        with browser_page() as page:
-            token = extract_api_token(page)
-        log.info(f"Got API token: {token[:20]}...")
-        session = api_session(token)
+        session = api_session()
 
         tournaments = fetch_year_calendar(session, year)
         log.info(f"Calendar: {len(tournaments)} tournaments in {year}")

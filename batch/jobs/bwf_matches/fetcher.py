@@ -1,26 +1,25 @@
 """HTTP access to BWF tournament-detail / match data.
 
 All match data comes from the extranet API the bwfworldtour SPA calls — NOT from
-the Cloudflare-protected HTML page. A headless browser is used only once to lift
-the Bearer token from the rankings landing page; every match request is plain
-HTTP after that (same approach as bwf_rankings / bwf_players).
+the Cloudflare-protected HTML page. As of 2026, BWF moved these endpoints from
+POST+Bearer-token to plain GET with no auth — only Referer/User-Agent are
+required. The legacy `extract_api_token` browser dance is no longer needed for
+this job.
 
 Endpoint chain per tournament:
-  POST /api/vue-grouped-year-tournaments  -> calendar (tournament id + live_status)
-  POST /api/vue-tournament-draws          -> disciplines for one tournament (drawId per event)
-  POST /api/vue-tournament-draw-data      -> {"matches": [...]} for one draw
+  GET /api/vue-grouped-year-tournaments  -> calendar (tournament id + live_status)
+  GET /api/vue-tournament-draws          -> disciplines for one tournament (drawId per event)
+  GET /api/vue-tournament-draw-data      -> {"matches": [...]} for one draw
 """
 from typing import Any, Iterator
 
 import requests
 
-# Reuse the token-extraction + browser helpers proven by the rankings job.
-from batch.jobs.bwf_rankings.fetcher import (  # noqa: F401  (re-exported for probes)
-    USER_AGENT,
-    browser_page,
-    extract_api_token,
+USER_AGENT = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/120.0.0.0 Safari/537.36"
 )
-
 EXTRANET_BASE = "https://extranet-lv.bwfbadminton.com"
 
 # HSBC BWF World Tour category ids (Finals + Super 1000/750/500/300 and below),
@@ -29,15 +28,13 @@ EXTRANET_BASE = "https://extranet-lv.bwfbadminton.com"
 CATEGORY_IDS = [20, 21, 22, 23, 24, 25, 26, 27]
 
 
-def api_session(token: str) -> requests.Session:
+def api_session() -> requests.Session:
+    """Session with just the headers the BWF SPA sends. No auth needed."""
     s = requests.Session()
     s.headers.update(
         {
-            "Authorization": f"Bearer {token}",
             "Accept": "application/json, text/plain, */*",
-            "Content-Type": "application/json;charset=UTF-8",
-            # The draw-data endpoint is called by the bwfworldtour SPA, so mirror
-            # its Origin/Referer.
+            # Mirror the bwfworldtour SPA so the API doesn't drop us.
             "Origin": "https://bwfworldtour.bwfbadminton.com",
             "Referer": "https://bwfworldtour.bwfbadminton.com/",
             "User-Agent": USER_AGENT,
@@ -66,9 +63,12 @@ def fetch_year_calendar(s: requests.Session, year: int) -> list[dict[str, Any]]:
     keeps `id` and `live_status` ('future'|'pre'|'live'|'post'), which drives the
     대회전/대회중/대회후 classification downstream.
     """
-    r = s.post(
+    # requests serializes list params as repeated `category[]=20&category[]=21...`
+    # which is the form the BWF API expects.
+    params = [("year", year)] + [("category[]", c) for c in CATEGORY_IDS]
+    r = s.get(
         f"{EXTRANET_BASE}/api/vue-grouped-year-tournaments",
-        json={"year": year, "category": CATEGORY_IDS},
+        params=params,
         timeout=60,
     )
     r.raise_for_status()
@@ -89,9 +89,9 @@ def fetch_tournament_draws(s: requests.Session, tmt_id: int) -> list[dict[str, A
     Each draw carries `value` (the drawId needed by draw-data), `text` (MS/WS/...),
     and `slug`. Returns [] when the draw isn't published yet (future tournaments).
     """
-    r = s.post(
+    r = s.get(
         f"{EXTRANET_BASE}/api/vue-tournament-draws",
-        json={"tmtTab": "draw", "tmtId": tmt_id},
+        params={"tmtTab": "draw", "tmtId": tmt_id},
         timeout=30,
     )
     r.raise_for_status()
@@ -107,10 +107,15 @@ def fetch_draw_matches(
     `draw_id` is the `value` from fetch_tournament_draws (per-tournament, not
     globally stable). Pre-tournament draws return matches with
     matchStatusValue == 'none' (no result yet).
+
+    The 2026 response shape carries two views of the same data — a `results`
+    dict keyed by bracket slot ("0-0", "0-1"...) and a flat `matches` array.
+    The flat array preserves the original `match.id` (stable BWF id) that the
+    bwf_matches PK depends on, so we read from there.
     """
-    r = s.post(
+    r = s.get(
         f"{EXTRANET_BASE}/api/vue-tournament-draw-data",
-        json={"tmtTab": "draw", "tmtId": tmt_id, "drawId": str(draw_id)},
+        params={"tmtTab": "draw", "tmtId": tmt_id, "drawId": str(draw_id)},
         timeout=30,
     )
     r.raise_for_status()

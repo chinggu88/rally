@@ -1,6 +1,8 @@
 """Map BWF draw-data `matches` entries to `bwf_matches` rows."""
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from typing import Any
+
+KST = timezone(timedelta(hours=9))
 
 # Calendar live_status -> our 3-state lifecycle.
 #   future / pre -> 대회전, live -> 대회중, post / completed -> 대회후
@@ -64,7 +66,9 @@ def parse_match(
         "team1_seed": _str(match.get("team1seed")),
         "team2_seed": _str(match.get("team2seed")),
         "score": match.get("score") if isinstance(match.get("score"), list) else None,
-        "match_time": _parse_dt(match.get("matchTime")),
+        # match_time은 한국 시간(KST, UTC+9) 기준으로 저장. BWF의 matchTimeUtc를
+        # KST로 변환 — 변환 불가하면 fallback으로 matchTime(현지 시각)을 그대로 사용.
+        "match_time": _to_kst(match.get("matchTimeUtc")) or _parse_dt(match.get("matchTime")),
         "match_time_utc": _parse_dt(match.get("matchTimeUtc"), utc=True),
         "duration_min": _to_int(match.get("duration")),
         "court_name": _str(match.get("courtName")),
@@ -104,6 +108,22 @@ def _parse_dt(value: Any, utc: bool = False) -> str | None:
         try:
             dt = datetime.strptime(text, fmt)
             return dt.isoformat() + ("Z" if utc else "")
+        except ValueError:
+            continue
+    return None
+
+
+def _to_kst(utc_value: Any) -> str | None:
+    """Convert BWF의 matchTimeUtc('YYYY-MM-DD HH:MM:SS', UTC) → KST ISO 문자열."""
+    if not utc_value:
+        return None
+    text = str(utc_value).strip()
+    if not text or text.startswith("0000"):
+        return None
+    for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M", "%Y-%m-%d"):
+        try:
+            dt = datetime.strptime(text, fmt).replace(tzinfo=timezone.utc)
+            return dt.astimezone(KST).isoformat()
         except ValueError:
             continue
     return None
