@@ -126,6 +126,11 @@ class NewsView extends GetView<NewsController> {
               ),
             );
           }),
+          const Spacer(),
+          Obx(
+            () => _RealtimeStatusDot(connected: controller.isRealtimeConnected),
+          ),
+          const SizedBox(width: 20 - 12), // 우측 여백(섹션 헤더 padding 보정)
         ],
       ),
     );
@@ -135,9 +140,7 @@ class NewsView extends GetView<NewsController> {
     if (controller.isLiveLoading && controller.liveMatches.isEmpty) {
       return const SizedBox(
         height: 220,
-        child: Center(
-          child: CircularProgressIndicator(color: _accent),
-        ),
+        child: Center(child: CircularProgressIndicator(color: _accent)),
       );
     }
 
@@ -156,26 +159,38 @@ class NewsView extends GetView<NewsController> {
   Widget _buildCarousel(BuildContext context, List<LiveMatchResponse> matches) {
     final screenWidth = MediaQuery.of(context).size.width;
     final cardWidth = (screenWidth * 0.85).clamp(280.0, 360.0);
+    // PageView viewportFraction: 카드 너비 + 좌우 여백을 자연스럽게 노출.
+    final viewportFraction = (cardWidth + 16) / screenWidth;
 
-    return SizedBox(
-      height: 260,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        physics: const BouncingScrollPhysics(),
-        itemCount: matches.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 12),
-        itemBuilder: (context, index) {
-          final m = matches[index];
-          return LiveMatchCard(
-            match: m,
-            width: cardWidth,
-            // 추후 detail_url 외부 오픈 자리 — 현재는 no-op.
-            onTap: () {},
-          );
-        },
-      ),
+    // court1 → court2 → court3 … 순서로 정렬.
+    // 숫자가 없는 코트는 끝으로 보내고, 동률은 id 오름차순.
+    final sorted = List<LiveMatchResponse>.from(matches)..sort((a, b) {
+      final ca = _courtOrderKey(a.courtName);
+      final cb = _courtOrderKey(b.courtName);
+      final byCourt = ca.compareTo(cb);
+      if (byCourt != 0) return byCourt;
+      final ia = a.id ?? 1 << 30;
+      final ib = b.id ?? 1 << 30;
+      return ia.compareTo(ib);
+    });
+
+    return _LiveMatchPageView(
+      matches: sorted,
+      cardWidth: cardWidth,
+      viewportFraction: viewportFraction.clamp(0.5, 1.0),
+      controller: controller,
     );
+  }
+
+  /// court 이름에서 정렬 키를 추출.
+  /// - "Court 1" / "court1" / "1 코트" → 1
+  /// - 숫자가 없거나 비어있으면 매우 큰 값(끝으로) 반환
+  int _courtOrderKey(String? courtName) {
+    final raw = (courtName ?? '').trim();
+    if (raw.isEmpty) return 1 << 30;
+    final m = RegExp(r'(\d+)').firstMatch(raw);
+    if (m == null) return 1 << 29; // 텍스트만 있는 코트는 숫자 코트 뒤
+    return int.tryParse(m.group(1)!) ?? (1 << 29);
   }
 
   Widget _buildErrorState(String message) {
@@ -322,6 +337,210 @@ class NewsView extends GetView<NewsController> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// 라이브 매치 카드 PageView.
+///
+/// - 가로 스와이프 시 한 장씩 스냅된다 (PageView 기본 동작).
+/// - 좌우 카드의 일부가 보이도록 viewportFraction을 사용.
+/// - 하단에 페이지 인디케이터(점)를 표시.
+class _LiveMatchPageView extends StatefulWidget {
+  const _LiveMatchPageView({
+    required this.matches,
+    required this.cardWidth,
+    required this.viewportFraction,
+    required this.controller,
+  });
+
+  final List<LiveMatchResponse> matches;
+  final double cardWidth;
+  final double viewportFraction;
+  final NewsController controller;
+
+  @override
+  State<_LiveMatchPageView> createState() => _LiveMatchPageViewState();
+}
+
+class _LiveMatchPageViewState extends State<_LiveMatchPageView> {
+  static const Color _accent = Color(0xFFC3F400);
+  static const Color _inactive = Color(0xFF3A3A3A);
+
+  late PageController _pageController;
+  int _currentPage = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController(viewportFraction: widget.viewportFraction);
+  }
+
+  @override
+  void didUpdateWidget(covariant _LiveMatchPageView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.viewportFraction != widget.viewportFraction) {
+      _pageController.dispose();
+      _pageController = PageController(
+        viewportFraction: widget.viewportFraction,
+      );
+      _currentPage = _currentPage.clamp(0, widget.matches.length - 1);
+    }
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final matches = widget.matches;
+    return Column(
+      children: [
+        SizedBox(
+          height: 260,
+          child: PageView.builder(
+            controller: _pageController,
+            physics: const BouncingScrollPhysics(),
+            itemCount: matches.length,
+            onPageChanged: (i) => setState(() => _currentPage = i),
+            itemBuilder: (context, index) {
+              final m = matches[index];
+              final id = m.id;
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                child: Obx(() {
+                  final bumpAt =
+                      id == null ? null : widget.controller.scoreBumpAt[id];
+                  return LiveMatchCard(
+                    // 정렬 변경 시에도 동일 매치의 State가 재사용되도록 매치 id 키 사용.
+                    key: ValueKey<Object>(id ?? 'match-$index'),
+                    match: m,
+                    width: widget.cardWidth,
+                    scoreBumpAt: bumpAt,
+                    // 추후 detail_url 외부 오픈 자리 — 현재는 no-op.
+                    onTap: () {},
+                  );
+                }),
+              );
+            },
+          ),
+        ),
+        if (matches.length > 1) ...[
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(matches.length, (i) {
+              final active = i == _currentPage;
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
+                margin: const EdgeInsets.symmetric(horizontal: 3),
+                width: active ? 18 : 6,
+                height: 6,
+                decoration: BoxDecoration(
+                  color: active ? _accent : _inactive,
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              );
+            }),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// Realtime 채널 연결 상태 인디케이터.
+///
+/// - connected=true  : 라임 그린 도트가 호흡하듯 깜빡 (실시간 수신 중)
+/// - connected=false : 회색 도트 (폴링/오프라인 상태)
+class _RealtimeStatusDot extends StatefulWidget {
+  const _RealtimeStatusDot({required this.connected});
+
+  final bool connected;
+
+  @override
+  State<_RealtimeStatusDot> createState() => _RealtimeStatusDotState();
+}
+
+class _RealtimeStatusDotState extends State<_RealtimeStatusDot>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+
+  static const Color _accent = Color(0xFFC3F400);
+  static const Color _muted = Color(0xFF6B6B6B);
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    );
+    if (widget.connected) _ctrl.repeat(reverse: true);
+  }
+
+  @override
+  void didUpdateWidget(covariant _RealtimeStatusDot oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.connected && !_ctrl.isAnimating) {
+      _ctrl.repeat(reverse: true);
+    } else if (!widget.connected && _ctrl.isAnimating) {
+      _ctrl.stop();
+      _ctrl.value = 0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final connected = widget.connected;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        AnimatedBuilder(
+          animation: _ctrl,
+          builder: (context, _) {
+            final t = connected ? _ctrl.value : 0.0;
+            return Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(
+                color: connected ? _accent : _muted,
+                shape: BoxShape.circle,
+                boxShadow:
+                    connected
+                        ? [
+                          BoxShadow(
+                            color: _accent.withValues(alpha: 0.35 + 0.35 * t),
+                            blurRadius: 6 + 6 * t,
+                            spreadRadius: 0.5 + 1.5 * t,
+                          ),
+                        ]
+                        : null,
+              ),
+            );
+          },
+        ),
+        const SizedBox(width: 6),
+        Text(
+          connected ? 'LIVE' : 'OFF',
+          style: TextStyle(
+            fontFamily: AppTypography.chivo,
+            fontWeight: FontWeight.w800,
+            fontSize: 10,
+            letterSpacing: 0.8,
+            color: connected ? _accent : _muted,
+          ),
+        ),
+      ],
     );
   }
 }

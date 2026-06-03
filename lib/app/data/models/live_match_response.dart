@@ -42,11 +42,18 @@ class LiveMatchResponse {
   /// 1팀 선수 ID 목록
   List<int>? _team1PlayerIds;
 
+  /// 1팀 선수 아바타 URL 목록 (TODO: edge function 추후 제공 예정)
+  /// 단식이면 1개, 복식이면 2개. null/빈 배열이면 placeholder 표시.
+  List<String>? _team1PlayerAvatars;
+
   // ── team2 ──────────────────────────────────────────────────
   List<String>? _team2Names;
   String? _team2Country;
   String? _team2Seed;
   List<int>? _team2PlayerIds;
+
+  /// 2팀 선수 아바타 URL 목록 (TODO: edge function 추후 제공 예정)
+  List<String>? _team2PlayerAvatars;
 
   // ── 결과 / 진행 ────────────────────────────────────────────
   /// 승자 (원본 값 — "1"/"2" 또는 팀/선수명일 수 있음)
@@ -118,10 +125,12 @@ class LiveMatchResponse {
     String? team1Country,
     String? team1Seed,
     List<int>? team1PlayerIds,
+    List<String>? team1PlayerAvatars,
     List<String>? team2Names,
     String? team2Country,
     String? team2Seed,
     List<int>? team2PlayerIds,
+    List<String>? team2PlayerAvatars,
     String? winner,
     String? score,
     String? matchStatus,
@@ -161,10 +170,12 @@ class LiveMatchResponse {
     _team1Country = team1Country;
     _team1Seed = team1Seed;
     _team1PlayerIds = team1PlayerIds;
+    _team1PlayerAvatars = team1PlayerAvatars;
     _team2Names = team2Names;
     _team2Country = team2Country;
     _team2Seed = team2Seed;
     _team2PlayerIds = team2PlayerIds;
+    _team2PlayerAvatars = team2PlayerAvatars;
     _winner = winner;
     _score = score;
     _matchStatus = matchStatus;
@@ -208,10 +219,13 @@ class LiveMatchResponse {
   String? get team1Seed => _team1Seed;
   List<int>? get team1PlayerIds => _team1PlayerIds;
 
+  List<String>? get team1PlayerAvatars => _team1PlayerAvatars;
+
   List<String>? get team2Names => _team2Names;
   String? get team2Country => _team2Country;
   String? get team2Seed => _team2Seed;
   List<int>? get team2PlayerIds => _team2PlayerIds;
+  List<String>? get team2PlayerAvatars => _team2PlayerAvatars;
 
   String? get winner => _winner;
   String? get score => _score;
@@ -375,6 +389,21 @@ class LiveMatchResponse {
     return _rawGames.length - 1;
   }
 
+  // ── 부분 갱신 (Realtime용) ─────────────────────────────────
+
+  /// Realtime UPDATE/INSERT payload에서 `score` 필드만 갱신한다.
+  ///
+  /// 다른 필드(팀 정보, 대회 정보, 아바타 등)는 초기 fetch 값을 유지하고,
+  /// 변동이 잦은 스코어 관련 값(`_score`와 파생 `_rawGames`)만 덮어쓴다.
+  ///
+  /// payload에 `score` 키가 아예 없으면 no-op.
+  void applyScoreFromJson(Map<String, dynamic> json) {
+    if (!json.containsKey('score')) return;
+    final raw = json['score'];
+    _score = _str(raw);
+    _rawGames = _parseGames(raw);
+  }
+
   // ── fromJson / toJson ──────────────────────────────────────
 
   LiveMatchResponse.fromJson(Map<String, dynamic> json) {
@@ -389,10 +418,12 @@ class LiveMatchResponse {
     _team1Country = _str(json['team1_country']);
     _team1Seed = _str(json['team1_seed']);
     _team1PlayerIds = _asIntList(json['team1_player_ids']);
+    _team1PlayerAvatars = _asUrlList(json['team1_player_avatars']);
     _team2Names = _asNameList(json['team2_names']);
     _team2Country = _str(json['team2_country']);
     _team2Seed = _str(json['team2_seed']);
     _team2PlayerIds = _asIntList(json['team2_player_ids']);
+    _team2PlayerAvatars = _asUrlList(json['team2_player_avatars']);
     _winner = _str(json['winner']);
     _score = _str(json['score']);
     _rawGames = _parseGames(json['score']);
@@ -436,10 +467,12 @@ class LiveMatchResponse {
       'team1_country': _team1Country,
       'team1_seed': _team1Seed,
       'team1_player_ids': _team1PlayerIds,
+      'team1_player_avatars': _team1PlayerAvatars,
       'team2_names': _team2Names,
       'team2_country': _team2Country,
       'team2_seed': _team2Seed,
       'team2_player_ids': _team2PlayerIds,
+      'team2_player_avatars': _team2PlayerAvatars,
       'winner': _winner,
       'score': _score,
       'match_status': _matchStatus,
@@ -500,6 +533,28 @@ class LiveMatchResponse {
       return parts.isEmpty ? [trimmed] : parts;
     }
     return [value.toString()];
+  }
+
+  /// URL 문자열 배열을 `List<String>`으로 정규화.
+  ///
+  /// - 문자열 배열 그대로 받음
+  /// - 단일 문자열은 1-원소 리스트로
+  /// - 빈 문자열/null 원소는 빈 문자열로 보존(선수 순서 유지를 위해)
+  static List<String>? _asUrlList(dynamic value) {
+    if (value == null) return null;
+    if (value is List) {
+      final urls = value
+          .map((e) => e?.toString().trim() ?? '')
+          .toList(growable: false);
+      if (urls.every((e) => e.isEmpty)) return null;
+      return urls;
+    }
+    if (value is String) {
+      final t = value.trim();
+      if (t.isEmpty) return null;
+      return <String>[t];
+    }
+    return null;
   }
 
   /// 정수 ID 배열을 `List<int>`로 정규화 (문자열 ID 허용).
