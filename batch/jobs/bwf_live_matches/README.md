@@ -83,6 +83,34 @@
 
 `payload=None`(캡처 실패)일 때는 sweep을 **스킵**한다 — 일시적 네트워크/Cloudflare 이슈로 전 대회를 종료 처리하는 사고 방지.
 
+## `bwf_live_matches` ↔ `bwf_matches` 연동 (match_code)
+
+라이브 카드(results 페이지) 자체에는 BWF의 `match_code`(GUID)가 노출되지 않는다. **추가로 카드 href의 `/match/{id}`와 `bwf_matches.id`는 서로 다른 ID 체계라서 id 조인이 불가하다.** 대신 라이브 워커는 **`(tournament_id, event_name, team1_player_ids set, team2_player_ids set)`** 4-튜플로 `bwf_matches`를 룩업한다 — 같은 대회·종목 안에서 두 팀의 선수 ID 조합은 유일하다(아래 확인 SQL과 동일한 키).
+
+```sql
+-- 라이브 카드 한 장에 대응하는 bwf_matches row 찾기
+SELECT match_code FROM bwf_matches
+ WHERE tournament_id = :tid
+   AND event_name    = :event
+   AND team1_player_ids @> ARRAY[:t1...]::bigint[]
+   AND team2_player_ids @> ARRAY[:t2...]::bigint[];
+```
+
+팀 순서는 라이브 카드와 draw 데이터에서 뒤집혀 들어올 수 있어 양 팀을 `frozenset`으로 묶어 비교한다(순서 무관).
+
+**upsert 시점 (`upsert_live_matches`)**
+- 라이브 row를 쓰기 직전, 이번 틱에 등장한 `tournament_id` 집합으로 `bwf_matches`에서 `(match_code, tournament_id, event_name, team1_player_ids, team2_player_ids)`를 한 번에 SELECT (대회별 한 번).
+- 4-튜플 키로 매칭해 라이브 row의 `match_code` 컬럼에 채워 upsert.
+- `bwf_matches`에 아직 없는 매치는 None으로 남고, 다음 틱에서 재시도된다.
+
+**종료 시점 (`mark_ended`, 소프트 삭제)**
+1. 종료 후보(`tournament_status='live' AND promoted_at IS NULL`이고 이번 틱 active id에 없는 행)를 `id, match_code, score, tournament_id, event_name, team1_player_ids, team2_player_ids`로 SELECT.
+2. `match_code`가 비어 있으면 위와 동일한 4-튜플 키로 `bwf_matches`에서 재룩업해 채움(upsert 시점에 못 가져온 케이스 보강).
+3. `match_code` 기준으로 `bwf_matches.score`를 라이브 마지막 score로 UPDATE.
+4. `bwf_live_matches`는 `promoted_at=now() + tournament_status='post'`로 소프트 삭제(히스토리/UX 보존, 다시 라이브로 잡히면 자연 복구).
+
+`get-live-matches` Edge Function은 항상 `tournament_status='live'`만 반환하므로, 종료된 매치는 클라이언트에서 즉시 사라지고 score는 `bwf_matches`에서 영구 보관된다.
+
 ## CLI
 
 ```bash
