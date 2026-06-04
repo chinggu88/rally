@@ -588,7 +588,7 @@ class _LiveMatchPageViewState extends State<_LiveMatchPageView> {
     return Column(
       children: [
         SizedBox(
-          height: 260,
+          height: 400,
           child: PageView.builder(
             controller: _pageController,
             physics: const BouncingScrollPhysics(),

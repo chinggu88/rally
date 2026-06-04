@@ -1,24 +1,20 @@
-import 'dart:developer';
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../../theme/app_typography.dart';
 import '../../../../data/models/live_match_response.dart';
-import '../../../../utils/country_flag.dart';
 
 /// 라이브 매치 단일 카드 (홈 화면 상단 캐러셀에서 사용).
 ///
-/// 매거진 디자인 토큰(검정 카드 + 라임 옐로우 액센트)을 따른다.
-/// - 헤더: 대회 로고 + 대회명 + 종목/라운드/코트 라벨, 우측 상단 LIVE 배지
-/// - 본문: team1 vs team2 (국기/시드/선수명) + 게임 스코어
-/// - 푸터: 코트명 (있을 경우)
-///
-/// 카드 폭은 캐러셀에서 외부에서 결정(보통 화면 폭의 약 85%).
-/// [onTap]은 현재는 placeholder — 추후 detail_url 외부 오픈에 사용.
+/// 스코어보드형 레이아웃 — 첨부 디자인을 따른다.
+/// - 헤더: 라임 액센트 바 + 대회명(대문자), 그 아래 라운드 · 종목 라인
+/// - 본문: 좌/우 선수 아바타(국가 코드 pill) + 가운데 현재 세트 큰 스코어 + "SET n"
+/// - 이름 행: 아바타 아래 좌/우 선수명 (앞서는 쪽은 라임 강조)
+/// - PREVIOUS SETS: 완료된 세트들을 박스로 나열
+/// - 푸터: 코트명 pill (있을 경우)
 ///
 /// [scoreBumpAt] 는 컨트롤러가 Realtime UPDATE로 스코어 변경을 감지했을 때
-/// 갱신되는 타임스탬프. 값이 바뀔 때마다 현재 게임 pill과 숫자가 펄스 한 번.
+/// 갱신되는 타임스탬프. 값이 바뀔 때마다 카드 테두리 플래시 + 현재 스코어 펄스 1회.
 class LiveMatchCard extends StatefulWidget {
   const LiveMatchCard({
     super.key,
@@ -37,6 +33,7 @@ class LiveMatchCard extends StatefulWidget {
   static const Color accentDark = Color(0xFF283500);
   static const Color cardBg = Color(0xFF1C1B1B);
   static const Color cardBorder = Color(0xFF2A2A2A);
+  static const Color innerBg = Color(0xFF201F1F);
   static const Color subtleText = Color(0xFF9CA3A1);
   static const Color liveRed = Color(0xFFFF4D4F);
 
@@ -49,7 +46,7 @@ class _LiveMatchCardState extends State<LiveMatchCard>
   /// 카드 전체 테두리 깜빡임용
   late final AnimationController _flashCtrl;
 
-  /// 현재 게임 pill 스케일 + 글로우용
+  /// 현재 세트 스코어 스케일 + 글로우용
   late final AnimationController _pulseCtrl;
 
   @override
@@ -95,6 +92,33 @@ class _LiveMatchCardState extends State<LiveMatchCard>
     super.dispose();
   }
 
+  // ── 진행/결과 파생값 ──────────────────────────────────────────
+
+  /// 화면에 큰 스코어로 보여줄 게임 인덱스.
+  /// 진행 중이면 현재 게임, 종료/없으면 마지막 게임.
+  int? get _displayGameIndex {
+    final games = widget.match.games;
+    if (games.isEmpty) return null;
+    final cur = widget.match.currentGameIndex;
+    if (cur != null) return cur;
+    return games.length - 1;
+  }
+
+  /// 큰 스코어 기준으로 앞서는 쪽(1/2). 동점/판별불가 시 null.
+  /// 종료 경기는 winnerSide를 우선한다.
+  int? get _leadingSide {
+    if (widget.match.isCompleted) {
+      final w = widget.match.winnerSide;
+      if (w != null) return w;
+    }
+    final idx = _displayGameIndex;
+    if (idx == null) return null;
+    final g = widget.match.games[idx];
+    if (g.team1 > g.team2) return 1;
+    if (g.team2 > g.team1) return 2;
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -108,12 +132,6 @@ class _LiveMatchCardState extends State<LiveMatchCard>
             animation: _flashCtrl,
             builder: (context, child) {
               // bump 시점에 accent(라임)으로 튀었다가 cardBorder(어두운 회색)으로 감쇠.
-              // - _flashCtrl.value == 0 (정지/초기): t = 0 → cardBorder
-              // - _flashCtrl.value 가 forward 직후 빠르게 1로 갔다가 0으로 감쇠
-              //   하는 게 아니라, AnimationController 자체는 0 → 1 선형이므로
-              //   "강도"는 1 - value 로 계산해 시작 순간만 가장 강하게.
-              // 단, 정지 상태(value == 0)와 종료 상태(value == 1) 모두 t == 0 이 되도록
-              //   bump 발생 시 별도 처리: forward 중 status 가 forward 일 때만 강도 부여.
               final raw = _flashCtrl.value;
               final isFlashing = _flashCtrl.isAnimating;
               final t = isFlashing ? (1.0 - raw).clamp(0.0, 1.0) : 0.0;
@@ -145,36 +163,21 @@ class _LiveMatchCardState extends State<LiveMatchCard>
               );
             },
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildHeader(),
                   const SizedBox(height: 10),
-                  _buildEventLine(),
-                  const SizedBox(height: 10),
-                  _buildTeamRow(
-                    side: 1,
-                    display: widget.match.team1Display,
-                    country: (widget.match.team1Country ?? '').trim(),
-                    seed: (widget.match.team1Seed ?? '').trim(),
-                    avatars: widget.match.team1PlayerAvatars,
-                    playerCount: widget.match.team1Names?.length ?? 1,
-                  ),
-                  const SizedBox(height: 8),
-                  _buildScoreLine(),
-                  const SizedBox(height: 8),
-                  _buildTeamRow(
-                    side: 2,
-                    display: widget.match.team2Display,
-                    country: (widget.match.team2Country ?? '').trim(),
-                    seed: (widget.match.team2Seed ?? '').trim(),
-                    avatars: widget.match.team2PlayerAvatars,
-                    playerCount: widget.match.team2Names?.length ?? 1,
-                  ),
+                  _buildRoundLine(),
+                  const SizedBox(height: 16),
+                  _buildScoreboard(),
+                  const SizedBox(height: 12),
+                  _buildNamesRow(),
+                  ..._buildPreviousSets(),
                   if ((widget.match.courtName ?? '').trim().isNotEmpty) ...[
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 14),
                     _buildCourtFooter(widget.match.courtName!.trim()),
                   ],
                 ],
@@ -186,399 +189,662 @@ class _LiveMatchCardState extends State<LiveMatchCard>
     );
   }
 
-  // ── 헤더 (로고 + 대회명 + LIVE 배지) ─────────────────────────
+  // ── 헤더 (액센트 바 + 대회명) ─────────────────────────────────
   Widget _buildHeader() {
-    final logo = widget.match.displayLogoUrl;
     final tournamentName = (widget.match.name ?? '').trim();
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        _buildLogo(logo),
-        const SizedBox(width: 10),
+        Container(
+          width: 4,
+          height: 22,
+          decoration: BoxDecoration(
+            color: LiveMatchCard.accent,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 12),
         Expanded(
           child: Text(
-            tournamentName.isEmpty ? '대회 정보 없음' : tournamentName,
-            maxLines: 2,
+            (tournamentName.isEmpty ? '대회 정보 없음' : tournamentName)
+                .toUpperCase(),
+            maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: AppTypography.labelLg.copyWith(
-              color: Colors.white,
+            style: const TextStyle(
+              fontFamily: AppTypography.chivo,
+              fontWeight: FontWeight.w800,
               fontSize: 12,
-              height: 1.25,
-              letterSpacing: 0.3,
+              height: 1.2,
+              letterSpacing: 0.8,
+              color: LiveMatchCard.subtleText,
             ),
           ),
         ),
-        const SizedBox(width: 8),
       ],
     );
   }
 
-  Widget _buildLogo(String? url) {
-    const double size = 28;
-    if (url == null) {
-      return Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          color: const Color(0xFF2A2A2A),
-          borderRadius: BorderRadius.circular(6),
-        ),
-        alignment: Alignment.center,
-        child: const Icon(
-          Icons.emoji_events_outlined,
-          size: 16,
-          color: LiveMatchCard.subtleText,
+  // ── 라운드 · 종목 라인 ───────────────────────────────────────
+  Widget _buildRoundLine() {
+    final round = _roundShort((widget.match.roundName ?? '').trim());
+    final event =
+        (widget.match.eventName ?? widget.match.categoryName ?? '')
+            .trim()
+            .toUpperCase();
+
+    final children = <Widget>[];
+    if (round.isNotEmpty) {
+      children.add(
+        Text(
+          round,
+          style: const TextStyle(
+            fontFamily: AppTypography.chivo,
+            fontWeight: FontWeight.w800,
+            fontSize: 22,
+            height: 1.0,
+            letterSpacing: 0.3,
+            color: Colors.white,
+          ),
         ),
       );
     }
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(6),
-      child: CachedNetworkImage(
-        imageUrl: url,
-        width: size,
-        height: size,
-        fit: BoxFit.cover,
-        placeholder:
-            (_, __) => Container(
-              width: size,
-              height: size,
-              color: const Color(0xFF2A2A2A),
-            ),
-        errorWidget:
-            (_, __, ___) => Container(
-              width: size,
-              height: size,
-              color: const Color(0xFF2A2A2A),
-              alignment: Alignment.center,
-              child: const Icon(
-                Icons.broken_image_outlined,
-                size: 14,
-                color: LiveMatchCard.subtleText,
-              ),
-            ),
-      ),
-    );
-  }
-
-  // ── 종목·라운드 라인 ──────────────────────────────────────
-  Widget _buildEventLine() {
-    final parts = <String>[];
-    final ev = (widget.match.eventName ?? '').trim();
-    if (ev.isNotEmpty) parts.add(ev);
-    final round = (widget.match.roundName ?? '').trim();
-    if (round.isNotEmpty) parts.add(round);
-    final category = (widget.match.categoryName ?? '').trim();
-    if (category.isNotEmpty && parts.length < 2) parts.add(category);
-
-    if (parts.isEmpty) return const SizedBox.shrink();
-
-    return Text(
-      parts.join(' · '),
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      style: const TextStyle(
-        fontFamily: AppTypography.chivo,
-        fontWeight: FontWeight.w700,
-        fontSize: 11,
-        letterSpacing: 0.4,
-        color: LiveMatchCard.accent,
-      ),
-    );
-  }
-
-  // ── 팀 row (아바타/국기/시드/이름) ──────────────────────────────────
-  Widget _buildTeamRow({
-    required int side,
-    required String display,
-    required String country,
-    required String seed,
-    List<String>? avatars,
-    int playerCount = 1,
-  }) {
-    final flag = flagEmoji(country);
-    final isWinner = widget.match.winnerSide == side;
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        // 선수 프로필 아바타 (단식 1개, 복식 2개) — URL은 추후 edge function에서 제공.
-        _buildPlayerAvatars(avatars: avatars, count: playerCount.clamp(1, 2)),
-        const SizedBox(width: 8),
-        SizedBox(
-          width: 22,
-          child: Text(
-            flag.isEmpty ? '🏳' : flag,
-            style: const TextStyle(fontSize: 16),
+    if (round.isNotEmpty && event.isNotEmpty) {
+      children.add(
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 10),
+          child: Icon(Icons.circle, size: 6, color: LiveMatchCard.accent),
+        ),
+      );
+    }
+    if (event.isNotEmpty) {
+      children.add(
+        Text(
+          event,
+          style: const TextStyle(
+            fontFamily: AppTypography.chivo,
+            fontWeight: FontWeight.w800,
+            fontSize: 22,
+            height: 1.0,
+            letterSpacing: 0.3,
+            color: LiveMatchCard.accent,
           ),
         ),
-        const SizedBox(width: 6),
-        if (seed.isNotEmpty) ...[
+      );
+    }
+
+    if (children.isEmpty) return const SizedBox.shrink();
+    return Row(crossAxisAlignment: CrossAxisAlignment.center, children: children);
+  }
+
+  // ── 스코어보드 (아바타 + 현재 세트 큰 스코어) ───────────────────
+  Widget _buildScoreboard() {
+    final leading = _leadingSide;
+    return SizedBox(
+      height: 108,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // 뒤쪽 "LIVE" 워터마크 (진행 중일 때만)
+          if (widget.match.isLive)
+            Positioned.fill(
+              child: IgnorePointer(
+                child: Center(
+                  child: Text(
+                    'LIVE',
+                    style: TextStyle(
+                      fontFamily: AppTypography.chivo,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 68,
+                      letterSpacing: 4,
+                      color: Colors.white.withValues(alpha: 0.045),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildAvatarBlock(
+                avatars: widget.match.team1PlayerAvatars,
+                count: (widget.match.team1Names?.length ?? 1).clamp(1, 2),
+                country: (widget.match.team1Country ?? '').trim(),
+                highlight: leading == 1,
+              ),
+              Expanded(child: _buildBigScore()),
+              _buildAvatarBlock(
+                avatars: widget.match.team2PlayerAvatars,
+                count: (widget.match.team2Names?.length ?? 1).clamp(1, 2),
+                country: (widget.match.team2Country ?? '').trim(),
+                highlight: leading == 2,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBigScore() {
+    final idx = _displayGameIndex;
+    final leading = _leadingSide;
+
+    if (idx == null) {
+      // 게임 스코어가 없을 때: 폴백 문자열 또는 대기 라벨.
+      final fallback = (widget.match.scoreDisplay ?? '').trim();
+      return Center(
+        child: Text(
+          fallback.isEmpty ? '경기 시작 대기' : fallback,
+          textAlign: TextAlign.center,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontFamily: AppTypography.chivo,
+            fontWeight: FontWeight.w800,
+            fontSize: fallback.isEmpty ? 13 : 18,
+            letterSpacing: 0.4,
+            color: fallback.isEmpty ? LiveMatchCard.subtleText : Colors.white,
+          ),
+        ),
+      );
+    }
+
+    final g = widget.match.games[idx];
+    final setNo = idx + 1;
+    final completed = widget.match.isCompleted;
+
+    Color scoreColor(int side) {
+      if (leading == side) return LiveMatchCard.accent;
+      return Colors.white;
+    }
+
+    final scoreRow = Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(
+          '${g.team1}',
+          style: TextStyle(
+            fontFamily: AppTypography.chivo,
+            fontWeight: FontWeight.w800,
+            fontSize: 44,
+            height: 1.0,
+            color: scoreColor(1),
+          ),
+        ),
+        const SizedBox(width: 14),
+        Text(
+          '${g.team2}',
+          style: TextStyle(
+            fontFamily: AppTypography.chivo,
+            fontWeight: FontWeight.w800,
+            fontSize: 44,
+            height: 1.0,
+            color: scoreColor(2),
+          ),
+        ),
+      ],
+    );
+
+    // 스코어 변경 시 펄스(스케일 + 글로우).
+    final pulsingScore = AnimatedBuilder(
+      animation: _pulseCtrl,
+      builder: (context, child) {
+        final v = _pulseCtrl.value;
+        final pulse = 1.0 + 0.12 * _pulseShape(v);
+        return Transform.scale(scale: pulse, child: child);
+      },
+      child: scoreRow,
+    );
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 6),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          pulsingScore,
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (!completed) ...[
+                Container(
+                  width: 5,
+                  height: 5,
+                  decoration: const BoxDecoration(
+                    color: LiveMatchCard.accent,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 5),
+              ],
+              Text(
+                completed ? 'FINAL' : 'SET $setNo',
+                style: const TextStyle(
+                  fontFamily: AppTypography.chivo,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 11,
+                  letterSpacing: 1.0,
+                  color: LiveMatchCard.accent,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── 선수 아바타 블록 (라운드 사각형 + 국가 코드 pill) ──────────────
+  Widget _buildAvatarBlock({
+    required List<String>? avatars,
+    required int count,
+    required String country,
+    required bool highlight,
+  }) {
+    final code = country.toUpperCase();
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildAvatar(avatars: avatars, count: count, highlight: highlight),
+        if (code.isNotEmpty) ...[
+          const SizedBox(height: 8),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
             decoration: BoxDecoration(
-              color: LiveMatchCard.accentDark,
+              color: LiveMatchCard.accent,
               borderRadius: BorderRadius.circular(4),
             ),
             child: Text(
-              seed,
+              code,
               style: const TextStyle(
                 fontFamily: AppTypography.chivo,
                 fontWeight: FontWeight.w800,
-                fontSize: 10,
-                letterSpacing: 0.4,
-                color: LiveMatchCard.accent,
+                fontSize: 9,
+                letterSpacing: 0.6,
+                color: LiveMatchCard.accentDark,
               ),
             ),
           ),
-          const SizedBox(width: 8),
         ],
-        Expanded(
-          child: Text(
-            display,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontFamily: AppTypography.chivo,
-              fontWeight: isWinner ? FontWeight.w800 : FontWeight.w600,
-              fontSize: 14,
-              height: 1.2,
-              color: isWinner ? LiveMatchCard.accent : Colors.white,
-            ),
-          ),
-        ),
       ],
     );
   }
 
-  // ── 스코어 라인 (게임별 점수 또는 폴백 문자열) ─────────────
-  Widget _buildScoreLine() {
-    final games = widget.match.games;
-    if (games.isNotEmpty) {
-      final currentIdx = widget.match.currentGameIndex;
-      return Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          for (int i = 0; i < games.length; i++) ...[
-            if (i > 0) const SizedBox(width: 8),
-            _buildGamePill(game: games[i], isCurrent: i == currentIdx),
-          ],
-        ],
-      );
-    }
-
-    final fallback = (widget.match.scoreDisplay ?? '').trim();
-    if (fallback.isEmpty) {
-      return Text(
-        '경기 시작 대기',
-        style: AppTypography.bodyMd.copyWith(
-          color: LiveMatchCard.subtleText,
-          fontSize: 12,
-        ),
-      );
-    }
-    return Text(
-      fallback,
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      style: const TextStyle(
-        fontFamily: AppTypography.chivo,
-        fontWeight: FontWeight.w800,
-        fontSize: 14,
-        letterSpacing: 0.4,
-        color: Colors.white,
-      ),
-    );
-  }
-
-  Widget _buildGamePill({
-    required LiveGameScore game,
-    required bool isCurrent,
-  }) {
-    final bg = isCurrent ? LiveMatchCard.accent : const Color(0xFF201F1F);
-    final border = isCurrent ? LiveMatchCard.accent : const Color(0xFF2A2A2A);
-    final fg = isCurrent ? LiveMatchCard.accentDark : Colors.white;
-
-    final scoreText = '${game.team1}-${game.team2}';
-
-    // 숫자가 바뀔 때 AnimatedSwitcher로 페이드 + 미세 슬라이드.
-    final scoreLabel = AnimatedSwitcher(
-      duration: const Duration(milliseconds: 280),
-      transitionBuilder: (child, anim) {
-        final offsetAnim = Tween<Offset>(
-          begin: const Offset(0, 0.35),
-          end: Offset.zero,
-        ).animate(CurvedAnimation(parent: anim, curve: Curves.easeOutCubic));
-        return ClipRect(
-          child: FadeTransition(
-            opacity: anim,
-            child: SlideTransition(position: offsetAnim, child: child),
-          ),
-        );
-      },
-      child: Text(
-        scoreText,
-        key: ValueKey<String>(scoreText),
-        style: TextStyle(
-          fontFamily: AppTypography.chivo,
-          fontWeight: FontWeight.w800,
-          fontSize: 12,
-          letterSpacing: 0.3,
-          color: fg,
-        ),
-      ),
-    );
-
-    // 현재 게임 pill에는 스코어 변경 시 펄스(스케일 + 글로우) 추가.
-    final pillCore = Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: border),
-      ),
-      child: scoreLabel,
-    );
-
-    if (!isCurrent) return pillCore;
-
-    return AnimatedBuilder(
-      animation: _pulseCtrl,
-      builder: (context, child) {
-        // 0 → 1로 가며 1.0 → 1.18 → 1.0 펄스. 이중 sin으로 부드럽게.
-        final v = _pulseCtrl.value;
-        final pulse = 1.0 + 0.18 * _pulseShape(v);
-        final glow = 0.55 * _pulseShape(v);
-        return Transform.scale(
-          scale: pulse,
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(6),
-              boxShadow:
-                  glow > 0.01
-                      ? [
-                        BoxShadow(
-                          color: LiveMatchCard.accent.withValues(alpha: glow),
-                          blurRadius: 14,
-                          spreadRadius: 1,
-                        ),
-                      ]
-                      : null,
-            ),
-            child: child,
-          ),
-        );
-      },
-      child: pillCore,
-    );
-  }
-
-  /// 0..1 → 0..1..0 의 부드러운 산 모양 (펄스 1회).
-  double _pulseShape(double t) {
-    if (t <= 0) return 0;
-    if (t >= 1) return 0;
-    // sin(πt) → 0..1..0
-    return (t < 0.5 ? t * 2 : (1 - t) * 2);
-  }
-
-  // ── 선수 프로필 아바타 ──────────────────────────────────
-  /// 선수 아바타 스택 (단식 1개 / 복식 2개 살짝 겹친 형태).
-  ///
-  /// [avatars]는 URL 목록(인덱스는 선수 순서). null/짧으면 placeholder 원으로 채움.
-  /// 추후 edge function에서 `team{1,2}_player_avatars` 배열을 제공할 예정이며,
-  /// 그 시점이 와도 본 위젯은 그대로 동작한다.
-  Widget _buildPlayerAvatars({
+  Widget _buildAvatar({
     required List<String>? avatars,
     required int count,
+    required bool highlight,
   }) {
-    const double size = 22;
-    const double overlap = 8; // 두 아바타가 겹치는 폭
-    final width = count == 1 ? size : size * 2 - overlap;
-
     String? urlAt(int i) {
       if (avatars == null || i >= avatars.length) return null;
       final u = avatars[i].trim();
       return u.isEmpty ? null : u;
     }
 
-    return SizedBox(
-      width: width,
-      height: size,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Positioned(left: 0, top: 0, child: _avatarCircle(urlAt(0), size)),
-          if (count >= 2)
+    if (count >= 2) {
+      // 복식: 독립된 두 컨테이너를 최소한으로 겹쳐 대각선으로 배치.
+      const double size = 48;
+      const double offset = 38; // size보다 작게 → 살짝(10px)만 겹침
+      const double total = size + offset;
+      return SizedBox(
+        width: total,
+        height: total,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            // 첫 번째 선수: 좌상단
             Positioned(
-              left: size - overlap,
+              left: 0,
               top: 0,
-              child: _avatarCircle(urlAt(1), size),
+              child: _avatarFrame(
+                _avatarImage(urlAt(0)),
+                size: size,
+                highlight: highlight,
+              ),
             ),
+            // 두 번째 선수: 우하단 (위에 겹쳐 그려져 경계가 드러남)
+            Positioned(
+              right: 0,
+              bottom: 0,
+              child: _avatarFrame(
+                _avatarImage(urlAt(1)),
+                size: size,
+                highlight: highlight,
+                gap: true,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // 단식: 단일 컨테이너.
+    return _avatarFrame(
+      _avatarImage(urlAt(0)),
+      size: 70,
+      highlight: highlight,
+    );
+  }
+
+  /// 라운드 사각형 아바타 프레임.
+  ///
+  /// [gap] 이 true이면 겹친 아바타가 서로 분리돼 보이도록 cardBg 외곽 링을 추가한다.
+  Widget _avatarFrame(
+    Widget child, {
+    required double size,
+    required bool highlight,
+    bool gap = false,
+  }) {
+    final borderColor =
+        highlight ? LiveMatchCard.accent : LiveMatchCard.cardBorder;
+    final frame = Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: LiveMatchCard.innerBg,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: borderColor, width: highlight ? 2 : 1),
+        boxShadow:
+            highlight
+                ? [
+                  BoxShadow(
+                    color: LiveMatchCard.accent.withValues(alpha: 0.22),
+                    blurRadius: 12,
+                    spreadRadius: 0.5,
+                  ),
+                ]
+                : null,
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(13),
+        child: child,
+      ),
+    );
+
+    if (!gap) return frame;
+    // 겹치는 쪽 아바타에 카드 배경색 외곽 링을 둘러 경계를 분리.
+    return Container(
+      padding: const EdgeInsets.all(2),
+      decoration: BoxDecoration(
+        color: LiveMatchCard.cardBg,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: frame,
+    );
+  }
+
+  Widget _avatarImage(String? url) {
+    final placeholder = Container(
+      color: LiveMatchCard.innerBg,
+      alignment: Alignment.center,
+      child: const Icon(
+        Icons.person,
+        size: 26,
+        color: LiveMatchCard.subtleText,
+      ),
+    );
+    if (url == null) return placeholder;
+    return CachedNetworkImage(
+      imageUrl: url,
+      fit: BoxFit.cover,
+      placeholder: (_, __) => Container(color: LiveMatchCard.innerBg),
+      errorWidget: (_, __, ___) => placeholder,
+    );
+  }
+
+  // ── 이름 행 (아바타 아래 좌/우 선수명) ──────────────────────────
+  Widget _buildNamesRow() {
+    final leading = _leadingSide;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: _nameLabel(
+            widget.match.team1Display,
+            align: TextAlign.left,
+            highlight: leading == 1,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _nameLabel(
+            widget.match.team2Display,
+            align: TextAlign.right,
+            highlight: leading == 2,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _nameLabel(
+    String name, {
+    required TextAlign align,
+    required bool highlight,
+  }) {
+    final style = TextStyle(
+      fontFamily: AppTypography.chivo,
+      fontWeight: highlight ? FontWeight.w800 : FontWeight.w700,
+      fontSize: 14,
+      height: 1.15,
+      letterSpacing: 0.5,
+      color: highlight ? LiveMatchCard.accent : Colors.white,
+    );
+
+    // 복식: "/" 기준으로 분리해 선수별 한 줄씩(최대 2줄), 줄별로 넘치면 "..." 표시.
+    final parts = name
+        .split('/')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
+    if (parts.length >= 2) {
+      return Column(
+        crossAxisAlignment:
+            align == TextAlign.right
+                ? CrossAxisAlignment.end
+                : CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final p in parts.take(2))
+            Text(
+              p.toUpperCase(),
+              textAlign: align,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: style,
+            ),
+        ],
+      );
+    }
+
+    // 단식: 한 선수명, 넘치면 2줄까지 후 "..." 표시.
+    return Text(
+      name.toUpperCase(),
+      textAlign: align,
+      maxLines: 2,
+      overflow: TextOverflow.ellipsis,
+      style: style,
+    );
+  }
+
+  // ── PREVIOUS SETS (완료된 세트 박스 나열) ──────────────────────
+  List<Widget> _buildPreviousSets() {
+    final idx = _displayGameIndex;
+    if (idx == null || idx <= 0) return const <Widget>[];
+    final games = widget.match.games;
+    final previous = games.sublist(0, idx);
+    if (previous.isEmpty) return const <Widget>[];
+
+    return [
+      const SizedBox(height: 18),
+      const Center(
+        child: Text(
+          'PREVIOUS SETS',
+          style: TextStyle(
+            fontFamily: AppTypography.chivo,
+            fontWeight: FontWeight.w800,
+            fontSize: 10,
+            letterSpacing: 1.6,
+            color: LiveMatchCard.subtleText,
+          ),
+        ),
+      ),
+      const SizedBox(height: 10),
+      Center(
+        child: Wrap(
+          spacing: 10,
+          runSpacing: 8,
+          alignment: WrapAlignment.center,
+          children: [
+            for (int i = 0; i < previous.length; i++)
+              _buildSetBox(
+                setNo: i + 1,
+                game: previous[i],
+                highlight: i == previous.length - 1,
+              ),
+          ],
+        ),
+      ),
+    ];
+  }
+
+  Widget _buildSetBox({
+    required int setNo,
+    required LiveGameScore game,
+    required bool highlight,
+  }) {
+    final t1won = game.team1 > game.team2;
+    final t2won = game.team2 > game.team1;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: LiveMatchCard.innerBg,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: highlight ? LiveMatchCard.accent : LiveMatchCard.cardBorder,
+          width: highlight ? 1.4 : 1,
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'SET $setNo',
+            style: const TextStyle(
+              fontFamily: AppTypography.chivo,
+              fontWeight: FontWeight.w700,
+              fontSize: 9,
+              letterSpacing: 0.8,
+              color: LiveMatchCard.subtleText,
+            ),
+          ),
+          const SizedBox(height: 3),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '${game.team1}',
+                style: TextStyle(
+                  fontFamily: AppTypography.chivo,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 17,
+                  height: 1.0,
+                  color: t1won ? LiveMatchCard.accent : Colors.white,
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 6),
+                child: Text(
+                  ':',
+                  style: TextStyle(
+                    fontFamily: AppTypography.chivo,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                    color: LiveMatchCard.subtleText,
+                  ),
+                ),
+              ),
+              Text(
+                '${game.team2}',
+                style: TextStyle(
+                  fontFamily: AppTypography.chivo,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 17,
+                  height: 1.0,
+                  color: t2won ? LiveMatchCard.accent : Colors.white,
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
   }
 
-  Widget _avatarCircle(String? url, double size) {
-    final placeholder = Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: const Color(0xFF2A2A2A),
-        shape: BoxShape.circle,
-        border: Border.all(color: LiveMatchCard.cardBg, width: 1.5),
-      ),
-      alignment: Alignment.center,
-      child: const Icon(
-        Icons.person_outline,
-        size: 13,
-        color: LiveMatchCard.subtleText,
-      ),
-    );
-
-    if (url == null) return placeholder;
-
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: LiveMatchCard.cardBg, width: 1.5),
-      ),
-      child: ClipOval(
-        child: CachedNetworkImage(
-          imageUrl: url,
-          width: size,
-          height: size,
-          fit: BoxFit.cover,
-          placeholder: (_, __) => Container(color: const Color(0xFF2A2A2A)),
-          errorWidget: (_, __, ___) => placeholder,
+  // ── 푸터 (코트명 pill) ────────────────────────────────────────
+  Widget _buildCourtFooter(String courtName) {
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        decoration: BoxDecoration(
+          color: LiveMatchCard.innerBg,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: LiveMatchCard.cardBorder),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.person_outline,
+              size: 13,
+              color: LiveMatchCard.subtleText,
+            ),
+            const SizedBox(width: 5),
+            Text(
+              courtName.toUpperCase(),
+              style: const TextStyle(
+                fontFamily: AppTypography.chivo,
+                fontWeight: FontWeight.w700,
+                fontSize: 11,
+                letterSpacing: 0.6,
+                color: LiveMatchCard.subtleText,
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  // ── 푸터 (코트명) ────────────────────────────────────────
-  Widget _buildCourtFooter(String courtName) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Icon(
-          Icons.stadium_outlined,
-          size: 12,
-          color: LiveMatchCard.subtleText,
-        ),
-        const SizedBox(width: 4),
-        Text(
-          courtName,
-          style: const TextStyle(
-            fontFamily: AppTypography.sourceSans,
-            fontWeight: FontWeight.w600,
-            fontSize: 11,
-            color: LiveMatchCard.subtleText,
-            letterSpacing: 0.2,
-          ),
-        ),
-      ],
-    );
+  // ── helpers ───────────────────────────────────────────────────
+
+  /// 0..1 → 0..1..0 의 부드러운 산 모양 (펄스 1회).
+  double _pulseShape(double t) {
+    if (t <= 0) return 0;
+    if (t >= 1) return 0;
+    return (t < 0.5 ? t * 2 : (1 - t) * 2);
+  }
+
+  /// 라운드명을 짧은 코드로 축약. (예: "Round of 16" → "R16", "Quarter-final" → "QF")
+  String _roundShort(String round) {
+    if (round.isEmpty) return '';
+    final lower = round.toLowerCase();
+
+    final roundOf = RegExp(r'round\s*of\s*(\d+)').firstMatch(lower);
+    if (roundOf != null) return 'R${roundOf.group(1)}';
+
+    if (lower.contains('quarter')) return 'QF';
+    if (lower.contains('semi')) return 'SF';
+    if (lower == 'final' || lower.contains('final')) {
+      // "final"만 단독이면 FINAL, 그 외 (예: "semi-final")는 위에서 처리됨.
+      return 'FINAL';
+    }
+    if (lower.contains('qualif')) return 'QUAL';
+
+    // 그 외에는 원본을 대문자로 (최대 6자).
+    final up = round.toUpperCase();
+    return up.length <= 6 ? up : up.substring(0, 6);
   }
 }
