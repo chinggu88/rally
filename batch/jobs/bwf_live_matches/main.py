@@ -186,9 +186,13 @@ def _run_one_tick(
         return
 
     # 각 라이브 대회의 results/{today} 페이지에서 라이브 카드 수집
+    # polled_tournament_ids = results 페이지 navigation까지 예외 없이 통과한 대회.
+    # 카드 0개여도 "조회는 성공"으로 본다 — mark_ended는 이 경계 안에서만 sweep
+    # 한다(SPA 캐시 락/네트워크 실패 케이스의 폭주 방지).
     today = _today_url_segment()
     all_matches: list[dict[str, Any]] = []
     per_tournament: list[tuple[str, int, int]] = []  # (name, tid, card_count)
+    polled_tournament_ids: list[int] = []
     for route in routes:
         tid = route["tournament_id"]
         try:
@@ -200,6 +204,7 @@ def _run_one_tick(
                 f"results page navigation failed tid={tid}: {type(e).__name__}: {e}"
             )
             continue
+        polled_tournament_ids.append(tid)
         matches = parse_live_match_cards(cards, route)
         all_matches.extend(matches)
         per_tournament.append((route["name"], tid, len(matches)))
@@ -227,20 +232,23 @@ def _run_one_tick(
     written = upsert_live_matches(supabase, all_matches)
     state.total_upserted += written
 
-    # 빈 카드 결과(모든 대회에서 라이브 0개)는 일시적 SPA 캡처 실패일 가능성이
-    # 높다 — 정상 종료라면 캘린더 캡처도 곧 라이브 대회를 제거할 것이다. 그
-    # 사이 모든 매치를 종료 마킹하면 클라이언트가 "방금 끝남"으로 잘못 보고
-    # 다음 틱에 다시 살아나면 깜빡임이 생긴다. 그래서 캡처가 비어도 active_ids
-    # 가 1개 이상일 때만 sweep.
-    if active_match_ids:
-        ended = mark_ended(supabase, active_match_ids, log)
+    # results 페이지 navigation까지 성공한 대회 경계 안에서만 sweep한다.
+    # - polled에 있고 active_ids에 없는 row → 그 대회는 조회됐는데 매치가 더
+    #   이상 라이브가 아니라는 뜻 → 종료 처리.
+    # - polled에 없는 대회(전부 navigation 실패) → 안전책으로 sweep 스킵.
+    if polled_tournament_ids:
+        ended = mark_ended(
+            supabase, active_match_ids, log,
+            polled_tournament_ids=polled_tournament_ids,
+        )
         state.total_ended += ended
     else:
         ended = 0
-        log.info("skipping mark_ended: no active matches captured this tick")
+        log.info("skipping mark_ended: no tournament results page polled this tick")
     log.info(
         f"tick {state.ticks}: parents={len(parents)} matches_upserted={written} "
         f"active_matches={len(active_match_ids)} newly_ended={ended} "
+        f"polled_tournaments={len(polled_tournament_ids)} "
         f"by_tournament={per_tournament}"
     )
 
