@@ -4,8 +4,11 @@ import 'dart:developer';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../data/models/get_news_cards_response.dart';
 import '../../../data/models/live_match_response.dart';
+import '../../../data/models/news_card_response.dart';
 import '../../../data/repositories/live_match_repository.dart';
+import '../../../data/repositories/news_card_repository.dart';
 
 /// 홈(뉴스) 화면 컨트롤러.
 ///
@@ -21,6 +24,12 @@ class NewsController extends GetxController {
 
   final LiveMatchRepository _liveMatchRepository =
       Get.find<LiveMatchRepository>();
+
+  final NewsCardRepository _newsCardRepository =
+      Get.find<NewsCardRepository>();
+
+  /// 카드뉴스 페이지당 개수 (Edge Function 기본값과 동일)
+  static const int _newsPageSize = 20;
 
   /// 라이브 매치 목록 (start_date ASC → id ASC)
   final _liveMatches = <LiveMatchResponse>[].obs;
@@ -44,6 +53,34 @@ class NewsController extends GetxController {
   /// View에서 카드별 펄스 애니메이션 트리거에 사용한다.
   final RxMap<int, DateTime> scoreBumpAt = <int, DateTime>{}.obs;
 
+  // ── 카드뉴스 상태 ────────────────────────────────────────────
+
+  /// 카드뉴스 목록 (최신순, 무한 스크롤로 누적)
+  final _newsCards = <NewsCardResponse>[].obs;
+  List<NewsCardResponse> get newsCards => _newsCards;
+
+  /// 첫 페이지 로딩 중 여부
+  final _isNewsLoading = false.obs;
+  bool get isNewsLoading => _isNewsLoading.value;
+
+  /// 다음 페이지(더보기) 로딩 중 여부
+  final _isNewsLoadingMore = false.obs;
+  bool get isNewsLoadingMore => _isNewsLoadingMore.value;
+
+  /// 카드뉴스 에러 메시지 (null이면 정상)
+  final _newsError = RxnString();
+  String? get newsError => _newsError.value;
+
+  /// 마지막으로 로드한 카드뉴스 페이지 번호
+  int _newsPage = 0;
+
+  /// 더 불러올 페이지가 남았는지 여부
+  final _hasMoreNews = true.obs;
+  bool get hasMoreNews => _hasMoreNews.value;
+
+  /// 카드뉴스 inflight 토큰 (race condition 방지)
+  int _newsInflightToken = 0;
+
   /// 진행 중인 inflight 요청 토큰 (race condition 방지)
   int _inflightToken = 0;
 
@@ -54,6 +91,7 @@ class NewsController extends GetxController {
   void onInit() {
     super.onInit();
     fetchLiveMatches();
+    fetchNewsCards();
     _subscribeRealtime();
   }
 
@@ -89,9 +127,96 @@ class NewsController extends GetxController {
     }
   }
 
-  /// Pull-to-refresh / 재시도 버튼용 — 라이브 매치 재호출.
+  /// Pull-to-refresh / 재시도 버튼용 — 라이브 매치 + 카드뉴스 재호출.
   Future<void> refreshLiveMatches() async {
-    await fetchLiveMatches();
+    await Future.wait([
+      fetchLiveMatches(),
+      fetchNewsCards(),
+    ]);
+  }
+
+  // ── 카드뉴스 조회 ────────────────────────────────────────────
+
+  /// 카드뉴스 첫 페이지를 조회한다(기존 목록을 교체).
+  ///
+  /// pull-to-refresh / 최초 진입 / 재시도에 사용한다.
+  Future<void> fetchNewsCards() async {
+    final token = ++_newsInflightToken;
+
+    try {
+      _isNewsLoading.value = true;
+      _newsError.value = null;
+
+      final response = await _newsCardRepository.getNewsCards(
+        page: 1,
+        perPage: _newsPageSize,
+      );
+
+      // race condition 가드: 더 새로운 요청이 발생했으면 결과 무시
+      if (token != _newsInflightToken) return;
+
+      _newsCards.assignAll(response.cards);
+      _newsPage = response.page ?? 1;
+      _hasMoreNews.value = _computeHasMore(response);
+    } catch (e) {
+      if (token != _newsInflightToken) return;
+      log('NewsController.fetchNewsCards error: $e');
+      _newsError.value = '뉴스를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.';
+      _newsCards.clear();
+      _hasMoreNews.value = false;
+    } finally {
+      if (token == _newsInflightToken) {
+        _isNewsLoading.value = false;
+      }
+    }
+  }
+
+  /// 다음 페이지를 조회해 기존 목록 뒤에 누적한다(무한 스크롤).
+  ///
+  /// 이미 로딩 중이거나 더 불러올 페이지가 없으면 no-op.
+  Future<void> loadMoreNewsCards() async {
+    if (_isNewsLoading.value ||
+        _isNewsLoadingMore.value ||
+        !_hasMoreNews.value) {
+      return;
+    }
+
+    final token = _newsInflightToken;
+    final nextPage = _newsPage + 1;
+
+    try {
+      _isNewsLoadingMore.value = true;
+
+      final response = await _newsCardRepository.getNewsCards(
+        page: nextPage,
+        perPage: _newsPageSize,
+      );
+
+      // fetchNewsCards(refresh)가 끼어들었으면 더보기 결과는 버린다.
+      if (token != _newsInflightToken) return;
+
+      _newsCards.addAll(response.cards);
+      _newsPage = response.page ?? nextPage;
+      _hasMoreNews.value = _computeHasMore(response);
+    } catch (e) {
+      log('NewsController.loadMoreNewsCards error: $e');
+      // 더보기 실패는 조용히 무시(다음 스크롤에서 재시도 가능). 더 시도하지 않도록 막지 않는다.
+    } finally {
+      if (token == _newsInflightToken) {
+        _isNewsLoadingMore.value = false;
+      }
+    }
+  }
+
+  /// 응답의 total/count 기준으로 다음 페이지 존재 여부를 계산한다.
+  bool _computeHasMore(GetNewsCardsResponse response) {
+    final count = response.count ?? response.cards.length;
+    // 이번 페이지가 페이지 크기보다 적게 왔으면 마지막 페이지.
+    if (count < (response.perPage ?? _newsPageSize)) return false;
+    // total 정보가 있으면 누적 개수로 판단.
+    final total = response.total;
+    if (total != null) return _newsCards.length < total;
+    return count > 0;
   }
 
   // ── Realtime 구독 ────────────────────────────────────────────
