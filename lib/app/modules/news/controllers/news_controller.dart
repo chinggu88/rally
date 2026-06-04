@@ -4,11 +4,13 @@ import 'dart:developer';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../data/models/active_tournament_response.dart';
 import '../../../data/models/get_news_cards_response.dart';
 import '../../../data/models/live_match_response.dart';
 import '../../../data/models/news_card_response.dart';
 import '../../../data/repositories/live_match_repository.dart';
 import '../../../data/repositories/news_card_repository.dart';
+import '../../../data/repositories/tournament_repository.dart';
 
 /// 홈(뉴스) 화면 컨트롤러.
 ///
@@ -27,6 +29,9 @@ class NewsController extends GetxController {
 
   final NewsCardRepository _newsCardRepository =
       Get.find<NewsCardRepository>();
+
+  final TournamentRepository _tournamentRepository =
+      Get.find<TournamentRepository>();
 
   /// 카드뉴스 페이지당 개수 (Edge Function 기본값과 동일)
   static const int _newsPageSize = 20;
@@ -52,6 +57,23 @@ class NewsController extends GetxController {
   /// 마지막 스코어 변경이 발생한 매치 id → 변경 시각.
   /// View에서 카드별 펄스 애니메이션 트리거에 사용한다.
   final RxMap<int, DateTime> scoreBumpAt = <int, DateTime>{}.obs;
+
+  // ── 남은 대회(진행중/진행예정) 상태 ───────────────────────────
+
+  /// 진행중/진행예정 대회 목록 (start_date ASC, 한국 선수 정보 포함)
+  final _activeTournaments = <ActiveTournamentResponse>[].obs;
+  List<ActiveTournamentResponse> get activeTournaments => _activeTournaments;
+
+  /// 남은 대회 로딩 중 여부
+  final _isActiveTournamentsLoading = false.obs;
+  bool get isActiveTournamentsLoading => _isActiveTournamentsLoading.value;
+
+  /// 남은 대회 에러 메시지 (null이면 정상)
+  final _activeTournamentsError = RxnString();
+  String? get activeTournamentsError => _activeTournamentsError.value;
+
+  /// 남은 대회 inflight 토큰 (race condition 방지)
+  int _activeTournamentsToken = 0;
 
   // ── 카드뉴스 상태 ────────────────────────────────────────────
 
@@ -90,6 +112,7 @@ class NewsController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    fetchActiveTournaments();
     fetchLiveMatches();
     fetchNewsCards();
     _subscribeRealtime();
@@ -127,12 +150,38 @@ class NewsController extends GetxController {
     }
   }
 
-  /// Pull-to-refresh / 재시도 버튼용 — 라이브 매치 + 카드뉴스 재호출.
+  /// Pull-to-refresh / 재시도 버튼용 — 남은 대회 + 라이브 매치 + 카드뉴스 재호출.
   Future<void> refreshLiveMatches() async {
     await Future.wait([
+      fetchActiveTournaments(),
       fetchLiveMatches(),
       fetchNewsCards(),
     ]);
+  }
+
+  /// 진행중/진행예정 "남은 대회" 목록을 조회한다(한국 선수 참여 정보 포함).
+  Future<void> fetchActiveTournaments() async {
+    final token = ++_activeTournamentsToken;
+
+    try {
+      _isActiveTournamentsLoading.value = true;
+      _activeTournamentsError.value = null;
+
+      final response = await _tournamentRepository.getActiveTournamentsKr();
+
+      // race condition 가드: 더 새로운 요청이 발생했으면 결과 무시
+      if (token != _activeTournamentsToken) return;
+      _activeTournaments.assignAll(response.tournaments);
+    } catch (e) {
+      if (token != _activeTournamentsToken) return;
+      log('NewsController.fetchActiveTournaments error: $e');
+      _activeTournamentsError.value = '대회 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.';
+      _activeTournaments.clear();
+    } finally {
+      if (token == _activeTournamentsToken) {
+        _isActiveTournamentsLoading.value = false;
+      }
+    }
   }
 
   // ── 카드뉴스 조회 ────────────────────────────────────────────
@@ -151,10 +200,6 @@ class NewsController extends GetxController {
         page: 1,
         perPage: _newsPageSize,
       );
-
-      // race condition 가드: 더 새로운 요청이 발생했으면 결과 무시
-      if (token != _newsInflightToken) return;
-
       _newsCards.assignAll(response.cards);
       _newsPage = response.page ?? 1;
       _hasMoreNews.value = _computeHasMore(response);
@@ -263,7 +308,6 @@ class NewsController extends GetxController {
   }
 
   void _onLiveMatchChange(PostgresChangePayload payload) {
-    log('asdf ${payload.eventType}');
     try {
       switch (payload.eventType) {
         case PostgresChangeEvent.insert:
@@ -356,7 +400,6 @@ class NewsController extends GetxController {
   }
 
   void _handleDelete(Map<String, dynamic> oldRow) {
-    log('asdf delete oldRow=$oldRow');
     final oldId = oldRow['id'];
     final id =
         oldId is int

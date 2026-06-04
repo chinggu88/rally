@@ -2,6 +2,8 @@ import 'dart:developer';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../models/active_tournament_response.dart';
+import '../models/get_active_tournaments_response.dart';
 import '../models/get_tournament_matches_response.dart';
 import '../models/get_tournament_participants_response.dart';
 import '../models/get_tournament_response.dart';
@@ -117,6 +119,69 @@ class TournamentRepository {
       rethrow;
     } catch (e) {
       log('TournamentRepository.getTournament error: $e');
+      rethrow;
+    }
+  }
+
+  /// 진행중/진행예정 대회 + 한국 선수 참여 정보 조회
+  /// — Edge Function: `get-active-tournaments-kr`
+  ///
+  /// 오늘 날짜를 포함해 진행중(ongoing) 또는 진행예정(upcoming)인 대회를
+  /// start_date 오름차순으로 조회하고, 각 대회의 한국 선수 참여 인원을 포함한다.
+  ///
+  /// 대회가 없거나 미존재(404)는 에러가 아니라 "데이터 없음"으로 간주해
+  /// 빈 목록을 가진 [GetActiveTournamentsResponse]를 반환한다.
+  /// 그 외 실패 시 `Exception('get-active-tournaments-kr failed: ...')` throw.
+  Future<GetActiveTournamentsResponse> getActiveTournamentsKr() async {
+    try {
+      final res = await _client.functions.invoke(
+        'get-active-tournaments-kr',
+        method: HttpMethod.get,
+      );
+
+      // 데이터 없음: 빈 목록으로 정상 반환
+      if (res.status == 404) {
+        return GetActiveTournamentsResponse(
+          count: 0,
+          tournaments: const <ActiveTournamentResponse>[],
+        );
+      }
+
+      if (res.status != 200 || res.data == null) {
+        throw Exception(
+          'get-active-tournaments-kr failed: '
+          'status=${res.status}, data=${res.data}',
+        );
+      }
+
+      final raw = res.data;
+      late final Map<String, dynamic> json;
+      if (raw is Map<String, dynamic>) {
+        json = raw;
+      } else if (raw is Map) {
+        json = Map<String, dynamic>.from(raw);
+      } else {
+        throw Exception(
+          'get-active-tournaments-kr failed: '
+          'unexpected payload type ${raw.runtimeType}',
+        );
+      }
+
+      return GetActiveTournamentsResponse.fromJson(json);
+    } on FunctionException catch (e) {
+      if (e.status == 404) {
+        return GetActiveTournamentsResponse(
+          count: 0,
+          tournaments: const <ActiveTournamentResponse>[],
+        );
+      }
+      log(
+        'TournamentRepository.getActiveTournamentsKr FunctionException: '
+        'status=${e.status}, details=${e.details}',
+      );
+      rethrow;
+    } catch (e) {
+      log('TournamentRepository.getActiveTournamentsKr error: $e');
       rethrow;
     }
   }
