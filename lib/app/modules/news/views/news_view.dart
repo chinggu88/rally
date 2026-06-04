@@ -4,8 +4,10 @@ import 'package:get/get.dart';
 
 import '../../../../theme/app_colors.dart';
 import '../../../../theme/app_typography.dart';
+import '../../../data/models/active_tournament_response.dart';
 import '../../../data/models/live_match_response.dart';
 import '../controllers/news_controller.dart';
+import 'widgets/active_tournament_card.dart';
 import 'widgets/live_match_card.dart';
 import 'widgets/news_card_item.dart';
 
@@ -47,6 +49,9 @@ class NewsView extends GetView<NewsController> {
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
                 const SliverToBoxAdapter(child: SizedBox(height: 8)),
+                SliverToBoxAdapter(
+                  child: Obx(() => _buildActiveTournamentsSection(context)),
+                ),
                 SliverToBoxAdapter(child: _buildLiveSection(context, scheme)),
                 const SliverToBoxAdapter(child: SizedBox(height: 24)),
                 SliverToBoxAdapter(child: _buildNewsSection(context, scheme)),
@@ -74,6 +79,58 @@ class NewsView extends GetView<NewsController> {
           fontSize: 18,
           letterSpacing: 0.6,
         ),
+      ),
+    );
+  }
+
+  // ── 남은 대회(진행중/예정) 섹션 ──────────────────────────
+  Widget _buildActiveTournamentsSection(BuildContext context) {
+    final loading = controller.isActiveTournamentsLoading;
+    final tournaments = controller.activeTournaments;
+
+    // 로딩 중이 아니고 보여줄 대회가 없으면 섹션 자체를 숨겨 상단을 비운다.
+    if (!loading && tournaments.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (loading && tournaments.isEmpty)
+          const SizedBox(
+            height: 44,
+            child: Center(child: CircularProgressIndicator(color: _accent)),
+          )
+        else
+          _buildActiveTournamentsList(tournaments),
+        const SizedBox(height: 24),
+      ],
+    );
+  }
+
+  
+
+  Widget _buildActiveTournamentsList(List<ActiveTournamentResponse> items) {
+    // 서버(get-active-tournaments-kr)가 start_date ASC로 정렬해 내려주므로
+    // 클라이언트에서 별도 정렬 없이 API 응답 순서를 그대로 사용한다.
+    return SizedBox(
+      height: 44,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        physics: const BouncingScrollPhysics(),
+        itemCount: items.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 10),
+        itemBuilder: (context, index) {
+          return Center(
+            child: ActiveTournamentCard(
+              key: ValueKey<Object>(
+                items[index].tournamentId ?? 'tour-$index',
+              ),
+              tournament: items[index],
+            ),
+          );
+        },
       ),
     );
   }
