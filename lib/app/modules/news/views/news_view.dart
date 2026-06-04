@@ -7,6 +7,7 @@ import '../../../../theme/app_typography.dart';
 import '../../../data/models/live_match_response.dart';
 import '../controllers/news_controller.dart';
 import 'widgets/live_match_card.dart';
+import 'widgets/news_card_item.dart';
 
 /// 홈(뉴스) 화면.
 ///
@@ -33,15 +34,25 @@ class NewsView extends GetView<NewsController> {
           onRefresh: controller.refreshLiveMatches,
           color: _accent,
           backgroundColor: scheme.surfaceContainer,
-          child: CustomScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            slivers: [
-              const SliverToBoxAdapter(child: SizedBox(height: 8)),
-              SliverToBoxAdapter(child: _buildLiveSection(context, scheme)),
-              const SliverToBoxAdapter(child: SizedBox(height: 24)),
-              SliverToBoxAdapter(child: _buildNewsPlaceholder(scheme)),
-              const SliverToBoxAdapter(child: SizedBox(height: 32)),
-            ],
+          child: NotificationListener<ScrollNotification>(
+            onNotification: (notification) {
+              // 바닥 근처(400px 이내) 도달 시 다음 페이지 로드.
+              if (notification.metrics.pixels >=
+                  notification.metrics.maxScrollExtent - 400) {
+                controller.loadMoreNewsCards();
+              }
+              return false;
+            },
+            child: CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                const SliverToBoxAdapter(child: SizedBox(height: 8)),
+                SliverToBoxAdapter(child: _buildLiveSection(context, scheme)),
+                const SliverToBoxAdapter(child: SizedBox(height: 24)),
+                SliverToBoxAdapter(child: _buildNewsSection(context, scheme)),
+                const SliverToBoxAdapter(child: SizedBox(height: 32)),
+              ],
+            ),
           ),
         ),
       ),
@@ -281,58 +292,178 @@ class NewsView extends GetView<NewsController> {
     );
   }
 
-  // ── 뉴스 placeholder ────────────────────────────────────
-  Widget _buildNewsPlaceholder(ColorScheme scheme) {
+  // ── 뉴스(카드뉴스) 섹션 ──────────────────────────────────
+  Widget _buildNewsSection(BuildContext context, ColorScheme scheme) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            '뉴스',
-            style: TextStyle(
-              fontFamily: AppTypography.chivo,
-              fontWeight: FontWeight.w800,
-              fontSize: 18,
-              letterSpacing: 0.2,
-              color: Colors.white,
-            ),
+          Row(
+            children: [
+              const Text(
+                '뉴스',
+                style: TextStyle(
+                  fontFamily: AppTypography.chivo,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 18,
+                  letterSpacing: 0.2,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Obx(() {
+                final count = controller.newsCards.length;
+                if (count == 0) return const SizedBox.shrink();
+                return Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _accent,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    '$count',
+                    style: const TextStyle(
+                      fontFamily: AppTypography.chivo,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 11,
+                      color: _accentDark,
+                      letterSpacing: 0.4,
+                    ),
+                  ),
+                );
+              }),
+            ],
           ),
           const SizedBox(height: 12),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 16),
-            decoration: BoxDecoration(
-              color: const Color(0xFF1C1B1B),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFF2A2A2A)),
+          Obx(() => _buildNewsBody(context)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNewsBody(BuildContext context) {
+    if (controller.isNewsLoading && controller.newsCards.isEmpty) {
+      return const SizedBox(
+        height: 220,
+        child: Center(child: CircularProgressIndicator(color: _accent)),
+      );
+    }
+
+    final error = controller.newsError;
+    if (error != null && controller.newsCards.isEmpty) {
+      return _buildNewsErrorState(error);
+    }
+
+    if (controller.newsCards.isEmpty) {
+      return _buildNewsEmptyState();
+    }
+
+    final cards = controller.newsCards;
+    return Column(
+      children: [
+        for (var i = 0; i < cards.length; i++) ...[
+          NewsCardItem(
+            key: ValueKey<Object>(cards[i].id ?? 'news-$i'),
+            card: cards[i],
+          ),
+          if (i != cards.length - 1) const SizedBox(height: 20),
+        ],
+        // 더보기 로딩 인디케이터
+        if (controller.isNewsLoadingMore) ...[
+          const SizedBox(height: 20),
+          const SizedBox(
+            height: 28,
+            width: 28,
+            child: CircularProgressIndicator(strokeWidth: 2, color: _accent),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildNewsErrorState(String message) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1C1B1B),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFF2A2A2A)),
+      ),
+      child: Column(
+        children: [
+          const Icon(Icons.cloud_off_outlined, size: 36, color: _subtleText),
+          const SizedBox(height: 10),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: AppTypography.bodyMd.copyWith(
+              color: Colors.white,
+              fontSize: 13,
             ),
-            child: Column(
-              children: [
-                const Icon(
-                  Icons.newspaper_outlined,
-                  size: 36,
-                  color: _subtleText,
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            height: 40,
+            child: ElevatedButton(
+              onPressed: controller.fetchNewsCards,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _accent,
+                foregroundColor: _accentDark,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
                 ),
-                const SizedBox(height: 10),
-                Text(
-                  '뉴스 콘텐츠 준비 중',
-                  textAlign: TextAlign.center,
-                  style: AppTypography.bodyMd.copyWith(
-                    color: Colors.white,
-                    fontSize: 13,
-                  ),
+                padding: const EdgeInsets.symmetric(horizontal: 22),
+              ),
+              child: const Text(
+                '다시 시도',
+                style: TextStyle(
+                  fontFamily: AppTypography.chivo,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 13,
+                  letterSpacing: 0.6,
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  '곧 BWF 관련 소식을 만나보실 수 있습니다.',
-                  textAlign: TextAlign.center,
-                  style: AppTypography.bodyMd.copyWith(
-                    color: _subtleText,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNewsEmptyState() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1C1B1B),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFF2A2A2A)),
+      ),
+      child: Column(
+        children: [
+          const Icon(Icons.newspaper_outlined, size: 36, color: _subtleText),
+          const SizedBox(height: 10),
+          Text(
+            '아직 카드뉴스가 없습니다.',
+            textAlign: TextAlign.center,
+            style: AppTypography.bodyMd.copyWith(
+              color: Colors.white,
+              fontSize: 13,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '새로운 소식이 준비되면 여기에 카드뉴스로 표시됩니다.',
+            textAlign: TextAlign.center,
+            style: AppTypography.bodyMd.copyWith(
+              color: _subtleText,
+              fontSize: 12,
             ),
           ),
         ],
