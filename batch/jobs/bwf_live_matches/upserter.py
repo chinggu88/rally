@@ -176,12 +176,23 @@ def _sync_scores_to_bwf_matches(
     return updated
 
 
-def mark_ended(supabase: Client, active_match_ids: Iterable[int], log) -> int:
+def mark_ended(
+    supabase: Client,
+    active_match_ids: Iterable[int],
+    log,
+    polled_tournament_ids: Iterable[int] | None = None,
+) -> int:
     """현재 라이브 응답에 없는 매치 행을 종료 처리.
 
+    [polled_tournament_ids] 이번 틱에 results 페이지를 **정상 응답까지 받은**
+    대회 id 집합. None/빈값이면 sweep 자체를 건너뛴다(전역 폭주 방지).
+    카드가 0개라도 navigation이 성공했다면 "그 대회는 라이브가 끝났다"는
+    신호로 본다 — SPA 캐시 락이나 네트워크 실패와 정상 종료를 구분하기 위해
+    main.py가 try/except를 통과한 대회만 이 집합에 담아 호출한다.
+
     종료 흐름:
-      1) 종료 후보(라이브 응답에 없고, 아직 live 상태)를 id/match_code/score만
-         최소 컬럼으로 SELECT.
+      1) 종료 후보 = polled_tournament_ids 안의 대회 중, active 리스트에 없고
+         아직 'live'+promoted_at IS NULL인 row.
       2) match_code가 비어있으면 bwf_matches에서 한 번 더 룩업해 채운다
          (upsert 시점에 못 가져온 경우 대비).
       3) match_code 기준으로 bwf_matches.score를 라이브 마지막 score로 동기화.
@@ -191,9 +202,13 @@ def mark_ended(supabase: Client, active_match_ids: Iterable[int], log) -> int:
     라이브로 다시 잡히면 upsert path에서 tournament_status='live' + promoted_at
     NULL로 자연 복구된다(parser가 매 row에 두 값을 그렇게 박는다).
     """
+    polled_tids = [tid for tid in (polled_tournament_ids or []) if isinstance(tid, int)]
+    if not polled_tids:
+        return 0
+
     now = datetime.now(timezone.utc).isoformat()
 
-    # 1) 종료 후보 조회 (match_code 재룩업에 필요한 컬럼 함께)
+    # 1) 종료 후보 조회 — 정상 조회된 대회 경계 내에서만.
     q = (
         supabase.table("bwf_live_matches")
         .select(
@@ -202,6 +217,7 @@ def mark_ended(supabase: Client, active_match_ids: Iterable[int], log) -> int:
         )
         .eq("tournament_status", "live")
         .is_("promoted_at", "null")
+        .in_("tournament_id", polled_tids)
     )
     ids = list(active_match_ids)
     if ids:
