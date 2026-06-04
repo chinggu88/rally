@@ -55,3 +55,4 @@ GitHub Actions에서는 Repository Secrets로 주입됩니다.
 | [`bwf_players`](jobs/bwf_players/README.md) | 수동 | 랭킹 선수 프로필 크롤링 → `bwf_players` 테이블 upsert |
 | `bwf_calendar` | 수동 | 올해 대회 캘린더(전 category) 크롤링 → `bwf_tournaments` upsert |
 | [`bwf_matches`](jobs/bwf_matches/README.md) | 매일 06:00 KST | 대회별 경기(대진표) 크롤링 → `bwf_matches` upsert (대회전/대회중/대회후 분류). **선행: `bwf_calendar`** |
+| [`badminton_planet_news`](jobs/badminton_planet_news/README.md) | 매일 06:00 KST | badmintonplanet.com 신규 뉴스 기사 크롤링 → `badminton_planet_news` 테이블 upsert |

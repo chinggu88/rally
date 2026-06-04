@@ -1,0 +1,37 @@
+name: Batch — Badminton Planet News
+
+on:
+  schedule:
+    - cron: '0 21 * * *'  # 매일 06:00 KST
+  workflow_dispatch:
+    inputs:
+      max_pages:
+        description: '훑을 최대 페이지 수 (백필 시 크게)'
+        required: false
+        default: '5'
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: 'batch/.python-version'
+          cache: 'pip'
+          cache-dependency-path: 'batch/requirements.txt'
+
+      - name: Install Python dependencies
+        working-directory: batch
+        run: pip install -r requirements.txt
+
+      - name: Run Badminton Planet news crawler
+        working-directory: .
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          NEWS_MAX_PAGES: ${{ github.event.inputs.max_pages || '5' }}
+          PYTHONPATH: .
+        run: python -m batch.jobs.badminton_planet_news.main

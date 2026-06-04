@@ -1,0 +1,3 @@
+# batch/.env 새로 만들기 (gitignore 되어 커밋 안 됨)
+SUPABASE_URL=https://ztcfgymcxilxcjahyucw.supabase.co
+SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp0Y2ZneW1jeGlseGNqYWh5dWN3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODkwMDcyOCwiZXhwIjoyMDk0NDc2NzI4fQ.rJIQyahuawYoQOjDarghfD86WmqroAxmXn2yQtkAbpE
