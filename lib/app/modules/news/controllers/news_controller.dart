@@ -27,8 +27,7 @@ class NewsController extends GetxController {
   final LiveMatchRepository _liveMatchRepository =
       Get.find<LiveMatchRepository>();
 
-  final NewsCardRepository _newsCardRepository =
-      Get.find<NewsCardRepository>();
+  final NewsCardRepository _newsCardRepository = Get.find<NewsCardRepository>();
 
   final TournamentRepository _tournamentRepository =
       Get.find<TournamentRepository>();
@@ -115,12 +114,12 @@ class NewsController extends GetxController {
     fetchActiveTournaments();
     fetchLiveMatches();
     fetchNewsCards();
-    _subscribeRealtime();
+    subscribeRealtime();
   }
 
   @override
   void onClose() {
-    _unsubscribeRealtime();
+    unsubscribeRealtime();
     super.onClose();
   }
 
@@ -271,7 +270,7 @@ class NewsController extends GetxController {
   /// - INSERT: 새 라이브 매치가 생기면 목록에 추가
   /// - UPDATE: 스코어/상태 변경 시 해당 row 교체 + 스코어 diff면 펄스 트리거
   /// - DELETE: 라이브 종료된 매치 제거
-  void _subscribeRealtime() {
+  void subscribeRealtime() {
     try {
       final client = Supabase.instance.client;
       _liveChannel = client
@@ -295,7 +294,7 @@ class NewsController extends GetxController {
     }
   }
 
-  void _unsubscribeRealtime() {
+  void unsubscribeRealtime() {
     final ch = _liveChannel;
     if (ch == null) return;
     try {
