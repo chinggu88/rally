@@ -4,6 +4,8 @@ import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:rally/app/modules/news/controllers/news_controller.dart';
 
+import '../../match/controllers/match_controller.dart';
+
 /// 앱 셸 컨트롤러.
 ///
 /// 바텀 네비게이션의 현재 탭 인덱스를 관리하고,
@@ -12,6 +14,9 @@ import 'package:rally/app/modules/news/controllers/news_controller.dart';
 class AppController extends GetxController with WidgetsBindingObserver {
   static AppController get to => Get.find();
 
+  /// 경기 탭 인덱스 (BottomNavigationBar 순서: 뉴스0 / 경기1 / 선수2 / 내정보3)
+  static const int matchTabIndex = 1;
+
   final _currentIndex = 0.obs;
 
   int get currentIndex => _currentIndex.value;
@@ -19,6 +24,11 @@ class AppController extends GetxController with WidgetsBindingObserver {
 
   void changeTab(int index) {
     currentIndex = index;
+
+    // 경기 탭 진입 시 LIVE/진행중/임박 대회 카드로 자동 스크롤.
+    if (index == matchTabIndex && Get.isRegistered<MatchController>()) {
+      MatchController.to.autoScrollToFeaturedTournament();
+    }
   }
 
   /// 현재 앱 라이프사이클 상태. 초기값은 resumed.

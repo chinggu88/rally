@@ -13,8 +13,15 @@ import '../controllers/match_controller.dart';
 ///
 /// Stitch projectId: 307006344264476289
 /// Stitch screenId : 225c4429594e4cb3835b154cbc861919
-class MatchView extends GetView<MatchController> {
+class MatchView extends StatefulWidget {
   const MatchView({super.key});
+
+  @override
+  State<MatchView> createState() => _MatchViewState();
+}
+
+class _MatchViewState extends State<MatchView> {
+  MatchController get controller => MatchController.to;
 
   // Stitch 디자인 토큰 (AppColors와 정합되지 않는 시안 디테일만 별도 상수로 보존)
   static const Color _accent = Color(0xFFC3F400); // primaryContainer
@@ -22,6 +29,49 @@ class MatchView extends GetView<MatchController> {
   static const Color _badgeBg = Color(0xFF201F1F); // surfaceContainer 톤
   static const Color _subtleText = Color(0xFF9CA3A1);
   static const Color _divider = Color(0xFF1F2421);
+
+  /// 리스트 스크롤 컨트롤러
+  final ScrollController _scrollController = ScrollController();
+
+  /// 대회 ID별 카드 GlobalKey (자동 스크롤 시 위치 탐색용)
+  final Map<int, GlobalKey> _cardKeys = {};
+
+  /// scrollTargetId 변화를 감지하는 GetX Worker
+  Worker? _scrollWorker;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollWorker =
+        ever<int?>(controller.scrollTargetId, _handleScrollTarget);
+  }
+
+  @override
+  void dispose() {
+    _scrollWorker?.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  /// 자동 스크롤 대상 ID가 설정되면 해당 카드로 스크롤한다.
+  void _handleScrollTarget(int? id) {
+    if (id == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final ctx = _cardKeys[id]?.currentContext;
+      if (ctx != null) {
+        Scrollable.ensureVisible(
+          ctx,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+          alignment: 0.08, // 카드를 화면 상단 근처에 배치
+        );
+      }
+      controller.clearScrollTarget();
+    });
+  }
+
+  /// 대회 ID에 대응하는 GlobalKey를 반환(없으면 생성)한다.
+  GlobalKey _keyFor(int id) => _cardKeys.putIfAbsent(id, () => GlobalKey());
 
   @override
   Widget build(BuildContext context) {
@@ -72,6 +122,7 @@ class MatchView extends GetView<MatchController> {
   Widget _buildContent(ColorScheme scheme) {
     // 정적 위젯 + 동적 영역(Obx)으로 분리하여 GetX 경고 회피
     return CustomScrollView(
+      controller: _scrollController,
       physics: const AlwaysScrollableScrollPhysics(),
       slivers: [
         SliverToBoxAdapter(child: _buildHeader()),
@@ -283,6 +334,7 @@ class MatchView extends GetView<MatchController> {
             const SizedBox(height: 12),
             for (final t in group.items) ...[
               _TournamentCard(
+                key: t.tournamentId != null ? _keyFor(t.tournamentId!) : null,
                 tournament: t,
                 onTap: () => controller.openTournamentDetail(t),
               ),
@@ -379,7 +431,11 @@ class _MonthGroup {
 
 /// 대회 단일 카드 (매거진 스타일)
 class _TournamentCard extends StatelessWidget {
-  const _TournamentCard({required this.tournament, required this.onTap});
+  const _TournamentCard({
+    super.key,
+    required this.tournament,
+    required this.onTap,
+  });
 
   final TournamentResponse tournament;
   final VoidCallback onTap;
