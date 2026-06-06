@@ -42,6 +42,10 @@ class MatchController extends GetxController {
   /// 상세 진입 중복 가드 (탭 더블탭 방지)
   bool _isOpeningDetail = false;
 
+  /// 자동 스크롤 대상 대회 ID. 값이 설정되면 View가 해당 카드로 스크롤한 뒤
+  /// `clearScrollTarget()`으로 다시 비운다. (null = 스크롤 요청 없음)
+  final scrollTargetId = RxnInt();
+
   @override
   void onInit() {
     super.onInit();
@@ -109,6 +113,60 @@ class MatchController extends GetxController {
 
   /// 이전 연도로 이동한다.
   Future<void> goPreviousYear() => changeYear(selectedYear - 1);
+
+  /// 경기 탭 진입 시 LIVE/진행중/임박 대회 카드로 자동 스크롤한다.
+  ///
+  /// 우선순위: ① LIVE 경기 → ② 오늘 진행 중인 대회 → ③ 가장 가까운 개최예정 대회.
+  /// 대상 대회 ID를 [scrollTargetId]에 실으면 View가 해당 카드로 스크롤한다.
+  Future<void> autoScrollToFeaturedTournament() async {
+    // 아직 로딩 중이거나 비어 있으면 데이터 로드를 기다린다.
+    if (isLoading || tournaments.isEmpty) {
+      await fetchTournaments();
+    }
+
+    final target = _pickFeaturedTournament();
+    final id = target?.tournamentId;
+    if (id != null) {
+      // 동일 ID를 연속 요청해도 트리거되도록 먼저 비운 뒤 설정한다.
+      scrollTargetId.value = null;
+      scrollTargetId.value = id;
+    }
+  }
+
+  /// 자동 스크롤 처리가 끝난 뒤 View에서 호출해 대상을 비운다.
+  void clearScrollTarget() => scrollTargetId.value = null;
+
+  /// 자동 이동 대상 대회를 우선순위에 따라 선택한다. 없으면 null.
+  TournamentResponse? _pickFeaturedTournament() {
+    if (tournaments.isEmpty) return null;
+
+    // ① 현재 LIVE 중인 대회
+    for (final t in tournaments) {
+      if (t.isLiveNow) return t;
+    }
+
+    // ② 오늘 진행 중인 대회
+    for (final t in tournaments) {
+      if (t.isOngoing) return t;
+    }
+
+    // ③ 오늘 이후 시작하는 대회 중 가장 가까운(시작일이 빠른) 대회
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    TournamentResponse? nearest;
+    DateTime? nearestStart;
+    for (final t in tournaments) {
+      final start = t.startDateTime;
+      if (start == null) continue;
+      final startDay = DateTime(start.year, start.month, start.day);
+      if (startDay.isBefore(today)) continue;
+      if (nearestStart == null || startDay.isBefore(nearestStart)) {
+        nearest = t;
+        nearestStart = startDay;
+      }
+    }
+    return nearest;
+  }
 
   /// 대회 상세 화면(인앱)으로 이동한다.
   ///
