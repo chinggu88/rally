@@ -175,7 +175,6 @@ class _LiveMatchCardState extends State<LiveMatchCard>
                   _buildScoreboard(),
                   const SizedBox(height: 12),
                   _buildNamesRow(),
-                  ..._buildPreviousSets(),
                   if ((widget.match.courtName ?? '').trim().isNotEmpty) ...[
                     const SizedBox(height: 14),
                     _buildCourtFooter(widget.match.courtName!.trim()),
@@ -279,49 +278,55 @@ class _LiveMatchCardState extends State<LiveMatchCard>
   // ── 스코어보드 (아바타 + 현재 세트 큰 스코어) ───────────────────
   Widget _buildScoreboard() {
     final leading = _leadingSide;
-    return SizedBox(
-      height: 108,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          // 뒤쪽 "LIVE" 워터마크 (진행 중일 때만)
-          if (widget.match.isLive)
-            Positioned.fill(
-              child: IgnorePointer(
-                child: Center(
-                  child: Text(
-                    'LIVE',
-                    style: TextStyle(
-                      fontFamily: AppTypography.chivo,
-                      fontWeight: FontWeight.w900,
-                      fontSize: 68,
-                      letterSpacing: 4,
-                      color: Colors.white.withValues(alpha: 0.045),
-                    ),
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        // 뒤쪽 "LIVE" 워터마크 (진행 중일 때만)
+        if (widget.match.isLive)
+          Positioned.fill(
+            child: IgnorePointer(
+              child: Center(
+                child: Text(
+                  'LIVE',
+                  style: TextStyle(
+                    fontFamily: AppTypography.chivo,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 68,
+                    letterSpacing: 4,
+                    color: Colors.white.withValues(alpha: 0.045),
                   ),
                 ),
               ),
             ),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildAvatarBlock(
-                avatars: widget.match.team1PlayerAvatars,
-                count: (widget.match.team1Names?.length ?? 1).clamp(1, 2),
-                country: (widget.match.team1Country ?? '').trim(),
-                highlight: leading == 1,
-              ),
-              Expanded(child: _buildBigScore()),
-              _buildAvatarBlock(
-                avatars: widget.match.team2PlayerAvatars,
-                count: (widget.match.team2Names?.length ?? 1).clamp(1, 2),
-                country: (widget.match.team2Country ?? '').trim(),
-                highlight: leading == 2,
-              ),
-            ],
           ),
-        ],
-      ),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildAvatarBlock(
+              avatars: widget.match.team1PlayerAvatars,
+              count: (widget.match.team1Names?.length ?? 1).clamp(1, 2),
+              country: (widget.match.team1Country ?? '').trim(),
+              highlight: leading == 1,
+            ),
+            // 가운데 컬럼: 현재 세트 큰 스코어 + "SET n" + 지난 세트 점수
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildBigScore(),
+                  ..._buildPreviousSets(),
+                ],
+              ),
+            ),
+            _buildAvatarBlock(
+              avatars: widget.match.team2PlayerAvatars,
+              count: (widget.match.team2Names?.length ?? 1).clamp(1, 2),
+              country: (widget.match.team2Country ?? '').trim(),
+              highlight: leading == 2,
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -669,7 +674,7 @@ class _LiveMatchCardState extends State<LiveMatchCard>
     );
   }
 
-  // ── PREVIOUS SETS (완료된 세트 박스 나열) ──────────────────────
+  // ── PREVIOUS (완료된 세트 점수 — 현재 스코어 아래 세로 나열) ─────────
   List<Widget> _buildPreviousSets() {
     final idx = _displayGameIndex;
     if (idx == null || idx <= 0) return const <Widget>[];
@@ -678,39 +683,31 @@ class _LiveMatchCardState extends State<LiveMatchCard>
     if (previous.isEmpty) return const <Widget>[];
 
     return [
-      const SizedBox(height: 18),
-      const Center(
-        child: Text(
-          'PREVIOUS SETS',
-          style: TextStyle(
-            fontFamily: AppTypography.chivo,
-            fontWeight: FontWeight.w800,
-            fontSize: 10,
-            letterSpacing: 1.6,
-            color: LiveMatchCard.subtleText,
-          ),
+      const SizedBox(height: 12),
+      const Text(
+        'PREVIOUS',
+        style: TextStyle(
+          fontFamily: AppTypography.chivo,
+          fontWeight: FontWeight.w800,
+          fontSize: 9,
+          letterSpacing: 1.4,
+          color: LiveMatchCard.subtleText,
         ),
       ),
-      const SizedBox(height: 10),
-      Center(
-        child: Wrap(
-          spacing: 10,
-          runSpacing: 8,
-          alignment: WrapAlignment.center,
-          children: [
-            for (int i = 0; i < previous.length; i++)
-              _buildSetBox(
-                setNo: i + 1,
-                game: previous[i],
-                highlight: i == previous.length - 1,
-              ),
-          ],
+      const SizedBox(height: 7),
+      for (int i = 0; i < previous.length; i++) ...[
+        _buildSetRow(
+          setNo: i + 1,
+          game: previous[i],
+          highlight: i == previous.length - 1,
         ),
-      ),
+        if (i < previous.length - 1) const SizedBox(height: 6),
+      ],
     ];
   }
 
-  Widget _buildSetBox({
+  /// 지난 세트 한 줄 박스 — "S{n}  점수:점수" 형태.
+  Widget _buildSetRow({
     required int setNo,
     required LiveGameScore game,
     required bool highlight,
@@ -718,65 +715,60 @@ class _LiveMatchCardState extends State<LiveMatchCard>
     final t1won = game.team1 > game.team2;
     final t2won = game.team2 > game.team1;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
       decoration: BoxDecoration(
         color: LiveMatchCard.innerBg,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: highlight ? LiveMatchCard.accent : LiveMatchCard.cardBorder,
           width: highlight ? 1.4 : 1,
         ),
       ),
-      child: Column(
+      child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'SET $setNo',
+            'S$setNo',
             style: const TextStyle(
               fontFamily: AppTypography.chivo,
               fontWeight: FontWeight.w700,
-              fontSize: 9,
-              letterSpacing: 0.8,
+              fontSize: 10,
+              letterSpacing: 0.6,
               color: LiveMatchCard.subtleText,
             ),
           ),
-          const SizedBox(height: 3),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                '${game.team1}',
-                style: TextStyle(
-                  fontFamily: AppTypography.chivo,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 17,
-                  height: 1.0,
-                  color: t1won ? LiveMatchCard.accent : Colors.white,
-                ),
+          const SizedBox(width: 8),
+          Text(
+            '${game.team1}',
+            style: TextStyle(
+              fontFamily: AppTypography.chivo,
+              fontWeight: FontWeight.w800,
+              fontSize: 14,
+              height: 1.0,
+              color: t1won ? LiveMatchCard.accent : Colors.white,
+            ),
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 4),
+            child: Text(
+              ':',
+              style: TextStyle(
+                fontFamily: AppTypography.chivo,
+                fontWeight: FontWeight.w700,
+                fontSize: 12,
+                color: LiveMatchCard.subtleText,
               ),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 6),
-                child: Text(
-                  ':',
-                  style: TextStyle(
-                    fontFamily: AppTypography.chivo,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 15,
-                    color: LiveMatchCard.subtleText,
-                  ),
-                ),
-              ),
-              Text(
-                '${game.team2}',
-                style: TextStyle(
-                  fontFamily: AppTypography.chivo,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 17,
-                  height: 1.0,
-                  color: t2won ? LiveMatchCard.accent : Colors.white,
-                ),
-              ),
-            ],
+            ),
+          ),
+          Text(
+            '${game.team2}',
+            style: TextStyle(
+              fontFamily: AppTypography.chivo,
+              fontWeight: FontWeight.w800,
+              fontSize: 14,
+              height: 1.0,
+              color: t2won ? LiveMatchCard.accent : Colors.white,
+            ),
           ),
         ],
       ),
