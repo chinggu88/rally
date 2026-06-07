@@ -6,10 +6,12 @@ import '../../../../theme/app_colors.dart';
 import '../../../../theme/app_typography.dart';
 import '../../../data/models/active_tournament_response.dart';
 import '../../../data/models/live_match_response.dart';
+import '../../../data/models/today_match_response.dart';
 import '../controllers/news_controller.dart';
 import 'widgets/active_tournament_card.dart';
 import 'widgets/live_match_card.dart';
 import 'widgets/news_card_item.dart';
+import 'widgets/today_match_card.dart';
 
 /// 홈(뉴스) 화면.
 ///
@@ -53,6 +55,8 @@ class NewsView extends GetView<NewsController> {
                   child: Obx(() => _buildActiveTournamentsSection(context)),
                 ),
                 SliverToBoxAdapter(child: _buildLiveSection(context, scheme)),
+                const SliverToBoxAdapter(child: SizedBox(height: 24)),
+                SliverToBoxAdapter(child: _buildTodaySection(context, scheme)),
                 const SliverToBoxAdapter(child: SizedBox(height: 24)),
                 SliverToBoxAdapter(child: _buildNewsSection(context, scheme)),
                 const SliverToBoxAdapter(child: SizedBox(height: 32)),
@@ -349,7 +353,209 @@ class NewsView extends GetView<NewsController> {
     );
   }
 
-  // ── 뉴스(카드뉴스) 섹션 ──────────────────────────────────
+  // ── 오늘 경기 섹션 ───────────────────────────────────────
+  Widget _buildTodaySection(BuildContext context, ColorScheme scheme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildTodayHeader(),
+        const SizedBox(height: 12),
+        Obx(() => _buildTodayBody(context)),
+      ],
+    );
+  }
+
+  Widget _buildTodayHeader() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: const BoxDecoration(
+              color: _accent,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 8),
+          const Text(
+            '오늘 경기',
+            style: TextStyle(
+              fontFamily: AppTypography.chivo,
+              fontWeight: FontWeight.w800,
+              fontSize: 18,
+              letterSpacing: 0.2,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Obx(() {
+            final count = controller.todayMerged.length;
+            if (count == 0) return const SizedBox.shrink();
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: _accent,
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                '$count',
+                style: const TextStyle(
+                  fontFamily: AppTypography.chivo,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 11,
+                  color: _accentDark,
+                  letterSpacing: 0.4,
+                ),
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTodayBody(BuildContext context) {
+    final isLoading = controller.isTodayLoading;
+    final items = controller.todayMerged;
+
+    if (isLoading && items.isEmpty) {
+      return const SizedBox(
+        height: 118,
+        child: Center(child: CircularProgressIndicator(color: _accent)),
+      );
+    }
+
+    final error = controller.todayError;
+    if (error != null && items.isEmpty) {
+      return _buildTodayErrorState(error);
+    }
+
+    if (items.isEmpty) {
+      return _buildTodayEmptyState();
+    }
+
+    return _buildTodayList(items);
+  }
+
+  Widget _buildTodayList(List<TodayMatchResponse> items) {
+    return SizedBox(
+      height: 118,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        itemCount: items.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 10),
+        itemBuilder: (_, i) => TodayMatchCard(
+          key: ValueKey<Object>(items[i].id ?? 'today-$i'),
+          match: items[i],
+          onTap: () {},
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTodayErrorState(String message) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1C1B1B),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFF2A2A2A)),
+        ),
+        child: Column(
+          children: [
+            const Icon(Icons.cloud_off_outlined, size: 36, color: _subtleText),
+            const SizedBox(height: 10),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: AppTypography.bodyMd.copyWith(
+                color: Colors.white,
+                fontSize: 13,
+              ),
+            ),
+            const SizedBox(height: 14),
+            SizedBox(
+              height: 40,
+              child: ElevatedButton(
+                onPressed: controller.fetchTodayMatches,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _accent,
+                  foregroundColor: _accentDark,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 22),
+                ),
+                child: const Text(
+                  '다시 시도',
+                  style: TextStyle(
+                    fontFamily: AppTypography.chivo,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 13,
+                    letterSpacing: 0.6,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTodayEmptyState() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 16),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1C1B1B),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFF2A2A2A)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.calendar_today_outlined,
+              size: 36,
+              color: _subtleText,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              '오늘은 더 표시할 경기가 없습니다.',
+              textAlign: TextAlign.center,
+              style: AppTypography.bodyMd.copyWith(
+                color: Colors.white,
+                fontSize: 13,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '결과가 등록되거나 새로운 경기가 추가되면 표시됩니다.',
+              textAlign: TextAlign.center,
+              style: AppTypography.bodyMd.copyWith(
+                color: _subtleText,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+// ── 뉴스(카드뉴스) 섹션 ──────────────────────────────────
   Widget _buildNewsSection(BuildContext context, ColorScheme scheme) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
