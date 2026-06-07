@@ -64,7 +64,7 @@ class NewsController extends GetxController {
 
   // ── 오늘 경기 상태 ──────────────────────────────────────────
 
-  /// 오늘 경기 결과 목록 (서버에서 reverse 적용 — 최근 끝난 게 먼저).
+  /// 오늘 경기 결과 목록 (match_time ASC).
   final _todayResults = <TodayMatchResponse>[].obs;
   List<TodayMatchResponse> get todayResults => _todayResults;
 
@@ -72,9 +72,20 @@ class NewsController extends GetxController {
   final _todayUpcoming = <TodayMatchResponse>[].obs;
   List<TodayMatchResponse> get todayUpcoming => _todayUpcoming;
 
-  /// 결과 → 예정 순서로 합친 단일 캐러셀용 목록.
-  List<TodayMatchResponse> get todayMerged =>
-      <TodayMatchResponse>[..._todayResults, ..._todayUpcoming];
+  /// 결과+예정을 경기 시간 오름차순으로 합친 단일 캐러셀용 목록.
+  /// 시간이 없는 항목은 뒤로 보낸다.
+  List<TodayMatchResponse> get todayMerged {
+    final list = <TodayMatchResponse>[..._todayResults, ..._todayUpcoming];
+    list.sort((a, b) {
+      final da = a.matchDateTime;
+      final db = b.matchDateTime;
+      if (da == null && db == null) return 0;
+      if (da == null) return 1;
+      if (db == null) return -1;
+      return da.compareTo(db);
+    });
+    return list;
+  }
 
   /// 오늘 경기 로딩 중 여부.
   final _isTodayLoading = false.obs;
