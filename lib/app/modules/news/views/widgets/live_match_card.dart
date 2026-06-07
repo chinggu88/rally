@@ -172,13 +172,18 @@ class _LiveMatchCardState extends State<LiveMatchCard>
                   const SizedBox(height: 10),
                   _buildRoundLine(),
                   const SizedBox(height: 16),
-                  _buildScoreboard(),
-                  const SizedBox(height: 12),
-                  _buildNamesRow(),
-                  if ((widget.match.courtName ?? '').trim().isNotEmpty) ...[
-                    const SizedBox(height: 14),
-                    _buildCourtFooter(widget.match.courtName!.trim()),
-                  ],
+                  // 가로 3열: [Team1] | [중앙 정보] | [Team2]
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 1열: Team1 (아바타 + 이름)
+                      _buildTeamColumn(side: 1),
+                      // 2열: 스코어 + 세트 + 이전 세트 + 코트
+                      Expanded(child: _buildCenterInfo()),
+                      // 3열: Team2 (아바타 + 이름)
+                      _buildTeamColumn(side: 2),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -272,16 +277,55 @@ class _LiveMatchCardState extends State<LiveMatchCard>
     }
 
     if (children.isEmpty) return const SizedBox.shrink();
-    return Row(crossAxisAlignment: CrossAxisAlignment.center, children: children);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: children,
+    );
   }
 
-  // ── 스코어보드 (아바타 + 현재 세트 큰 스코어) ───────────────────
-  Widget _buildScoreboard() {
+  // ── 팀 컬럼 (아바타 위, 이름 아래) ────────────────────────────
+  Widget _buildTeamColumn({required int side}) {
     final leading = _leadingSide;
+    final highlight = leading == side;
+    final avatars =
+        side == 1
+            ? widget.match.team1PlayerAvatars
+            : widget.match.team2PlayerAvatars;
+    final names = side == 1 ? widget.match.team1Names : widget.match.team2Names;
+    final country =
+        ((side == 1 ? widget.match.team1Country : widget.match.team2Country) ??
+                '')
+            .trim();
+    final display =
+        side == 1 ? widget.match.team1Display : widget.match.team2Display;
+    final count = (names?.length ?? 1).clamp(1, 2);
+    final align = side == 1 ? TextAlign.left : TextAlign.right;
+
+    return SizedBox(
+      width: 96,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          _buildAvatarBlock(
+            avatars: avatars,
+            count: count,
+            country: country,
+            highlight: highlight,
+          ),
+          const SizedBox(height: 10),
+          _nameLabel(display, align: align, highlight: highlight),
+        ],
+      ),
+    );
+  }
+
+  // ── 중앙 정보 (현재 스코어 + 세트 + 이전 세트 + 코트) ─────────────
+  Widget _buildCenterInfo() {
+    final courtName = (widget.match.courtName ?? '').trim();
     return Stack(
       alignment: Alignment.center,
       children: [
-        // 뒤쪽 "LIVE" 워터마크 (진행 중일 때만)
         if (widget.match.isLive)
           Positioned.fill(
             child: IgnorePointer(
@@ -299,31 +343,15 @@ class _LiveMatchCardState extends State<LiveMatchCard>
               ),
             ),
           ),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            _buildAvatarBlock(
-              avatars: widget.match.team1PlayerAvatars,
-              count: (widget.match.team1Names?.length ?? 1).clamp(1, 2),
-              country: (widget.match.team1Country ?? '').trim(),
-              highlight: leading == 1,
-            ),
-            // 가운데 컬럼: 현재 세트 큰 스코어 + "SET n" + 지난 세트 점수
-            Expanded(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildBigScore(),
-                  ..._buildPreviousSets(),
-                ],
-              ),
-            ),
-            _buildAvatarBlock(
-              avatars: widget.match.team2PlayerAvatars,
-              count: (widget.match.team2Names?.length ?? 1).clamp(1, 2),
-              country: (widget.match.team2Country ?? '').trim(),
-              highlight: leading == 2,
-            ),
+            _buildBigScore(),
+            ..._buildPreviousSets(),
+            if (courtName.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              _buildCourtFooter(courtName),
+            ],
           ],
         ),
       ],
@@ -526,11 +554,7 @@ class _LiveMatchCardState extends State<LiveMatchCard>
     }
 
     // 단식: 단일 컨테이너.
-    return _avatarFrame(
-      _avatarImage(urlAt(0)),
-      size: 70,
-      highlight: highlight,
-    );
+    return _avatarFrame(_avatarImage(urlAt(0)), size: 70, highlight: highlight);
   }
 
   /// 라운드 사각형 아바타 프레임.
@@ -562,10 +586,7 @@ class _LiveMatchCardState extends State<LiveMatchCard>
                 ]
                 : null,
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(13),
-        child: child,
-      ),
+      child: ClipRRect(borderRadius: BorderRadius.circular(13), child: child),
     );
 
     if (!gap) return frame;
@@ -599,31 +620,6 @@ class _LiveMatchCardState extends State<LiveMatchCard>
     );
   }
 
-  // ── 이름 행 (아바타 아래 좌/우 선수명) ──────────────────────────
-  Widget _buildNamesRow() {
-    final leading = _leadingSide;
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: _nameLabel(
-            widget.match.team1Display,
-            align: TextAlign.left,
-            highlight: leading == 1,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _nameLabel(
-            widget.match.team2Display,
-            align: TextAlign.right,
-            highlight: leading == 2,
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _nameLabel(
     String name, {
     required TextAlign align,
@@ -639,11 +635,12 @@ class _LiveMatchCardState extends State<LiveMatchCard>
     );
 
     // 복식: "/" 기준으로 분리해 선수별 한 줄씩(최대 2줄), 줄별로 넘치면 "..." 표시.
-    final parts = name
-        .split('/')
-        .map((e) => e.trim())
-        .where((e) => e.isNotEmpty)
-        .toList();
+    final parts =
+        name
+            .split('/')
+            .map((e) => e.trim())
+            .where((e) => e.isNotEmpty)
+            .toList();
     if (parts.length >= 2) {
       return Column(
         crossAxisAlignment:
