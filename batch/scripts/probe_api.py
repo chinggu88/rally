@@ -3,8 +3,6 @@ import json
 from pathlib import Path
 
 from batch.jobs.bwf_rankings.fetcher import (
-    browser_page,
-    extract_api_token,
     fetch_category_page,
     get_latest_publication,
 )
@@ -13,18 +11,13 @@ OUT = Path(__file__).resolve().parents[1] / "tests" / "fixtures" / "api_ms_page1
 
 
 def main() -> None:
-    with browser_page() as page:
-        token = extract_api_token(page)
-        print(f"token: {token[:40]}...")
-
-    pub = get_latest_publication(token)
+    pub = get_latest_publication()
     print(f"latest publication: {json.dumps(pub, ensure_ascii=False)}")
 
     data = fetch_category_page(
-        token,
         cat_id=6,
         publication_id=pub["id"],
-        page_key="1000",
+        page_key=1000,
         page=1,
         draw_count=1,
     )
