@@ -240,7 +240,8 @@ Deno.serve(async (req) => {
       if (played) results.push(enriched);
       else upcoming.push(enriched);
     }
-    results.reverse(); // 최근 끝난 게 먼저
+    // results / upcoming 둘 다 match_time ASC (DB order 그대로) — 클라이언트에서
+    // results + upcoming 을 합쳐도 전체가 경기 시간 오름차순으로 표시된다.
 
     return json({
       date,
