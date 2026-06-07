@@ -3,7 +3,8 @@
 // 홈(NewsView) "오늘 경기" 패널용. KST 기준 오늘 하루의 bwf_matches를
 //   - results  (점수가 있거나 winner 확정 / Walkover·Retired)
 //   - upcoming (그 외 — 경기 예정)
-// 으로 분류해 반환한다. bwf_live_matches에 있는 모든 match_code는 제외.
+// 으로 분류해 반환한다. bwf_live_matches 중 tournament_status='live'인 행의 match_code만 제외
+// (라이브 섹션과의 중복 방지). 라이브가 끝난(예: completed) 행은 결과 화면에 포함된다.
 // 대회 비정규화(name, logo_url 등)는 bwf_tournaments JOIN 후 응답에 인라인.
 //
 // 인증: 공개 (anon) — 실제 조회는 service_role로 RLS 우회.
@@ -84,6 +85,18 @@ function toKstIsoString(ts: string | null): string | null {
   return d.toISOString().replace(/\.\d{3}Z$/, "+09:00").replace(/Z$/, "+09:00");
 }
 
+/// KST wall-clock의 `HH:mm`을 디바이스/서버 타임존과 무관하게 추출한다.
+/// `ms + 9h`로 만든 Date의 `getUTCHours/getUTCMinutes`가 곧 KST 시·분이다.
+function toKstHhmm(ts: string | null): string | null {
+  if (!ts) return null;
+  const ms = Date.parse(ts);
+  if (Number.isNaN(ms)) return null;
+  const kst = new Date(ms + KST_OFFSET_MS);
+  const hh = String(kst.getUTCHours()).padStart(2, "0");
+  const mm = String(kst.getUTCMinutes()).padStart(2, "0");
+  return `${hh}:${mm}`;
+}
+
 type ScoreSet = { set?: number; home?: number | string; away?: number | string };
 
 function isPlayed(row: {
@@ -146,17 +159,18 @@ Deno.serve(async (req) => {
     if (mErr) return error(mErr.message, 500);
     const rowsRaw = matchRows ?? [];
 
-    // 2) 라이브 match_code set
+    // 2) 라이브 match_code set (tournament_status='live'인 행만)
     const { data: liveRows, error: liveErr } = await supabase
       .from("bwf_live_matches")
-      .select("match_code");
+      .select("match_code")
+      .eq("tournament_status", "live");
     if (liveErr) return error(liveErr.message, 500);
     const liveCodes = new Set<string>();
     for (const r of liveRows ?? []) {
       if (r.match_code) liveCodes.add(r.match_code as string);
     }
 
-    // 3) 라이브 제외
+    // 3) 라이브 제외 (현재 진행 중인 라이브와 중복되는 매치만 제거)
     const rows = rowsRaw.filter(
       (r) => !r.match_code || !liveCodes.has(r.match_code as string),
     );
@@ -208,6 +222,7 @@ Deno.serve(async (req) => {
       const enriched = {
         ...r,
         match_time_kst: toKstIsoString(r.match_time as string | null),
+        match_time_kst_hhmm: toKstHhmm(r.match_time as string | null),
         tournament_name: t?.name ?? null,
         tournament_logo_url: t?.logo_url ?? null,
         tournament_cat_logo_url: t?.cat_logo_url ?? null,
