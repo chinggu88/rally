@@ -22,25 +22,32 @@ rally/lib/
 │   │   │   ├── player_detail_response.dart                # 선수 상세 정보 모델 (랭킹/성적 등)
 │   │   │   ├── get_player_response.dart                   # 선수 단일 상세 조회 래퍼 모델
 │   │   │   ├── live_match_response.dart                   # 라이브 매치 단일 모델 (대회+매치+팀 비정규화 / 게임 스코어 파싱 + winnerSide/isLive/games getter) — 홈 라이브
-│   │   │   └── get_live_matches_response.dart             # { count, matches } 래퍼 모델 — 홈 라이브
+│   │   │   ├── get_live_matches_response.dart             # { count, matches } 래퍼 모델 — 홈 라이브
+│   │   │   ├── today_match_response.dart                  # 오늘 경기 단일 모델 (대회+매치+팀 비정규화, LiveGameScore 재사용) — TASK-007
+│   │   │   └── get_today_matches_response.dart            # { date, results_count, upcoming_count, results, upcoming } 래퍼 — TASK-007
 │   │   │
 │   │   └── repositories/
 │   │       ├── tournament_repository.dart                 # Edge Function `get-tournaments` / `get-tournament` / `get-tournament-matches` / `get-tournament-participants` 호출
 │   │       ├── player_repository.dart                     # Edge Function `get-players` / `get-player` 호출 (카테고리별 조회: MS/WS/MD/WD/XD)
-│   │       └── live_match_repository.dart                 # Edge Function `get-live-matches` 호출 (tournament_id/event_name 선택 필터, 404→빈 목록) — 홈 라이브
+│   │       ├── live_match_repository.dart                 # Edge Function `get-live-matches` 호출 (tournament_id/event_name 선택 필터, 404→빈 목록) — 홈 라이브
+│   │       └── today_match_repository.dart                # Edge Function `get-today-matches` 호출 (404→빈 응답, KST 오늘 기준) — TASK-007
 │   │
 │   └── modules/                                           # [모듈] 기능별 MVC 패턴 구현
 │       │
 │       ├── app/                                           # [앱 셸] 바텀네비를 호스팅하는 루트 화면
-│       │   ├── bindings/app_binding.dart                  # 바텀네비 전체 모듈 바인딩 + LiveMatchRepository fenix(홈 진입 보장)
+│       │   ├── bindings/app_binding.dart                  # 바텀네비 전체 모듈 바인딩 + Live/TodayMatchRepository fenix(홈 진입 보장)
 │       │   ├── controllers/app_controller.dart            # 탭 전환 상태 관리
 │       │   └── views/app_view.dart                        # 바텀네비 + 페이지 호스트
 │       │
-│       ├── news/                                          # [홈/뉴스] 바텀네비 1번 탭 — 상단 라이브 매치 캐러셀 + 뉴스 placeholder
-│       │   ├── bindings/news_binding.dart                 # LiveMatchRepository(fenix) + NewsController lazyPut
-│       │   ├── controllers/news_controller.dart           # 라이브 매치 fetch / 로딩·에러 상태 / Pull-to-refresh / race-condition 가드(_inflightToken)
-│       │   ├── views/news_view.dart                       # 라이브 섹션(가로 캐러셀) + 뉴스 placeholder + RefreshIndicator (다크 + 라임 옐로우)
-│       │   └── views/widgets/live_match_card.dart         # 라이브 매치 단일 카드 (로고/대회명/LIVE 배지 + team1 vs team2 + 게임 스코어 pill + 코트명)
+│       ├── news/                                          # [홈/뉴스] 바텀네비 1번 탭 — 활성 대회 + 라이브 매치 + 오늘 경기 가로 캐러셀 + 뉴스
+│       │   ├── bindings/news_binding.dart                 # LiveMatchRepository(fenix) + TodayMatchRepository(fenix) + NewsController lazyPut
+│       │   ├── controllers/news_controller.dart           # 라이브/오늘경기(results+upcoming 머지) fetch / Pull-to-refresh / race-condition 가드(_inflightToken)
+│       │   ├── views/news_view.dart                       # sliver: active_tournaments → live → today(가로 캐러셀, 결과→예정 순) → news / RefreshIndicator
+│       │   ├── views/widgets/active_tournament_card.dart  # 활성 대회 단일 카드 (로고 + 대회명)
+│       │   ├── views/widgets/live_match_card.dart         # 라이브 매치 단일 카드 (로고/대회명/LIVE 배지 + team1 vs team2 + 게임 스코어 + 코트명)
+│       │   ├── views/widgets/today_match_card.dart        # 오늘 경기 가로 카드 (팀1 국가·이름 / 시각 or FINAL / 팀2 국가·이름 + 결과 시 게임 스코어) — TASK-007
+│       │   ├── views/widgets/news_card_viewer.dart        # 뉴스 카드 뷰어 (pager + scrollable 이미지)
+│       │   └── views/widgets/news_card_item.dart          # 뉴스 카드 단일 항목 (이미지 + 제목)
 │       │
 │       ├── match/                                         # [경기] 국제 대회 리스트 + 상세 + 참가 선수 — TASK-004~006
 │       │   ├── bindings/match_binding.dart                # TournamentRepository + MatchController lazyPut
@@ -88,7 +95,7 @@ rally/lib/
 ```
 [AppView (바텀네비)]
    │
-   ├── 뉴스(Home/News)          ─► [NewsView] 상단 라이브 매치 캐러셀(get-live-matches) + 뉴스 placeholder
+   ├── 뉴스(Home/News)          ─► [NewsView] 활성 대회 캐러셀 + 라이브 매치 캐러셀 + 오늘 경기(results/upcoming 토글) + 뉴스 카드
    ├── 경기(Match)               ─► [MatchView] 대회 리스트
    │                              │
    │                              └─► [TournamentDetailView] 대회 상세 (경기 배열)
@@ -116,6 +123,7 @@ rally/lib/
   - `player` 모듈 ↔ `supabase/functions/get-players` (선수 목록)
   - `player` 모듈 ↔ `supabase/functions/get-player` (선수 상세)
   - `news` 모듈(홈) ↔ `supabase/functions/get-live-matches` (현재 진행 중 라이브 매치 목록 — `tournament_status='live'`)
+  - `news` 모듈(홈) ↔ `supabase/functions/get-today-matches` (KST 오늘 매치 — results/upcoming 분류, `bwf_live_matches` 중 `tournament_status='live'`만 제외 / 응답에 `match_time_kst_hhmm` 사전계산 포함) — TASK-007
 
 ## 주요 의존성
 
