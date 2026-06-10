@@ -48,6 +48,9 @@ dependencies:
   # 외부 URL 오픈 (대회 상세 페이지 이동)
   url_launcher: ^6.2.6
 
+  # 반응형 사이즈 (iPhone 14 Pro 393x852 기준 디자인 → 모든 디바이스 스케일링)
+  flutter_screenutil: ^5.9.3
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -65,13 +68,13 @@ flutter_launcher_icons:
   ios: true
   image_path: "assets/images/app_icon.png"
   remove_alpha_ios: true
-  background_color_ios: "#2A2D33"
-  adaptive_icon_background: "#2A2D33"
+  background_color_ios: "#3DFF7F"
+  adaptive_icon_background: "#3DFF7F"
   adaptive_icon_foreground: "assets/images/app_icon.png"
   web:
     generate: true
     image_path: "assets/images/app_icon.png"
-    background_color: "#2A2D33"
+    background_color: "#3DFF7F"
     theme_color: "#3DFF7F"
   windows:
     generate: true

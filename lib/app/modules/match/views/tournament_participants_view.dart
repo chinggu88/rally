@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
 import '../../../../theme/app_colors.dart';
@@ -43,11 +44,11 @@ class TournamentParticipantsView
           child: CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
-              const SliverToBoxAdapter(child: SizedBox(height: 8)),
+              SliverToBoxAdapter(child: SizedBox(height: 8.h)),
               SliverToBoxAdapter(child: _buildEventChips()),
-              const SliverToBoxAdapter(child: SizedBox(height: 12)),
+              SliverToBoxAdapter(child: SizedBox(height: 12.h)),
               SliverToBoxAdapter(child: _buildStateArea(scheme)),
-              const SliverToBoxAdapter(child: SizedBox(height: 32)),
+              SliverToBoxAdapter(child: SizedBox(height: 32.h)),
             ],
           ),
         ),
@@ -70,11 +71,11 @@ class TournamentParticipantsView
           name.isEmpty ? '참가 선수' : name,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
+          style: TextStyle(
             color: Colors.white,
             fontFamily: AppTypography.chivo,
             fontWeight: FontWeight.w800,
-            fontSize: 16,
+            fontSize: 16.sp,
             letterSpacing: 0.2,
           ),
         );
@@ -88,14 +89,14 @@ class TournamentParticipantsView
   /// 종목 선택 칩 행 (MS / WS / MD / WD / XD — 가로 스크롤 가능)
   Widget _buildEventChips() {
     return SizedBox(
-      height: 44,
+      height: 44.h,
       child: Obx(() {
         final selected = controller.selectedEvent;
         return ListView.separated(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          padding: EdgeInsets.symmetric(horizontal: 20.w),
           scrollDirection: Axis.horizontal,
           itemCount: TournamentParticipantsController.events.length,
-          separatorBuilder: (_, __) => const SizedBox(width: 8),
+          separatorBuilder: (_, __) => SizedBox(width: 8.w),
           itemBuilder: (context, index) {
             final code = TournamentParticipantsController.events[index];
             final isSelected = code == selected;
@@ -116,9 +117,9 @@ class TournamentParticipantsView
   Widget _buildStateArea(ColorScheme scheme) {
     return Obx(() {
       if (controller.isLoading && controller.participants.isEmpty) {
-        return const Padding(
-          padding: EdgeInsets.symmetric(vertical: 80),
-          child: Center(
+        return Padding(
+          padding: EdgeInsets.symmetric(vertical: 80.h),
+          child: const Center(
             child: CircularProgressIndicator(color: _accent),
           ),
         );
@@ -139,19 +140,19 @@ class TournamentParticipantsView
 
   Widget _buildErrorState(String message) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 60, 20, 60),
+      padding: EdgeInsets.fromLTRB(20.w, 60.h, 20.w, 60.h),
       child: Column(
         children: [
-          const Icon(Icons.cloud_off_outlined, size: 48, color: _subtleText),
-          const SizedBox(height: 12),
+          Icon(Icons.cloud_off_outlined, size: 48.sp, color: _subtleText),
+          SizedBox(height: 12.h),
           Text(
             message,
             textAlign: TextAlign.center,
             style: AppTypography.bodyMd.copyWith(color: Colors.white),
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: 20.h),
           SizedBox(
-            height: 44,
+            height: 44.h,
             child: ElevatedButton(
               onPressed: controller.refreshParticipants,
               style: ElevatedButton.styleFrom(
@@ -159,16 +160,16 @@ class TournamentParticipantsView
                 foregroundColor: _accentDark,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(24.r),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 24),
+                padding: EdgeInsets.symmetric(horizontal: 24.w),
               ),
-              child: const Text(
+              child: Text(
                 '다시 시도',
                 style: TextStyle(
                   fontFamily: AppTypography.chivo,
                   fontWeight: FontWeight.w800,
-                  fontSize: 14,
+                  fontSize: 14.sp,
                   letterSpacing: 0.6,
                 ),
               ),
@@ -181,28 +182,28 @@ class TournamentParticipantsView
 
   Widget _buildEmptyState() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 60, 20, 60),
+      padding: EdgeInsets.fromLTRB(20.w, 60.h, 20.w, 60.h),
       child: Column(
         children: [
-          const Icon(
+          Icon(
             Icons.groups_outlined,
-            size: 48,
+            size: 48.sp,
             color: _subtleText,
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12.h),
           Text(
             '참가 선수 정보가 아직 공개되지 않았습니다.',
             textAlign: TextAlign.center,
             style: AppTypography.bodyMd.copyWith(color: Colors.white),
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: 6.h),
           Obx(() => Text(
                 '${TournamentParticipantsController.labelKoOf(controller.selectedEvent)}'
                 ' 본선 발표 전이거나 데이터가 아직 동기화되지 않았어요.',
                 textAlign: TextAlign.center,
                 style: AppTypography.bodyMd.copyWith(
                   color: _subtleText,
-                  fontSize: 13,
+                  fontSize: 13.sp,
                 ),
               )),
         ],
@@ -212,13 +213,13 @@ class TournamentParticipantsView
 
   Widget _buildParticipantList(List<TournamentParticipantResponse> list) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+      padding: EdgeInsets.fromLTRB(20.w, 4.h, 20.w, 8.h),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           for (final p in list) ...[
             _ParticipantCard(participant: p),
-            const SizedBox(height: 12),
+            SizedBox(height: 12.h),
           ],
         ],
       ),
@@ -251,13 +252,13 @@ class _EventChip extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(999.r),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
           decoration: BoxDecoration(
             color: selected ? _accent : _chipBg,
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(999.r),
             border: Border.all(
               color: selected ? _accent : _chipBorder,
             ),
@@ -271,18 +272,18 @@ class _EventChip extends StatelessWidget {
                 style: TextStyle(
                   fontFamily: AppTypography.chivo,
                   fontWeight: FontWeight.w800,
-                  fontSize: 12,
+                  fontSize: 12.sp,
                   letterSpacing: 0.6,
                   color: selected ? _accentDark : _accent,
                 ),
               ),
-              const SizedBox(width: 6),
+              SizedBox(width: 6.w),
               Text(
                 koLabel,
                 style: TextStyle(
                   fontFamily: AppTypography.chivo,
                   fontWeight: FontWeight.w700,
-                  fontSize: 12,
+                  fontSize: 12.sp,
                   letterSpacing: 0.2,
                   color: selected ? _accentDark : Colors.white,
                 ),
@@ -316,10 +317,10 @@ class _ParticipantCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: _cardBg,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16.r),
         border: Border.all(color: _cardBorder),
       ),
-      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+      padding: EdgeInsets.fromLTRB(14.w, 14.h, 14.w, 14.h),
       child: participant.isDoubles ? _buildDoublesBody() : _buildSinglesBody(),
     );
   }
@@ -336,9 +337,9 @@ class _ParticipantCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             _buildSeedBadge(participant.seed),
-            const SizedBox(width: 12),
+            SizedBox(width: 12.w),
             _buildAvatar(participant.photoUrl),
-            const SizedBox(width: 14),
+            SizedBox(width: 14.w),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -350,11 +351,11 @@ class _ParticipantCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: AppTypography.headlineMd.copyWith(
                       color: Colors.white,
-                      fontSize: 17,
+                      fontSize: 17.sp,
                       height: 1.2,
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  SizedBox(height: 6.h),
                   _buildCountryRow(flag, country),
                 ],
               ),
@@ -384,7 +385,7 @@ class _ParticipantCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             _buildSeedBadge(participant.seed),
-            const SizedBox(width: 12),
+            SizedBox(width: 12.w),
             Expanded(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -396,7 +397,7 @@ class _ParticipantCard extends StatelessWidget {
                     flag: flag,
                     country: displayCountry,
                   ),
-                  const SizedBox(height: 10),
+                  SizedBox(height: 10.h),
                   _buildDoublesPlayerRow(
                     photoUrl: participant.photoUrl2,
                     firstName: p2.first,
@@ -418,22 +419,22 @@ class _ParticipantCard extends StatelessWidget {
   Widget _buildFirstRoundFooter(String firstRound) {
     return Column(
       children: [
-        const SizedBox(height: 12),
+        SizedBox(height: 12.h),
         Divider(height: 1, color: _cardBorder.withValues(alpha: 0.8)),
-        const SizedBox(height: 10),
+        SizedBox(height: 10.h),
         Row(
           children: [
-            const Icon(
+            Icon(
               Icons.flag_outlined,
               color: _subtleText,
-              size: 14,
+              size: 14.sp,
             ),
-            const SizedBox(width: 6),
+            SizedBox(width: 6.w),
             Text(
               '시작 라운드',
               style: AppTypography.labelLg.copyWith(
                 color: _subtleText,
-                fontSize: 11,
+                fontSize: 11.sp,
                 letterSpacing: 0.6,
               ),
             ),
@@ -456,8 +457,8 @@ class _ParticipantCard extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        _buildRoundAvatar(photoUrl, size: 36),
-        const SizedBox(width: 10),
+        _buildRoundAvatar(photoUrl, size: 36.r),
+        SizedBox(width: 10.w),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -470,31 +471,31 @@ class _ParticipantCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.labelLg.copyWith(
                     color: _subtleText,
-                    fontSize: 11,
+                    fontSize: 11.sp,
                     letterSpacing: 0.4,
                     height: 1.0,
                   ),
                 ),
-              const SizedBox(height: 2),
+              SizedBox(height: 2.h),
               Text(
                 lastName.isEmpty ? '—' : lastName,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: AppTypography.chivo,
                   fontWeight: FontWeight.w800,
-                  fontSize: 14,
+                  fontSize: 14.sp,
                   color: _accent,
                   letterSpacing: 0.2,
                   height: 1.1,
                 ),
               ),
-              const SizedBox(height: 2),
+              SizedBox(height: 2.h),
               Row(
                 children: [
                   if (flag.isNotEmpty) ...[
-                    Text(flag, style: const TextStyle(fontSize: 11)),
-                    const SizedBox(width: 4),
+                    Text(flag, style: TextStyle(fontSize: 11.sp)),
+                    SizedBox(width: 4.w),
                   ],
                   Flexible(
                     child: Text(
@@ -503,7 +504,7 @@ class _ParticipantCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.labelLg.copyWith(
                         color: _subtleText,
-                        fontSize: 11,
+                        fontSize: 11.sp,
                         letterSpacing: 0.3,
                         height: 1.0,
                       ),
@@ -576,12 +577,12 @@ class _ParticipantCard extends StatelessWidget {
     final label = hasSeed ? '$seed' : '—';
 
     return Container(
-      width: 36,
-      height: 36,
+      width: 36.w,
+      height: 36.h,
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: hasSeed ? _accent : Colors.transparent,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(10.r),
         border: Border.all(
           color: hasSeed ? _accent : _cardBorder,
         ),
@@ -591,7 +592,7 @@ class _ParticipantCard extends StatelessWidget {
         style: TextStyle(
           fontFamily: AppTypography.chivo,
           fontWeight: FontWeight.w800,
-          fontSize: hasSeed ? 14 : 13,
+          fontSize: hasSeed ? 14.sp : 13.sp,
           letterSpacing: -0.2,
           color: hasSeed ? _accentDark : _subtleText,
         ),
@@ -601,14 +602,13 @@ class _ParticipantCard extends StatelessWidget {
 
   /// 선수 사진(64x64, cached_network_image) + 폴백 인물 아이콘.
   Widget _buildAvatar(String? photoUrl) {
-    const double size = 56;
     final hasPhoto = photoUrl != null && photoUrl.isNotEmpty;
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(12.r),
       child: SizedBox(
-        width: size,
-        height: size,
+        width: 56.w,
+        height: 56.h,
         child: hasPhoto
             ? CachedNetworkImage(
                 imageUrl: photoUrl,
@@ -625,7 +625,7 @@ class _ParticipantCard extends StatelessWidget {
     return Container(
       color: const Color(0xFF252423),
       alignment: Alignment.center,
-      child: const Icon(Icons.person, color: _subtleText, size: 26),
+      child: Icon(Icons.person, color: _subtleText, size: 26.sp),
     );
   }
 
@@ -636,7 +636,7 @@ class _ParticipantCard extends StatelessWidget {
         '국가 미정',
         style: AppTypography.labelLg.copyWith(
           color: _subtleText,
-          fontSize: 12,
+          fontSize: 12.sp,
         ),
       );
     }
@@ -645,24 +645,24 @@ class _ParticipantCard extends StatelessWidget {
         if (flag.isNotEmpty)
           Text(
             flag,
-            style: const TextStyle(fontSize: 14),
+            style: TextStyle(fontSize: 14.sp),
           )
         else
           Container(
-            width: 14,
-            height: 14,
+            width: 14.w,
+            height: 14.h,
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: const Color(0xFF353534),
-              borderRadius: BorderRadius.circular(3),
+              borderRadius: BorderRadius.circular(3.r),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.flag_outlined,
               color: _subtleText,
-              size: 10,
+              size: 10.sp,
             ),
           ),
-        const SizedBox(width: 6),
+        SizedBox(width: 6.w),
         Flexible(
           child: Text(
             country.isEmpty ? '—' : country.toUpperCase(),
@@ -670,7 +670,7 @@ class _ParticipantCard extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: AppTypography.labelLg.copyWith(
               color: _subtleText,
-              fontSize: 12,
+              fontSize: 12.sp,
               letterSpacing: 0.6,
             ),
           ),
@@ -682,18 +682,18 @@ class _ParticipantCard extends StatelessWidget {
   /// 라운드 칩 (R64/R32/R16/QF/SF/F) — 라임 옐로우 outline + 검정 텍스트(accent).
   Widget _buildRoundChip(String round) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
       decoration: BoxDecoration(
         color: _accent.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(999.r),
         border: Border.all(color: _accent.withValues(alpha: 0.6)),
       ),
       child: Text(
         round.toUpperCase(),
-        style: const TextStyle(
+        style: TextStyle(
           fontFamily: AppTypography.chivo,
           fontWeight: FontWeight.w800,
-          fontSize: 11,
+          fontSize: 11.sp,
           letterSpacing: 0.6,
           color: _accent,
         ),

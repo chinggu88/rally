@@ -8,8 +8,10 @@ import '../../../data/models/active_tournament_response.dart';
 import '../../../data/models/get_news_cards_response.dart';
 import '../../../data/models/live_match_response.dart';
 import '../../../data/models/news_card_response.dart';
+import '../../../data/models/today_match_response.dart';
 import '../../../data/repositories/live_match_repository.dart';
 import '../../../data/repositories/news_card_repository.dart';
+import '../../../data/repositories/today_match_repository.dart';
 import '../../../data/repositories/tournament_repository.dart';
 
 /// 홈(뉴스) 화면 컨트롤러.
@@ -26,6 +28,9 @@ class NewsController extends GetxController {
 
   final LiveMatchRepository _liveMatchRepository =
       Get.find<LiveMatchRepository>();
+
+  final TodayMatchRepository _todayMatchRepository =
+      Get.find<TodayMatchRepository>();
 
   final NewsCardRepository _newsCardRepository = Get.find<NewsCardRepository>();
 
@@ -56,6 +61,42 @@ class NewsController extends GetxController {
   /// 마지막 스코어 변경이 발생한 매치 id → 변경 시각.
   /// View에서 카드별 펄스 애니메이션 트리거에 사용한다.
   final RxMap<int, DateTime> scoreBumpAt = <int, DateTime>{}.obs;
+
+  // ── 오늘 경기 상태 ──────────────────────────────────────────
+
+  /// 오늘 경기 결과 목록 (match_time ASC).
+  final _todayResults = <TodayMatchResponse>[].obs;
+  List<TodayMatchResponse> get todayResults => _todayResults;
+
+  /// 오늘 예정 경기 목록 (match_time ASC).
+  final _todayUpcoming = <TodayMatchResponse>[].obs;
+  List<TodayMatchResponse> get todayUpcoming => _todayUpcoming;
+
+  /// 결과+예정을 경기 시간 오름차순으로 합친 단일 캐러셀용 목록.
+  /// 시간이 없는 항목은 뒤로 보낸다.
+  List<TodayMatchResponse> get todayMerged {
+    final list = <TodayMatchResponse>[..._todayResults, ..._todayUpcoming];
+    list.sort((a, b) {
+      final da = a.matchDateTime;
+      final db = b.matchDateTime;
+      if (da == null && db == null) return 0;
+      if (da == null) return 1;
+      if (db == null) return -1;
+      return da.compareTo(db);
+    });
+    return list;
+  }
+
+  /// 오늘 경기 로딩 중 여부.
+  final _isTodayLoading = false.obs;
+  bool get isTodayLoading => _isTodayLoading.value;
+
+  /// 오늘 경기 에러 메시지 (null이면 정상).
+  final _todayError = RxnString();
+  String? get todayError => _todayError.value;
+
+  /// 오늘 경기 inflight 토큰 (race condition 방지).
+  int _todayInflightToken = 0;
 
   // ── 남은 대회(진행중/진행예정) 상태 ───────────────────────────
 
@@ -113,6 +154,7 @@ class NewsController extends GetxController {
     super.onInit();
     fetchActiveTournaments();
     fetchLiveMatches();
+    fetchTodayMatches();
     fetchNewsCards();
     subscribeRealtime();
   }
@@ -149,16 +191,51 @@ class NewsController extends GetxController {
     }
   }
 
-  /// Pull-to-refresh / 재시도 버튼용 — 남은 대회 + 라이브 매치 + 카드뉴스 재호출.
+  /// Pull-to-refresh / 재시도 버튼용 — 남은 대회 + 라이브 매치 + 오늘 경기 + 카드뉴스 재호출.
   Future<void> refreshLiveMatches() async {
     await Future.wait([
       fetchActiveTournaments(),
       fetchLiveMatches(),
+      fetchTodayMatches(),
       fetchNewsCards(),
     ]);
   }
 
-  /// 진행중/진행예정 "남은 대회" 목록을 조회한다(한국 선수 참여 정보 포함).
+  // ── 오늘 경기 조회 ──────────────────────────────────────────
+
+  /// 오늘 경기(결과/예정) 목록을 조회한다.
+  ///
+  /// 빈 응답은 에러가 아니라 정상으로 처리한다.
+  Future<void> fetchTodayMatches() async {
+    final token = ++_todayInflightToken;
+
+    try {
+      _isTodayLoading.value = true;
+      _todayError.value = null;
+
+      final response = await _todayMatchRepository.getTodayMatches();
+
+      // race condition 가드: 더 새로운 요청이 발생했으면 결과 무시
+      if (token != _todayInflightToken) return;
+
+      _todayResults.assignAll(response.results ?? const <TodayMatchResponse>[]);
+      _todayUpcoming.assignAll(
+        response.upcoming ?? const <TodayMatchResponse>[],
+      );
+    } catch (e) {
+      if (token != _todayInflightToken) return;
+      log('NewsController.fetchTodayMatches error: $e');
+      _todayError.value = '오늘 경기 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.';
+      _todayResults.clear();
+      _todayUpcoming.clear();
+    } finally {
+      if (token == _todayInflightToken) {
+        _isTodayLoading.value = false;
+      }
+    }
+  }
+
+/// 진행중/진행예정 "남은 대회" 목록을 조회한다(한국 선수 참여 정보 포함).
   Future<void> fetchActiveTournaments() async {
     final token = ++_activeTournamentsToken;
 

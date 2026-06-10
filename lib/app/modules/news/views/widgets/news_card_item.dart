@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../../../theme/app_typography.dart';
 import '../../../../data/models/news_card_response.dart';
@@ -52,7 +53,7 @@ class _NewsCardItemState extends State<NewsCardItem> {
     final cardHeight = naturalHeight.clamp(0.0, _maxCardHeight);
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(16.r),
       child: Container(
         color: NewsCardItem.cardBg,
         child: Column(
@@ -77,8 +78,8 @@ class _NewsCardItemState extends State<NewsCardItem> {
                   // 현재/전체 카운터 (카드가 2장 이상일 때만)
                   if (urls.length > 1)
                     Positioned(
-                      top: 12,
-                      right: 12,
+                      top: 12.h,
+                      right: 12.w,
                       child: _CountBadge(
                         current: _currentPage + 1,
                         total: urls.length,
@@ -88,24 +89,24 @@ class _NewsCardItemState extends State<NewsCardItem> {
               ),
             ),
             if (urls.length > 1) ...[
-              const SizedBox(height: 12),
+              SizedBox(height: 12.h),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(urls.length, (i) {
                   final active = i == _currentPage;
                   return AnimatedContainer(
                     duration: const Duration(milliseconds: 220),
-                    margin: const EdgeInsets.symmetric(horizontal: 3),
-                    width: active ? 18 : 6,
-                    height: 6,
+                    margin: EdgeInsets.symmetric(horizontal: 3.w),
+                    width: active ? 18.w : 6.w,
+                    height: 6.h,
                     decoration: BoxDecoration(
                       color: active ? NewsCardItem.accent : _inactive,
-                      borderRadius: BorderRadius.circular(3),
+                      borderRadius: BorderRadius.circular(3.r),
                     ),
                   );
                 }),
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: 12.h),
             ],
           ],
         ),
@@ -149,10 +150,10 @@ class _CardImage extends StatelessWidget {
         placeholder: (_, __) => Container(
           color: const Color(0xFF222121),
           alignment: Alignment.center,
-          child: const SizedBox(
-            width: 26,
-            height: 26,
-            child: CircularProgressIndicator(
+          child: SizedBox(
+            width: 26.w,
+            height: 26.w,
+            child: const CircularProgressIndicator(
               strokeWidth: 2,
               color: NewsCardItem.accent,
             ),
@@ -161,9 +162,9 @@ class _CardImage extends StatelessWidget {
         errorWidget: (_, __, ___) => Container(
           color: const Color(0xFF222121),
           alignment: Alignment.center,
-          child: const Icon(
+          child: Icon(
             Icons.broken_image_outlined,
-            size: 28,
+            size: 28.sp,
             color: NewsCardItem.subtleText,
           ),
         ),
@@ -182,17 +183,17 @@ class _CountBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.55),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(999.r),
       ),
       child: Text(
         '$current / $total',
-        style: const TextStyle(
+        style: TextStyle(
           fontFamily: AppTypography.chivo,
           fontWeight: FontWeight.w800,
-          fontSize: 11,
+          fontSize: 11.sp,
           letterSpacing: 0.4,
           color: Colors.white,
         ),

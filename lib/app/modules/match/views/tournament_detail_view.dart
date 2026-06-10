@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
 import '../../../../theme/app_colors.dart';
@@ -57,13 +58,13 @@ class TournamentDetailView extends GetView<TournamentDetailController> {
         icon: const Icon(Icons.arrow_back, color: Colors.white),
         onPressed: () => Get.back<void>(),
       ),
-      title: const Text(
+      title: Text(
         'Kinetic Court',
         style: TextStyle(
           color: _accent,
           fontFamily: AppTypography.chivo,
           fontWeight: FontWeight.w800,
-          fontSize: 18,
+          fontSize: 18.sp,
           letterSpacing: 0.2,
         ),
       ),
@@ -84,12 +85,12 @@ class TournamentDetailView extends GetView<TournamentDetailController> {
     );
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 14),
+      padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 14.h),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildLogo(logoUrl, scheme),
-          const SizedBox(width: 14),
+          SizedBox(width: 14.w),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -99,26 +100,26 @@ class TournamentDetailView extends GetView<TournamentDetailController> {
                     _prettyTourLevel(tourLevel),
                     style: AppTypography.labelLg.copyWith(
                       color: _accent,
-                      fontSize: 11,
+                      fontSize: 11.sp,
                       letterSpacing: 1.2,
                     ),
                   ),
-                const SizedBox(height: 4),
+                SizedBox(height: 4.h),
                 Text(
                   name,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.headlineMd.copyWith(
                     color: Colors.white,
-                    fontSize: 19,
+                    fontSize: 19.sp,
                     height: 1.15,
                   ),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: 8.h),
                 Row(
                   children: [
                     _buildFlag(controller.flagUrl),
-                    const SizedBox(width: 6),
+                    SizedBox(width: 6.w),
                     Expanded(
                       child: Text(
                         _composeHeaderMeta(location, dateLabel),
@@ -126,7 +127,7 @@ class TournamentDetailView extends GetView<TournamentDetailController> {
                         overflow: TextOverflow.ellipsis,
                         style: AppTypography.bodyMd.copyWith(
                           color: _subtleText,
-                          fontSize: 12,
+                          fontSize: 12.sp,
                         ),
                       ),
                     ),
@@ -215,25 +216,25 @@ class TournamentDetailView extends GetView<TournamentDetailController> {
     }
 
     return SizedBox(
-      height: 64,
+      height: 64.h,
       child: Row(
         children: [
           Expanded(
             child: ListView.separated(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
               scrollDirection: Axis.horizontal,
               itemCount: chips.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              separatorBuilder: (_, __) => SizedBox(width: 8.w),
               itemBuilder: (context, i) => chips[i],
             ),
           ),
           if (controller.isMatchesLoading && !controller.hasMatches)
-            const Padding(
-              padding: EdgeInsets.only(right: 16),
+            Padding(
+              padding: EdgeInsets.only(right: 16.w),
               child: SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(
+                width: 18.w,
+                height: 18.h,
+                child: const CircularProgressIndicator(
                   strokeWidth: 2,
                   color: _accent,
                 ),
@@ -267,7 +268,7 @@ class TournamentDetailView extends GetView<TournamentDetailController> {
   // 요약 탭
   Widget _buildSummaryTab(ColorScheme scheme) {
     return ListView(
-      padding: const EdgeInsets.only(bottom: 40),
+      padding: EdgeInsets.only(bottom: 40.h),
       children: [
         _buildStatusBanner(scheme),
         if (controller.errorMessage != null) _buildErrorBanner(scheme),
@@ -280,13 +281,13 @@ class TournamentDetailView extends GetView<TournamentDetailController> {
   // 라운드 탭 — 해당 라운드 경기를 리스트로 노출
   Widget _buildRoundTab(ColorScheme scheme, TournamentMatchRound round) {
     return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 18, 20, 40),
+      padding: EdgeInsets.fromLTRB(20.w, 18.h, 20.w, 40.h),
       children: [
         _buildRoundHeader(round.name, round.matches.length, scheme),
-        const SizedBox(height: 12),
+        SizedBox(height: 12.h),
         for (final m in round.matches) ...[
           _MatchCard(match: m),
-          const SizedBox(height: 10),
+          SizedBox(height: 10.h),
         ],
       ],
     );
@@ -296,26 +297,26 @@ class TournamentDetailView extends GetView<TournamentDetailController> {
   Widget _buildPodiumTab(ColorScheme scheme) {
     final entries = controller.podium;
     return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 18, 20, 40),
+      padding: EdgeInsets.fromLTRB(20.w, 18.h, 20.w, 40.h),
       children: [
         Row(
           children: [
-            const Icon(Icons.emoji_events, color: _accent, size: 22),
-            const SizedBox(width: 8),
+            Icon(Icons.emoji_events, color: _accent, size: 22.sp),
+            SizedBox(width: 8.w),
             Text(
               'CHAMPIONS',
               style: AppTypography.headlineMd.copyWith(
                 color: Colors.white,
-                fontSize: 16,
+                fontSize: 16.sp,
                 letterSpacing: 1.0,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16.h),
         for (final e in entries) ...[
           _PodiumCard(entry: e),
-          const SizedBox(height: 12),
+          SizedBox(height: 12.h),
         ],
       ],
     );
@@ -325,27 +326,27 @@ class TournamentDetailView extends GetView<TournamentDetailController> {
     return Row(
       children: [
         Container(
-          width: 4,
-          height: 18,
+          width: 4.w,
+          height: 18.h,
           decoration: BoxDecoration(
             color: _accent,
-            borderRadius: BorderRadius.circular(2),
+            borderRadius: BorderRadius.circular(2.r),
           ),
         ),
-        const SizedBox(width: 8),
+        SizedBox(width: 8.w),
         Text(
           name,
           style: AppTypography.headlineMd.copyWith(
             color: Colors.white,
-            fontSize: 16,
+            fontSize: 16.sp,
           ),
         ),
-        const SizedBox(width: 8),
+        SizedBox(width: 8.w),
         Text(
           '$count',
           style: AppTypography.labelLg.copyWith(
             color: _subtleText,
-            fontSize: 12,
+            fontSize: 12.sp,
           ),
         ),
       ],
@@ -485,7 +486,7 @@ class TournamentDetailView extends GetView<TournamentDetailController> {
       child: Container(
         decoration: BoxDecoration(
           color: scheme.surfaceContainer,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(12.r),
           border: Border.all(color: scheme.outlineVariant),
         ),
         child: Column(
@@ -512,11 +513,11 @@ class TournamentDetailView extends GetView<TournamentDetailController> {
         color: Colors.transparent,
         child: InkWell(
           onTap: controller.openExternalDetail,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(12.r),
           child: Container(
             decoration: BoxDecoration(
               color: scheme.surfaceContainer,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(12.r),
               border: Border.all(color: scheme.outlineVariant),
             ),
             child: ListTile(
@@ -531,7 +532,7 @@ class TournamentDetailView extends GetView<TournamentDetailController> {
                 overflow: TextOverflow.ellipsis,
                 style: AppTypography.bodyMd.copyWith(
                   color: _subtleText,
-                  fontSize: 13,
+                  fontSize: 13.sp,
                 ),
               ),
             ),
@@ -543,17 +544,17 @@ class TournamentDetailView extends GetView<TournamentDetailController> {
 
   Widget _buildErrorBanner(ColorScheme scheme) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(20, 24, 20, 0),
-      padding: const EdgeInsets.all(16),
+      margin: EdgeInsets.fromLTRB(20.w, 24.h, 20.w, 0),
+      padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
         color: scheme.surfaceContainer,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12.r),
         border: Border.all(color: scheme.outlineVariant),
       ),
       child: Row(
         children: [
-          const Icon(Icons.cloud_off_outlined, color: _subtleText, size: 20),
-          const SizedBox(width: 12),
+          Icon(Icons.cloud_off_outlined, color: _subtleText, size: 20.sp),
+          SizedBox(width: 12.w),
           Expanded(
             child: Text(
               controller.errorMessage ?? '',
@@ -579,21 +580,21 @@ class TournamentDetailView extends GetView<TournamentDetailController> {
   // ── shared visuals ────────────────────────────────────────────────────
 
   Widget _buildLogo(String? url, ColorScheme scheme) {
-    const double size = 64;
+    final double size = 64.w;
     if (url == null || url.isEmpty) {
       return Container(
         width: size,
         height: size,
         decoration: BoxDecoration(
           color: scheme.surfaceContainer,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(14.r),
           border: Border.all(color: scheme.outlineVariant),
         ),
         alignment: Alignment.center,
         child: Icon(
           Icons.emoji_events_outlined,
           color: scheme.onSurfaceVariant.withValues(alpha: 0.4),
-          size: 28,
+          size: 28.sp,
         ),
       );
     }
@@ -604,19 +605,19 @@ class TournamentDetailView extends GetView<TournamentDetailController> {
       height: size,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(14.r),
       ),
-      padding: const EdgeInsets.all(8),
+      padding: EdgeInsets.all(8.w),
       child: Image.network(
         url,
         fit: BoxFit.contain,
         loadingBuilder: (context, child, progress) {
           if (progress == null) return child;
-          return const Center(
+          return Center(
             child: SizedBox(
-              width: 18,
-              height: 18,
-              child: CircularProgressIndicator(strokeWidth: 2),
+              width: 18.w,
+              height: 18.h,
+              child: const CircularProgressIndicator(strokeWidth: 2),
             ),
           );
         },
@@ -626,7 +627,7 @@ class TournamentDetailView extends GetView<TournamentDetailController> {
             child: Icon(
               Icons.emoji_events_outlined,
               color: scheme.onSurfaceVariant.withValues(alpha: 0.4),
-              size: 28,
+              size: 28.sp,
             ),
           );
         },
@@ -636,17 +637,17 @@ class TournamentDetailView extends GetView<TournamentDetailController> {
 
   Widget _buildFlag(String? url) {
     if (url == null || url.isEmpty) {
-      return const SizedBox(width: 20, height: 13);
+      return SizedBox(width: 20.w, height: 13.h);
     }
     return ClipRRect(
-      borderRadius: BorderRadius.circular(2),
+      borderRadius: BorderRadius.circular(2.r),
       child: Image.network(
         url,
-        width: 20,
-        height: 13,
+        width: 20.w,
+        height: 13.h,
         fit: BoxFit.cover,
         errorBuilder: (context, error, stack) =>
-            const SizedBox(width: 20, height: 13),
+            SizedBox(width: 20.w, height: 13.h),
       ),
     );
   }
@@ -775,13 +776,13 @@ class _TabChip extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12.r),
         child: Container(
-          constraints: const BoxConstraints(minWidth: 52),
-          padding: const EdgeInsets.symmetric(horizontal: 14),
+          constraints: BoxConstraints(minWidth: 52.w),
+          padding: EdgeInsets.symmetric(horizontal: 14.w),
           decoration: BoxDecoration(
             color: bg,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(12.r),
             border: Border.all(color: border),
           ),
           child: Center(child: _buildContent(fg)),
@@ -795,7 +796,7 @@ class _TabChip extends StatelessWidget {
       title,
       style: AppTypography.labelLg.copyWith(
         color: fg,
-        fontSize: 13,
+        fontSize: 13.sp,
         fontWeight: FontWeight.w800,
         letterSpacing: kind == _TabChipKind.podium ? 0.8 : 0.4,
       ),
@@ -826,10 +827,10 @@ class _PodiumCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: scheme.surfaceContainer,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12.r),
         border: Border.all(color: scheme.outlineVariant),
       ),
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -837,17 +838,17 @@ class _PodiumCard extends StatelessWidget {
             entry.eventName.toUpperCase(),
             style: AppTypography.labelLg.copyWith(
               color: _accent,
-              fontSize: 11,
+              fontSize: 11.sp,
               letterSpacing: 0.8,
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12.h),
           // 우승
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const Icon(Icons.emoji_events, color: _accent, size: 20),
-              const SizedBox(width: 8),
+              Icon(Icons.emoji_events, color: _accent, size: 20.sp),
+              SizedBox(width: 8.w),
               Expanded(
                 child: Text(
                   entry.champion,
@@ -856,17 +857,17 @@ class _PodiumCard extends StatelessWidget {
                   style: AppTypography.bodyMd.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.w800,
-                    fontSize: 15,
+                    fontSize: 15.sp,
                   ),
                 ),
               ),
               if (champCtry.isNotEmpty) ...[
-                const SizedBox(width: 8),
+                SizedBox(width: 8.w),
                 Text(
                   champCtry.toUpperCase(),
                   style: AppTypography.labelLg.copyWith(
                     color: _subtleText,
-                    fontSize: 11,
+                    fontSize: 11.sp,
                   ),
                 ),
               ],
@@ -879,11 +880,11 @@ class _PodiumCard extends StatelessWidget {
             ],
           ),
           if (runner.isNotEmpty) ...[
-            const SizedBox(height: 10),
+            SizedBox(height: 10.h),
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const SizedBox(width: 28),
+                SizedBox(width: 28.w),
                 Expanded(
                   child: Text(
                     runner,
@@ -891,17 +892,17 @@ class _PodiumCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: AppTypography.bodyMd.copyWith(
                       color: _subtleText,
-                      fontSize: 13,
+                      fontSize: 13.sp,
                     ),
                   ),
                 ),
                 if (runnerCtry.isNotEmpty) ...[
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8.w),
                   Text(
                     runnerCtry.toUpperCase(),
                     style: AppTypography.labelLg.copyWith(
                       color: _subtleText,
-                      fontSize: 11,
+                      fontSize: 11.sp,
                     ),
                   ),
                 ],
@@ -916,26 +917,26 @@ class _PodiumCard extends StatelessWidget {
           ],
           // 게임 파싱 실패 시 원본 스코어 문자열 폴백
           if (!hasGames && score.isNotEmpty) ...[
-            const SizedBox(height: 12),
+            SizedBox(height: 12.h),
             Divider(height: 1, color: scheme.outlineVariant),
-            const SizedBox(height: 10),
+            SizedBox(height: 10.h),
             Row(
               children: [
                 Text(
                   'SCORE',
                   style: AppTypography.labelLg.copyWith(
                     color: _subtleText,
-                    fontSize: 10,
+                    fontSize: 10.sp,
                     letterSpacing: 0.8,
                   ),
                 ),
-                const SizedBox(width: 10),
+                SizedBox(width: 10.w),
                 Expanded(
                   child: Text(
                     score,
                     style: AppTypography.statsNumber.copyWith(
                       color: Colors.white,
-                      fontSize: 15,
+                      fontSize: 15.sp,
                     ),
                   ),
                 ),
@@ -982,45 +983,44 @@ class _StatusCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = AppColors.dark;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
+      padding: EdgeInsets.fromLTRB(20.w, 18.h, 20.w, 0),
       child: Container(
         decoration: BoxDecoration(
           color: scheme.surfaceContainer,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(16.r),
           border: Border.all(color: accent.withValues(alpha: 0.5)),
         ),
-        padding: const EdgeInsets.all(18),
+        padding: EdgeInsets.all(18.w),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
                   decoration: BoxDecoration(
                     color: overlineBg,
-                    borderRadius: BorderRadius.circular(999),
+                    borderRadius: BorderRadius.circular(999.r),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       if (showPulse) ...[
                         Container(
-                          width: 7,
-                          height: 7,
+                          width: 7.w,
+                          height: 7.h,
                           decoration: BoxDecoration(
                             color: overlineColor,
                             shape: BoxShape.circle,
                           ),
                         ),
-                        const SizedBox(width: 6),
+                        SizedBox(width: 6.w),
                       ],
                       Text(
                         overline,
                         style: AppTypography.labelLg.copyWith(
                           color: overlineColor,
-                          fontSize: 11,
+                          fontSize: 11.sp,
                           letterSpacing: 0.8,
                         ),
                       ),
@@ -1028,18 +1028,18 @@ class _StatusCard extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                Icon(icon, color: iconColor, size: 22),
+                Icon(icon, color: iconColor, size: 22.sp),
               ],
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16.h),
             Text(
               headline,
               style: AppTypography.headlineLg.copyWith(
                 color: Colors.white,
-                fontSize: 24,
+                fontSize: 24.sp,
               ),
             ),
-            const SizedBox(height: 6),
+            SizedBox(height: 6.h),
             Text(
               subtitle,
               style: AppTypography.bodyMd.copyWith(
@@ -1047,10 +1047,10 @@ class _StatusCard extends StatelessWidget {
               ),
             ),
             if (onCta != null) ...[
-              const SizedBox(height: 18),
+              SizedBox(height: 18.h),
               SizedBox(
                 width: double.infinity,
-                height: 48,
+                height: 48.h,
                 child: ElevatedButton(
                   onPressed: onCta,
                   style: ElevatedButton.styleFrom(
@@ -1058,7 +1058,7 @@ class _StatusCard extends StatelessWidget {
                     foregroundColor: onAccent,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24),
+                      borderRadius: BorderRadius.circular(24.r),
                     ),
                   ),
                   child: Row(
@@ -1066,15 +1066,15 @@ class _StatusCard extends StatelessWidget {
                     children: [
                       Text(
                         ctaLabel,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: AppTypography.chivo,
                           fontWeight: FontWeight.w800,
-                          fontSize: 15,
+                          fontSize: 15.sp,
                           letterSpacing: 0.4,
                         ),
                       ),
-                      const SizedBox(width: 6),
-                      const Icon(Icons.arrow_forward, size: 18),
+                      SizedBox(width: 6.w),
+                      Icon(Icons.arrow_forward, size: 18.sp),
                     ],
                   ),
                 ),
@@ -1098,22 +1098,22 @@ class _InfoRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = AppColors.dark;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 80,
+            width: 80.w,
             child: Text(
               label,
               style: AppTypography.labelLg.copyWith(
                 color: scheme.onSurfaceVariant,
-                fontSize: 12,
+                fontSize: 12.sp,
                 letterSpacing: 0.6,
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12.w),
           Expanded(
             child: Text(
               value,
@@ -1137,7 +1137,7 @@ class _Section extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = AppColors.dark;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
+      padding: EdgeInsets.fromLTRB(20.w, 28.h, 20.w, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1147,13 +1147,13 @@ class _Section extends StatelessWidget {
                 title.toUpperCase(),
                 style: AppTypography.headlineLg.copyWith(color: Colors.white),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12.w),
               Expanded(
                 child: Container(height: 1, color: scheme.outlineVariant),
               ),
             ],
           ),
-          const SizedBox(height: 18),
+          SizedBox(height: 18.h),
           child,
         ],
       ),
@@ -1182,10 +1182,10 @@ class _MatchCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: scheme.surfaceContainer,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12.r),
         border: Border.all(color: scheme.outlineVariant),
       ),
-      padding: const EdgeInsets.all(14),
+      padding: EdgeInsets.all(14.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1199,7 +1199,7 @@ class _MatchCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: AppTypography.labelLg.copyWith(
                       color: _accent,
-                      fontSize: 11,
+                      fontSize: 11.sp,
                       letterSpacing: 0.4,
                     ),
                   ),
@@ -1210,12 +1210,12 @@ class _MatchCard extends StatelessWidget {
                   meta,
                   style: AppTypography.bodyMd.copyWith(
                     color: _subtleText,
-                    fontSize: 11,
+                    fontSize: 11.sp,
                   ),
                 ),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12.h),
           _teamLine(
             name: match.team1Display,
             country: match.team1Country,
@@ -1225,7 +1225,7 @@ class _MatchCard extends StatelessWidget {
             points: [for (final g in games) g.team1],
             oppPoints: [for (final g in games) g.team2],
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10.h),
           _teamLine(
             name: match.team2Display,
             country: match.team2Country,
@@ -1237,26 +1237,26 @@ class _MatchCard extends StatelessWidget {
           ),
           // 게임 파싱 실패했지만 원본 스코어 문자열이 있으면 폴백 표기
           if (games.isEmpty && scoreText.isNotEmpty) ...[
-            const SizedBox(height: 12),
+            SizedBox(height: 12.h),
             Divider(height: 1, color: scheme.outlineVariant),
-            const SizedBox(height: 10),
+            SizedBox(height: 10.h),
             Row(
               children: [
                 Text(
                   'SCORE',
                   style: AppTypography.labelLg.copyWith(
                     color: _subtleText,
-                    fontSize: 10,
+                    fontSize: 10.sp,
                     letterSpacing: 0.8,
                   ),
                 ),
-                const SizedBox(width: 10),
+                SizedBox(width: 10.w),
                 Expanded(
                   child: Text(
                     scoreText,
                     style: AppTypography.statsNumber.copyWith(
                       color: Colors.white,
-                      fontSize: 15,
+                      fontSize: 15.sp,
                     ),
                   ),
                 ),
@@ -1287,9 +1287,9 @@ class _MatchCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         SizedBox(
-          width: 20,
+          width: 20.w,
           child: isWinner
-              ? const Icon(Icons.emoji_events, color: _accent, size: 16)
+              ? Icon(Icons.emoji_events, color: _accent, size: 16.sp)
               : const SizedBox.shrink(),
         ),
         Expanded(
@@ -1302,7 +1302,7 @@ class _MatchCard extends StatelessWidget {
                     color: color,
                     fontWeight:
                         isWinner ? FontWeight.w800 : FontWeight.w500,
-                    fontSize: 14,
+                    fontSize: 14.sp,
                   ),
                 ),
                 if (sd.isNotEmpty)
@@ -1310,7 +1310,7 @@ class _MatchCard extends StatelessWidget {
                     text: '  [$sd]',
                     style: AppTypography.labelLg.copyWith(
                       color: _subtleText,
-                      fontSize: 11,
+                      fontSize: 11.sp,
                     ),
                   ),
               ],
@@ -1320,12 +1320,12 @@ class _MatchCard extends StatelessWidget {
           ),
         ),
         if (ctry.isNotEmpty) ...[
-          const SizedBox(width: 8),
+          SizedBox(width: 8.w),
           Text(
             ctry.toUpperCase(),
             style: AppTypography.labelLg.copyWith(
               color: _subtleText,
-              fontSize: 11,
+              fontSize: 11.sp,
               letterSpacing: 0.5,
             ),
           ),
@@ -1369,13 +1369,13 @@ class _GameCell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 26,
+      width: 26.w,
       alignment: Alignment.center,
-      margin: const EdgeInsets.only(left: 6),
+      margin: EdgeInsets.only(left: 6.w),
       child: Text(
         '$point',
         style: AppTypography.statsNumber.copyWith(
-          fontSize: 17,
+          fontSize: 17.sp,
           color: won ? _accent : _subtleText,
         ),
       ),
