@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../../../theme/app_colors.dart';
 import '../../../../../theme/app_typography.dart';
@@ -37,14 +38,14 @@ class TodayMatchCard extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12.r),
         onTap: onTap,
         child: Container(
-          width: _cardWidth,
-          padding: const EdgeInsets.all(14),
+          width: _cardWidth.w,
+          padding: EdgeInsets.all(14.w),
           decoration: BoxDecoration(
             color: scheme.surfaceContainer,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(12.r),
             border: Border.all(color: scheme.outlineVariant),
           ),
           child: Column(
@@ -60,7 +61,7 @@ class TodayMatchCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: AppTypography.labelLg.copyWith(
                           color: _accent,
-                          fontSize: 11,
+                          fontSize: 11.sp,
                           letterSpacing: 0.4,
                         ),
                       ),
@@ -68,36 +69,36 @@ class TodayMatchCard extends StatelessWidget {
                   const Spacer(),
                   if (showStatusBadge) ...[
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 2),
+                      padding: EdgeInsets.symmetric(
+                          horizontal: 6.w, vertical: 2.h),
                       decoration: BoxDecoration(
                         color: _accent,
-                        borderRadius: BorderRadius.circular(3),
+                        borderRadius: BorderRadius.circular(3.r),
                       ),
                       child: Text(
                         match.isWalkover ? 'W/O' : 'RET',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: AppTypography.chivo,
                           fontWeight: FontWeight.w900,
-                          fontSize: 9,
+                          fontSize: 9.sp,
                           color: _accentDark,
                           letterSpacing: 0.4,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 6),
+                    SizedBox(width: 6.w),
                   ],
                   if (meta.isNotEmpty)
                     Text(
                       meta,
                       style: AppTypography.bodyMd.copyWith(
                         color: _subtleText,
-                        fontSize: 11,
+                        fontSize: 11.sp,
                       ),
                     ),
                 ],
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: 12.h),
               _teamLine(
                 name: match.team1Display,
                 country: match.team1Country,
@@ -107,7 +108,7 @@ class TodayMatchCard extends StatelessWidget {
                 points: [for (final g in games) g.team1],
                 oppPoints: [for (final g in games) g.team2],
               ),
-              const SizedBox(height: 10),
+              SizedBox(height: 10.h),
               _teamLine(
                 name: match.team2Display,
                 country: match.team2Country,
@@ -143,9 +144,9 @@ class TodayMatchCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         SizedBox(
-          width: 20,
+          width: 20.w,
           child: isWinner
-              ? const Icon(Icons.emoji_events, color: _accent, size: 16)
+              ? Icon(Icons.emoji_events, color: _accent, size: 16.sp)
               : const SizedBox.shrink(),
         ),
         Expanded(
@@ -158,7 +159,7 @@ class TodayMatchCard extends StatelessWidget {
                     color: color,
                     fontWeight:
                         isWinner ? FontWeight.w800 : FontWeight.w500,
-                    fontSize: 14,
+                    fontSize: 14.sp,
                   ),
                 ),
                 if (sd.isNotEmpty)
@@ -166,7 +167,7 @@ class TodayMatchCard extends StatelessWidget {
                     text: '  [$sd]',
                     style: AppTypography.labelLg.copyWith(
                       color: _subtleText,
-                      fontSize: 11,
+                      fontSize: 11.sp,
                     ),
                   ),
               ],
@@ -176,12 +177,12 @@ class TodayMatchCard extends StatelessWidget {
           ),
         ),
         if (ctry.isNotEmpty) ...[
-          const SizedBox(width: 8),
+          SizedBox(width: 8.w),
           Text(
             ctry.toUpperCase(),
             style: AppTypography.labelLg.copyWith(
               color: _subtleText,
-              fontSize: 11,
+              fontSize: 11.sp,
               letterSpacing: 0.5,
             ),
           ),
@@ -219,13 +220,13 @@ class _GameCell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 26,
+      width: 26.w,
       alignment: Alignment.center,
-      margin: const EdgeInsets.only(left: 6),
+      margin: EdgeInsets.only(left: 6.w),
       child: Text(
         '$point',
         style: AppTypography.statsNumber.copyWith(
-          fontSize: 17,
+          fontSize: 17.sp,
           color: won ? _accent : _subtleText,
         ),
       ),

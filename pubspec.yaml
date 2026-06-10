@@ -48,6 +48,9 @@ dependencies:
   # 외부 URL 오픈 (대회 상세 페이지 이동)
   url_launcher: ^6.2.6
 
+  # 반응형 사이즈 (iPhone 14 Pro 393x852 기준 디자인 → 모든 디바이스 스케일링)
+  flutter_screenutil: ^5.9.3
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

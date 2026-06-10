@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
 import '../../../../theme/app_colors.dart';
@@ -96,24 +97,24 @@ class _MatchViewState extends State<MatchView> {
       backgroundColor: AppColors.dark.surface,
       elevation: 0,
       centerTitle: true,
-      title: const Text(
+      title: Text(
         'Kinetic Court',
         style: TextStyle(
           color: _accent,
           fontFamily: AppTypography.chivo,
           fontWeight: FontWeight.w800,
-          fontSize: 18,
+          fontSize: 18.sp,
           letterSpacing: 0.2,
         ),
       ),
-      leading: const Padding(
-        padding: EdgeInsets.only(left: 12),
-        child: Icon(Icons.menu, color: Colors.white),
+      leading: Padding(
+        padding: EdgeInsets.only(left: 12.w),
+        child: const Icon(Icons.menu, color: Colors.white),
       ),
-      actions: const [
+      actions: [
         Padding(
-          padding: EdgeInsets.only(right: 12),
-          child: Icon(Icons.search, color: Colors.white),
+          padding: EdgeInsets.only(right: 12.w),
+          child: const Icon(Icons.search, color: Colors.white),
         ),
       ],
     );
@@ -127,7 +128,7 @@ class _MatchViewState extends State<MatchView> {
       slivers: [
         SliverToBoxAdapter(child: _buildHeader()),
         SliverToBoxAdapter(child: _buildYearSelector()),
-        SliverToBoxAdapter(child: const SizedBox(height: 16)),
+        SliverToBoxAdapter(child: SizedBox(height: 16.h)),
         SliverToBoxAdapter(child: _buildStateArea(scheme)),
       ],
     );
@@ -136,7 +137,7 @@ class _MatchViewState extends State<MatchView> {
   /// 상단 헤더 ("World Tour Calendar" + 부제)
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+      padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 12.h),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -147,7 +148,7 @@ class _MatchViewState extends State<MatchView> {
               height: 1.15,
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8.h),
           Text(
             'BWF가 공인하는 국제 대회 일정을 한눈에 확인하세요.',
             style: AppTypography.bodyMd.copyWith(
@@ -162,14 +163,14 @@ class _MatchViewState extends State<MatchView> {
   /// 연도 선택 컨트롤 (이전/다음 화살표 + 현재 연도 라벨)
   Widget _buildYearSelector() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
       child: Container(
         decoration: BoxDecoration(
           color: _badgeBg,
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(28.r),
           border: Border.all(color: _divider),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 6.h),
         child: Row(
           children: [
             // 이전 연도 버튼
@@ -179,13 +180,13 @@ class _MatchViewState extends State<MatchView> {
                 customBorder: const CircleBorder(),
                 onTap: controller.goPreviousYear,
                 child: Container(
-                  width: 36,
-                  height: 36,
+                  width: 36.w,
+                  height: 36.h,
                   alignment: Alignment.center,
-                  child: const Icon(
+                  child: Icon(
                     Icons.chevron_left,
                     color: Colors.white,
-                    size: 22,
+                    size: 22.sp,
                   ),
                 ),
               ),
@@ -211,13 +212,13 @@ class _MatchViewState extends State<MatchView> {
                 customBorder: const CircleBorder(),
                 onTap: controller.goNextYear,
                 child: Container(
-                  width: 36,
-                  height: 36,
+                  width: 36.w,
+                  height: 36.h,
                   alignment: Alignment.center,
-                  child: const Icon(
+                  child: Icon(
                     Icons.chevron_right,
                     color: Colors.white,
-                    size: 22,
+                    size: 22.sp,
                   ),
                 ),
               ),
@@ -232,9 +233,9 @@ class _MatchViewState extends State<MatchView> {
   Widget _buildStateArea(ColorScheme scheme) {
     return Obx(() {
       if (controller.isLoading && controller.tournaments.isEmpty) {
-        return const Padding(
-          padding: EdgeInsets.symmetric(vertical: 80),
-          child: Center(
+        return Padding(
+          padding: EdgeInsets.symmetric(vertical: 80.h),
+          child: const Center(
             child: CircularProgressIndicator(color: _accent),
           ),
         );
@@ -255,19 +256,19 @@ class _MatchViewState extends State<MatchView> {
 
   Widget _buildErrorState(String message) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 60, 20, 60),
+      padding: EdgeInsets.fromLTRB(20.w, 60.h, 20.w, 60.h),
       child: Column(
         children: [
-          const Icon(Icons.cloud_off_outlined, size: 48, color: _subtleText),
-          const SizedBox(height: 12),
+          Icon(Icons.cloud_off_outlined, size: 48.sp, color: _subtleText),
+          SizedBox(height: 12.h),
           Text(
             message,
             textAlign: TextAlign.center,
             style: AppTypography.bodyMd.copyWith(color: Colors.white),
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: 20.h),
           SizedBox(
-            height: 44,
+            height: 44.h,
             child: ElevatedButton(
               onPressed: controller.refreshTournaments,
               style: ElevatedButton.styleFrom(
@@ -275,16 +276,16 @@ class _MatchViewState extends State<MatchView> {
                 foregroundColor: _accentDark,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(24.r),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 24),
+                padding: EdgeInsets.symmetric(horizontal: 24.w),
               ),
-              child: const Text(
+              child: Text(
                 '다시 시도',
                 style: TextStyle(
                   fontFamily: AppTypography.chivo,
                   fontWeight: FontWeight.w800,
-                  fontSize: 14,
+                  fontSize: 14.sp,
                   letterSpacing: 0.6,
                 ),
               ),
@@ -297,20 +298,20 @@ class _MatchViewState extends State<MatchView> {
 
   Widget _buildEmptyState() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 60, 20, 60),
+      padding: EdgeInsets.fromLTRB(20.w, 60.h, 20.w, 60.h),
       child: Column(
         children: [
-          const Icon(
+          Icon(
             Icons.event_busy_outlined,
-            size: 48,
+            size: 48.sp,
             color: _subtleText,
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12.h),
           Obx(() => Text(
                 '${controller.selectedYear}년에는 등록된 대회가 없습니다.',
                 style: AppTypography.bodyMd.copyWith(color: Colors.white),
               )),
-          const SizedBox(height: 6),
+          SizedBox(height: 6.h),
           Text(
             '다른 연도를 선택해보세요.',
             style: AppTypography.bodyMd.copyWith(color: _subtleText),
@@ -325,22 +326,22 @@ class _MatchViewState extends State<MatchView> {
     final groups = _groupByMonth(tournaments);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
+      padding: EdgeInsets.fromLTRB(20.w, 4.h, 20.w, 32.h),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           for (final group in groups) ...[
             _buildMonthHeader(group.label),
-            const SizedBox(height: 12),
+            SizedBox(height: 12.h),
             for (final t in group.items) ...[
               _TournamentCard(
                 key: t.tournamentId != null ? _keyFor(t.tournamentId!) : null,
                 tournament: t,
                 onTap: () => controller.openTournamentDetail(t),
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: 12.h),
             ],
-            const SizedBox(height: 16),
+            SizedBox(height: 16.h),
           ],
         ],
       ),
@@ -352,19 +353,19 @@ class _MatchViewState extends State<MatchView> {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Container(
-          width: 4,
-          height: 22,
+          width: 4.w,
+          height: 22.h,
           decoration: BoxDecoration(
             color: _accent,
-            borderRadius: BorderRadius.circular(2),
+            borderRadius: BorderRadius.circular(2.r),
           ),
         ),
-        const SizedBox(width: 10),
+        SizedBox(width: 10.w),
         Text(
           label,
           style: AppTypography.headlineMd.copyWith(
             color: Colors.white,
-            fontSize: 20,
+            fontSize: 20.sp,
             height: 1.1,
           ),
         ),
@@ -463,14 +464,14 @@ class _TournamentCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16.r),
         child: Container(
           decoration: BoxDecoration(
             color: _cardBg,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(16.r),
             border: Border.all(color: _cardBorder),
           ),
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(16.w),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -485,12 +486,12 @@ class _TournamentCard extends StatelessWidget {
                         if (tourLevel.isNotEmpty)
                           _buildTourLevelBadge(tourLevel),
                         if (isLive) ...[
-                          if (tourLevel.isNotEmpty) const SizedBox(width: 6),
+                          if (tourLevel.isNotEmpty) SizedBox(width: 6.w),
                           _buildLiveBadge(),
                         ],
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8.h),
                     // 2행: 대회명
                     Text(
                       name,
@@ -498,16 +499,16 @@ class _TournamentCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.headlineMd.copyWith(
                         color: Colors.white,
-                        fontSize: 18,
+                        fontSize: 18.sp,
                         height: 1.2,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8.h),
                     // 3행: 국기 + 국가/도시
                     Row(
                       children: [
                         _buildFlag(t.flagUrl),
-                        const SizedBox(width: 6),
+                        SizedBox(width: 6.w),
                         Flexible(
                           child: Text(
                             _composeLocation(country, location),
@@ -515,28 +516,28 @@ class _TournamentCard extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: AppTypography.bodyMd.copyWith(
                               color: _subtleText,
-                              fontSize: 13,
+                              fontSize: 13.sp,
                             ),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 6),
+                    SizedBox(height: 6.h),
                     // 4행: 날짜 라벨
                     if (dateLabel.isNotEmpty)
                       Row(
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.calendar_month_outlined,
-                            size: 14,
+                            size: 14.sp,
                             color: _subtleText,
                           ),
-                          const SizedBox(width: 4),
+                          SizedBox(width: 4.w),
                           Text(
                             dateLabel,
                             style: AppTypography.bodyMd.copyWith(
                               color: Colors.white,
-                              fontSize: 13,
+                              fontSize: 13.sp,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -544,27 +545,27 @@ class _TournamentCard extends StatelessWidget {
                       ),
                     // 5행: 상금 + 상태
                     if (prize.isNotEmpty || status.isNotEmpty) ...[
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8.h),
                       Row(
                         children: [
                           if (prize.isNotEmpty) ...[
-                            const Icon(
+                            Icon(
                               Icons.emoji_events_outlined,
-                              size: 14,
+                              size: 14.sp,
                               color: _accent,
                             ),
-                            const SizedBox(width: 4),
+                            SizedBox(width: 4.w),
                             Text(
                               prize,
                               style: AppTypography.labelLg.copyWith(
                                 color: _accent,
-                                fontSize: 12,
+                                fontSize: 12.sp,
                                 letterSpacing: 0.4,
                               ),
                             ),
                           ],
                           if (prize.isNotEmpty && status.isNotEmpty)
-                            const SizedBox(width: 12),
+                            SizedBox(width: 12.w),
                           if (status.isNotEmpty) _buildStatusBadge(status),
                         ],
                       ),
@@ -572,17 +573,17 @@ class _TournamentCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12.w),
               // 우측 로고 / 화살표
               Column(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   _buildLogo(t.logoUrl ?? t.catLogoUrl),
-                  const SizedBox(height: 12),
-                  const Icon(
+                  SizedBox(height: 12.h),
+                  Icon(
                     Icons.arrow_forward,
                     color: Colors.white,
-                    size: 18,
+                    size: 18.sp,
                   ),
                 ],
               ),
@@ -595,16 +596,16 @@ class _TournamentCard extends StatelessWidget {
 
   Widget _buildTourLevelBadge(String text) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
       decoration: BoxDecoration(
         color: _accent,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(999.r),
       ),
       child: Text(
         text,
         style: AppTypography.labelLg.copyWith(
           color: _accentDark,
-          fontSize: 11,
+          fontSize: 11.sp,
           letterSpacing: 0.4,
         ),
       ),
@@ -613,30 +614,30 @@ class _TournamentCard extends StatelessWidget {
 
   Widget _buildLiveBadge() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
       decoration: BoxDecoration(
         color: _liveRed,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(999.r),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 6,
-            height: 6,
+            width: 6.w,
+            height: 6.h,
             decoration: const BoxDecoration(
               color: Colors.white,
               shape: BoxShape.circle,
             ),
           ),
-          const SizedBox(width: 4),
-          const Text(
+          SizedBox(width: 4.w),
+          Text(
             'LIVE',
             style: TextStyle(
               color: Colors.white,
               fontFamily: AppTypography.chivo,
               fontWeight: FontWeight.w800,
-              fontSize: 10,
+              fontSize: 10.sp,
               letterSpacing: 0.6,
             ),
           ),
@@ -647,17 +648,17 @@ class _TournamentCard extends StatelessWidget {
 
   Widget _buildStatusBadge(String status) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
       decoration: BoxDecoration(
         color: const Color(0xFF201F1F),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(999.r),
         border: Border.all(color: _cardBorder),
       ),
       child: Text(
         status.toUpperCase(),
         style: AppTypography.labelLg.copyWith(
           color: _subtleText,
-          fontSize: 10,
+          fontSize: 10.sp,
           letterSpacing: 0.5,
         ),
       ),
@@ -667,29 +668,29 @@ class _TournamentCard extends StatelessWidget {
   Widget _buildFlag(String? url) {
     if (url == null || url.isEmpty) {
       return Container(
-        width: 18,
-        height: 12,
+        width: 18.w,
+        height: 12.h,
         decoration: BoxDecoration(
           color: _cardBorder,
-          borderRadius: BorderRadius.circular(2),
+          borderRadius: BorderRadius.circular(2.r),
         ),
       );
     }
     return ClipRRect(
-      borderRadius: BorderRadius.circular(2),
+      borderRadius: BorderRadius.circular(2.r),
       child: CachedNetworkImage(
         imageUrl: url,
-        width: 18,
-        height: 12,
+        width: 18.w,
+        height: 12.h,
         fit: BoxFit.cover,
         placeholder: (context, _) => Container(
-          width: 18,
-          height: 12,
+          width: 18.w,
+          height: 12.h,
           color: _cardBorder,
         ),
         errorWidget: (context, _, __) => Container(
-          width: 18,
-          height: 12,
+          width: 18.w,
+          height: 12.h,
           color: _cardBorder,
         ),
       ),
@@ -697,20 +698,20 @@ class _TournamentCard extends StatelessWidget {
   }
 
   Widget _buildLogo(String? url) {
-    const double size = 56;
+    final double size = 56.w;
     if (url == null || url.isEmpty) {
       return Container(
         width: size,
         height: size,
         decoration: BoxDecoration(
           color: _cardBorder,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(8.r),
         ),
         alignment: Alignment.center,
-        child: const Icon(
+        child: Icon(
           Icons.sports_tennis,
           color: _subtleText,
-          size: 24,
+          size: 24.sp,
         ),
       );
     }
@@ -722,29 +723,29 @@ class _TournamentCard extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(8.r),
       ),
-      padding: const EdgeInsets.all(6),
+      padding: EdgeInsets.all(6.w),
       child: Image.network(
         url,
         fit: BoxFit.contain,
         loadingBuilder: (context, child, progress) {
           if (progress == null) return child;
-          return const Center(
+          return Center(
             child: SizedBox(
-              width: 16,
-              height: 16,
-              child: CircularProgressIndicator(strokeWidth: 2),
+              width: 16.w,
+              height: 16.h,
+              child: const CircularProgressIndicator(strokeWidth: 2),
             ),
           );
         },
         errorBuilder: (context, error, stack) {
           log('MatchView._buildLogo image error: url=$url error=$error');
-          return const Center(
+          return Center(
             child: Icon(
               Icons.emoji_events_outlined,
               color: _subtleText,
-              size: 22,
+              size: 22.sp,
             ),
           );
         },
