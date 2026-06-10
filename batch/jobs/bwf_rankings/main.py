@@ -6,8 +6,6 @@ from typing import Any
 from dotenv import load_dotenv
 
 from batch.jobs.bwf_rankings.fetcher import (
-    browser_page,
-    extract_api_token,
     fetch_all_pages,
     get_latest_publication,
 )
@@ -89,11 +87,7 @@ def run() -> int:
     per_category: dict[str, int] = {}
 
     try:
-        with browser_page() as page:
-            token = extract_api_token(page)
-            log.info(f"Got API token: {token[:20]}...")
-
-        pub = get_latest_publication(token)
+        pub = get_latest_publication()
         year, week = _resolve_week(pub)
         pub_id = pub["id"]
         log.info(f"Latest publication: id={pub_id} year={year} week={week}")
@@ -101,7 +95,7 @@ def run() -> int:
         for cat, cat_id in CATEGORIES:
             log.info(f"Fetching {cat} (catId={cat_id})")
             raw_rows = list(
-                fetch_all_pages(token, cat_id=cat_id, publication_id=pub_id)
+                fetch_all_pages(cat_id=cat_id, publication_id=pub_id)
             )
             log.info(f"{cat}: {len(raw_rows)} raw rows from API")
 

@@ -33,6 +33,13 @@ def browser_page() -> Iterator[Page]:
 
 
 def extract_api_token(page: Page) -> str:
+    """Legacy helper kept for other jobs that still rely on Bearer auth.
+
+    The public rankings endpoints no longer require this token — see
+    `get_latest_publication` / `fetch_all_pages` below, which hit the API
+    directly. This function remains for callers (e.g. bwf_calendar, probes)
+    that have not migrated.
+    """
     page.goto(ENTRY_URL, wait_until="domcontentloaded", timeout=60_000)
     page.wait_for_selector("#rankings_landing_container", timeout=30_000)
     html = page.content()
@@ -42,13 +49,11 @@ def extract_api_token(page: Page) -> str:
     return m.group(1)
 
 
-def _api_session(token: str) -> requests.Session:
+def _api_session() -> requests.Session:
     s = requests.Session()
     s.headers.update(
         {
-            "Authorization": f"Bearer {token}",
             "Accept": "application/json, text/plain, */*",
-            "Content-Type": "application/json;charset=UTF-8",
             "Origin": "https://bwfbadminton.com",
             "Referer": "https://bwfbadminton.com/",
             "User-Agent": USER_AGENT,
@@ -57,12 +62,12 @@ def _api_session(token: str) -> requests.Session:
     return s
 
 
-def get_latest_publication(token: str) -> dict[str, Any]:
+def get_latest_publication() -> dict[str, Any]:
     """Fetch the list of available ranking weeks; return the first (latest)."""
-    s = _api_session(token)
-    r = s.post(
+    s = _api_session()
+    r = s.get(
         f"{EXTRANET_BASE}/api/vue-rankingweek",
-        json={"rankId": RANK_ID},
+        params={"rankId": RANK_ID},
         timeout=30,
     )
     r.raise_for_status()
@@ -73,27 +78,26 @@ def get_latest_publication(token: str) -> dict[str, Any]:
 
 
 def fetch_category_page(
-    token: str,
     cat_id: int,
     publication_id: int,
-    page_key: str,
+    page_key: int,
     page: int,
     draw_count: int,
 ) -> dict[str, Any]:
-    s = _api_session(token)
-    payload = {
+    s = _api_session()
+    params = {
         "rankId": RANK_ID,
         "catId": cat_id,
         "publicationId": publication_id,
-        "doubles": cat_id >= 8,
+        "doubles": "true" if cat_id >= 8 else "false",
         "searchKey": "",
         "pageKey": page_key,
         "page": page,
         "drawCount": draw_count,
     }
-    r = s.post(
+    r = s.get(
         f"{EXTRANET_BASE}/api/vue-rankingtable",
-        json=payload,
+        params=params,
         timeout=60,
     )
     r.raise_for_status()
@@ -101,17 +105,15 @@ def fetch_category_page(
 
 
 def fetch_all_pages(
-    token: str,
     cat_id: int,
     publication_id: int,
-    page_key: str = "1000",
+    page_key: int = 1000,
 ) -> Iterator[dict[str, Any]]:
     """Yield every player row across all pages for the given category."""
     draw = 1
     page_no = 1
     while True:
         data = fetch_category_page(
-            token,
             cat_id=cat_id,
             publication_id=publication_id,
             page_key=page_key,

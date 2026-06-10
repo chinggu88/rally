@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
 import '../../../../theme/app_colors.dart';
@@ -42,24 +43,24 @@ class PlayerView extends GetView<PlayerController> {
       backgroundColor: AppColors.dark.surface,
       elevation: 0,
       centerTitle: true,
-      title: const Text(
+      title: Text(
         'Kinetic Court',
         style: TextStyle(
           color: _accent,
           fontFamily: AppTypography.chivo,
           fontWeight: FontWeight.w800,
-          fontSize: 18,
+          fontSize: 18.sp,
           letterSpacing: 0.2,
         ),
       ),
-      leading: const Padding(
-        padding: EdgeInsets.only(left: 12),
-        child: Icon(Icons.menu, color: Colors.white),
+      leading: Padding(
+        padding: EdgeInsets.only(left: 12.w),
+        child: const Icon(Icons.menu, color: Colors.white),
       ),
-      actions: const [
+      actions: [
         Padding(
-          padding: EdgeInsets.only(right: 12),
-          child: Icon(Icons.search, color: Colors.white),
+          padding: EdgeInsets.only(right: 12.w),
+          child: const Icon(Icons.search, color: Colors.white),
         ),
       ],
     );
@@ -69,9 +70,9 @@ class PlayerView extends GetView<PlayerController> {
     return CustomScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       slivers: [
-        const SliverToBoxAdapter(child: SizedBox(height: 12)),
+        SliverToBoxAdapter(child: SizedBox(height: 12.h)),
         SliverToBoxAdapter(child: _buildCategoryChips()),
-        const SliverToBoxAdapter(child: SizedBox(height: 12)),
+        SliverToBoxAdapter(child: SizedBox(height: 12.h)),
         SliverToBoxAdapter(child: _buildStateArea(scheme)),
       ],
     );
@@ -80,14 +81,14 @@ class PlayerView extends GetView<PlayerController> {
   /// 카테고리 칩 그룹 (MS / WS / MD / WD / XD — 가로 스크롤 가능)
   Widget _buildCategoryChips() {
     return SizedBox(
-      height: 44,
+      height: 44.h,
       child: Obx(() {
         final selected = controller.selectedCategory;
         return ListView.separated(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          padding: EdgeInsets.symmetric(horizontal: 20.w),
           scrollDirection: Axis.horizontal,
           itemCount: PlayerController.categories.length,
-          separatorBuilder: (_, __) => const SizedBox(width: 8),
+          separatorBuilder: (_, __) => SizedBox(width: 8.w),
           itemBuilder: (context, index) {
             final code = PlayerController.categories[index];
             final isSelected = code == selected;
@@ -108,9 +109,9 @@ class PlayerView extends GetView<PlayerController> {
   Widget _buildStateArea(ColorScheme scheme) {
     return Obx(() {
       if (controller.isLoading && controller.players.isEmpty) {
-        return const Padding(
-          padding: EdgeInsets.symmetric(vertical: 80),
-          child: Center(
+        return Padding(
+          padding: EdgeInsets.symmetric(vertical: 80.h),
+          child: const Center(
             child: CircularProgressIndicator(color: _accent),
           ),
         );
@@ -131,19 +132,19 @@ class PlayerView extends GetView<PlayerController> {
 
   Widget _buildErrorState(String message) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 60, 20, 60),
+      padding: EdgeInsets.fromLTRB(20.w, 60.h, 20.w, 60.h),
       child: Column(
         children: [
-          const Icon(Icons.cloud_off_outlined, size: 48, color: _subtleText),
-          const SizedBox(height: 12),
+          Icon(Icons.cloud_off_outlined, size: 48.sp, color: _subtleText),
+          SizedBox(height: 12.h),
           Text(
             message,
             textAlign: TextAlign.center,
             style: AppTypography.bodyMd.copyWith(color: Colors.white),
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: 20.h),
           SizedBox(
-            height: 44,
+            height: 44.h,
             child: ElevatedButton(
               onPressed: controller.refreshPlayers,
               style: ElevatedButton.styleFrom(
@@ -151,16 +152,16 @@ class PlayerView extends GetView<PlayerController> {
                 foregroundColor: _accentDark,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(24.r),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 24),
+                padding: EdgeInsets.symmetric(horizontal: 24.w),
               ),
-              child: const Text(
+              child: Text(
                 '다시 시도',
                 style: TextStyle(
                   fontFamily: AppTypography.chivo,
                   fontWeight: FontWeight.w800,
-                  fontSize: 14,
+                  fontSize: 14.sp,
                   letterSpacing: 0.6,
                 ),
               ),
@@ -173,21 +174,21 @@ class PlayerView extends GetView<PlayerController> {
 
   Widget _buildEmptyState() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 60, 20, 60),
+      padding: EdgeInsets.fromLTRB(20.w, 60.h, 20.w, 60.h),
       child: Column(
         children: [
-          const Icon(
+          Icon(
             Icons.groups_outlined,
-            size: 48,
+            size: 48.sp,
             color: _subtleText,
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12.h),
           Obx(() => Text(
                 '${PlayerController.labelKoOf(controller.selectedCategory)} '
                 '랭킹 데이터가 없습니다.',
                 style: AppTypography.bodyMd.copyWith(color: Colors.white),
               )),
-          const SizedBox(height: 6),
+          SizedBox(height: 6.h),
           Text(
             '다른 종목을 선택해보세요.',
             style: AppTypography.bodyMd.copyWith(color: _subtleText),
@@ -201,7 +202,7 @@ class PlayerView extends GetView<PlayerController> {
   Widget _buildPlayerList(List<PlayerResponse> list) {
     final isDoubles = _isDoublesCategory(controller.selectedCategory);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
+      padding: EdgeInsets.fromLTRB(20.w, 4.h, 20.w, 32.h),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -211,7 +212,7 @@ class PlayerView extends GetView<PlayerController> {
               isDoubles: isDoubles,
               onTap: () => controller.openPlayerDetail(p),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12.h),
           ],
         ],
       ),
@@ -249,13 +250,13 @@ class _CategoryChip extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(999.r),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
           decoration: BoxDecoration(
             color: selected ? _accent : _chipBg,
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(999.r),
             border: Border.all(
               color: selected ? _accent : _chipBorder,
             ),
@@ -269,18 +270,18 @@ class _CategoryChip extends StatelessWidget {
                 style: TextStyle(
                   fontFamily: AppTypography.chivo,
                   fontWeight: FontWeight.w800,
-                  fontSize: 12,
+                  fontSize: 12.sp,
                   letterSpacing: 0.6,
                   color: selected ? _accentDark : _accent,
                 ),
               ),
-              const SizedBox(width: 6),
+              SizedBox(width: 6.w),
               Text(
                 koLabel,
                 style: TextStyle(
                   fontFamily: AppTypography.chivo,
                   fontWeight: FontWeight.w700,
-                  fontSize: 12,
+                  fontSize: 12.sp,
                   letterSpacing: 0.2,
                   color: selected ? _accentDark : Colors.white,
                 ),
@@ -344,20 +345,20 @@ class _PlayerCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16.r),
         child: Container(
           decoration: BoxDecoration(
             color: _cardBg,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(16.r),
             border: Border.all(color: _cardBorder),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               // 좌측: 선수 사진
               _buildAvatar(player.photoUrl),
-              const SizedBox(width: 16),
+              SizedBox(width: 16.w),
               // 중앙: 순위+이름 / 국가 / 포인트·변동
               Expanded(
                 child: Column(
@@ -371,16 +372,16 @@ class _PlayerCard extends StatelessWidget {
                       children: [
                         Text(
                           rankLabel,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontFamily: AppTypography.chivo,
                             fontWeight: FontWeight.w800,
-                            fontSize: 18,
+                            fontSize: 18.sp,
                             height: 1.15,
                             letterSpacing: -0.5,
                             color: _accent,
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8.w),
                         Expanded(
                           child: Text(
                             displayName,
@@ -388,38 +389,38 @@ class _PlayerCard extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: AppTypography.headlineMd.copyWith(
                               color: Colors.white,
-                              fontSize: 19,
+                              fontSize: 19.sp,
                               height: 1.15,
                             ),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 6),
+                    SizedBox(height: 6.h),
                     // 2행: 국기 + 국가명
                     Row(
                       children: [
                         if (flag.isNotEmpty)
                           Text(
                             flag,
-                            style: const TextStyle(fontSize: 14),
+                            style: TextStyle(fontSize: 14.sp),
                           )
                         else
                           Container(
-                            width: 14,
-                            height: 14,
+                            width: 14.w,
+                            height: 14.h,
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
                               color: const Color(0xFF353534),
-                              borderRadius: BorderRadius.circular(3),
+                              borderRadius: BorderRadius.circular(3.r),
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.flag_outlined,
                               color: _subtleText,
-                              size: 10,
+                              size: 10.sp,
                             ),
                           ),
-                        const SizedBox(width: 6),
+                        SizedBox(width: 6.w),
                         Flexible(
                           child: Text(
                             displayCountry,
@@ -427,7 +428,7 @@ class _PlayerCard extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                             style: AppTypography.labelLg.copyWith(
                               color: _subtleText,
-                              fontSize: 12,
+                              fontSize: 12.sp,
                               letterSpacing: 0.5,
                             ),
                           ),
@@ -436,21 +437,21 @@ class _PlayerCard extends StatelessWidget {
                     ),
                     // 3행: 랭킹 포인트 + 순위 변동
                     if (pointsText.isNotEmpty || player.rankChange != null) ...[
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8.h),
                       Row(
                         children: [
                           if (pointsText.isNotEmpty) ...[
-                            const Icon(
+                            Icon(
                               Icons.bolt,
                               color: _accent,
-                              size: 14,
+                              size: 14.sp,
                             ),
-                            const SizedBox(width: 3),
+                            SizedBox(width: 3.w),
                             Text(
                               pointsText,
                               style: AppTypography.labelLg.copyWith(
                                 color: Colors.white,
-                                fontSize: 12,
+                                fontSize: 12.sp,
                                 letterSpacing: 0.2,
                               ),
                             ),
@@ -458,13 +459,13 @@ class _PlayerCard extends StatelessWidget {
                               ' P',
                               style: AppTypography.labelLg.copyWith(
                                 color: _subtleText,
-                                fontSize: 11,
+                                fontSize: 11.sp,
                               ),
                             ),
                           ],
                           if (pointsText.isNotEmpty &&
                               player.rankChange != null)
-                            const SizedBox(width: 10),
+                            SizedBox(width: 10.w),
                           _buildRankChange(),
                         ],
                       ),
@@ -472,12 +473,12 @@ class _PlayerCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12.w),
               // 우측: 진입 화살표
-              const Icon(
+              Icon(
                 Icons.arrow_forward,
                 color: Colors.white,
-                size: 18,
+                size: 18.sp,
               ),
             ],
           ),
@@ -488,13 +489,12 @@ class _PlayerCard extends StatelessWidget {
 
   /// 선수 사진 — 오버레이 없이 이미지만 (없으면 인물 아이콘 플레이스홀더).
   Widget _buildAvatar(String? photoUrl) {
-    const double size = 64;
     final hasPhoto = photoUrl != null && photoUrl.isNotEmpty;
     return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(12.r),
       child: Container(
-        width: size,
-        height: size,
+        width: 64.w,
+        height: 64.w,
         color: const Color(0xFF252423),
         child: hasPhoto
             ? Image.network(
@@ -534,30 +534,30 @@ class _PlayerCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16.r),
         child: Container(
           decoration: BoxDecoration(
             color: _cardBg,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(16.r),
             border: Border.all(color: _cardBorder),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               // 좌측: 단식과 동일한 #N 라벨
               Text(
                 rankLabel,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: AppTypography.chivo,
                   fontWeight: FontWeight.w800,
-                  fontSize: 18,
+                  fontSize: 18.sp,
                   height: 1.15,
                   letterSpacing: -0.5,
                   color: _accent,
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12.w),
               // 중앙: 두 선수의 행
               Expanded(
                 child: Column(
@@ -570,7 +570,7 @@ class _PlayerCard extends StatelessWidget {
                       flag: flag,
                       country: displayCountry,
                     ),
-                    const SizedBox(height: 10),
+                    SizedBox(height: 10.h),
                     _buildDoublesPlayerRow(
                       photoUrl: player.photoUrl2,
                       firstName: p2Display.first,
@@ -581,7 +581,7 @@ class _PlayerCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 10),
+              SizedBox(width: 10.w),
               // 우측: 포인트 + 순위 변동 (세로 중앙)
               _buildDoublesTrailing(pointsText),
             ],
@@ -602,8 +602,8 @@ class _PlayerCard extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        _buildRoundAvatar(photoUrl, size: 36),
-        const SizedBox(width: 10),
+        _buildRoundAvatar(photoUrl, size: 36.w),
+        SizedBox(width: 10.w),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -616,31 +616,31 @@ class _PlayerCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.labelLg.copyWith(
                     color: _subtleText,
-                    fontSize: 11,
+                    fontSize: 11.sp,
                     letterSpacing: 0.4,
                     height: 1.0,
                   ),
                 ),
-              const SizedBox(height: 2),
+              SizedBox(height: 2.h),
               Text(
                 lastName.isEmpty ? '—' : lastName,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: AppTypography.chivo,
                   fontWeight: FontWeight.w800,
-                  fontSize: 14,
+                  fontSize: 14.sp,
                   color: _accent,
                   letterSpacing: 0.2,
                   height: 1.1,
                 ),
               ),
-              const SizedBox(height: 2),
+              SizedBox(height: 2.h),
               Row(
                 children: [
                   if (flag.isNotEmpty) ...[
-                    Text(flag, style: const TextStyle(fontSize: 11)),
-                    const SizedBox(width: 4),
+                    Text(flag, style: TextStyle(fontSize: 11.sp)),
+                    SizedBox(width: 4.w),
                   ],
                   Flexible(
                     child: Text(
@@ -649,7 +649,7 @@ class _PlayerCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.labelLg.copyWith(
                         color: _subtleText,
-                        fontSize: 11,
+                        fontSize: 11.sp,
                         letterSpacing: 0.3,
                         height: 1.0,
                       ),
@@ -677,17 +677,17 @@ class _PlayerCard extends StatelessWidget {
         if (hasPoints)
           Text(
             pointsText,
-            style: const TextStyle(
+            style: TextStyle(
               fontFamily: AppTypography.chivo,
               fontWeight: FontWeight.w800,
-              fontSize: 16,
+              fontSize: 16.sp,
               color: Colors.white,
               height: 1.1,
               letterSpacing: -0.2,
             ),
           ),
         if (hasChange) ...[
-          const SizedBox(height: 4),
+          SizedBox(height: 4.h),
           _buildRankChange(),
         ],
       ],
@@ -762,8 +762,8 @@ class _PlayerCard extends StatelessWidget {
   }
 
   Widget _avatarPlaceholder() {
-    return const Center(
-      child: Icon(Icons.person, color: _subtleText, size: 30),
+    return Center(
+      child: Icon(Icons.person, color: _subtleText, size: 30.sp),
     );
   }
 
@@ -777,7 +777,7 @@ class _PlayerCard extends StatelessWidget {
         '–',
         style: AppTypography.labelLg.copyWith(
           color: _subtleText,
-          fontSize: 12,
+          fontSize: 12.sp,
         ),
       );
     }
@@ -790,12 +790,12 @@ class _PlayerCard extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, color: color, size: 18),
+        Icon(icon, color: color, size: 18.sp),
         Text(
           '$magnitude',
           style: AppTypography.labelLg.copyWith(
             color: color,
-            fontSize: 12,
+            fontSize: 12.sp,
           ),
         ),
       ],

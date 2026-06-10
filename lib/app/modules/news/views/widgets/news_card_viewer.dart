@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../../../theme/app_typography.dart';
 
@@ -61,19 +62,19 @@ class _NewsCardViewerState extends State<NewsCardViewer> {
                     child: CachedNetworkImage(
                       imageUrl: urls[index],
                       fit: BoxFit.contain,
-                      placeholder: (_, __) => const Center(
+                      placeholder: (_, __) => Center(
                         child: SizedBox(
-                          width: 30,
-                          height: 30,
-                          child: CircularProgressIndicator(
+                          width: 30.w,
+                          height: 30.w,
+                          child: const CircularProgressIndicator(
                             strokeWidth: 2,
                             color: NewsCardViewer._accent,
                           ),
                         ),
                       ),
-                      errorWidget: (_, __, ___) => const Icon(
+                      errorWidget: (_, __, ___) => Icon(
                         Icons.broken_image_outlined,
-                        size: 40,
+                        size: 40.sp,
                         color: Colors.white54,
                       ),
                     ),
@@ -84,8 +85,8 @@ class _NewsCardViewerState extends State<NewsCardViewer> {
           ),
           // 닫기 버튼
           Positioned(
-            top: MediaQuery.of(context).padding.top + 8,
-            right: 12,
+            top: MediaQuery.of(context).padding.top + 8.h,
+            right: 12.w,
             child: _CircleIconButton(
               icon: Icons.close,
               onTap: () => Navigator.of(context).maybePop(),
@@ -94,23 +95,23 @@ class _NewsCardViewerState extends State<NewsCardViewer> {
           // 하단 카운터
           if (urls.length > 1)
             Positioned(
-              bottom: MediaQuery.of(context).padding.bottom + 20,
+              bottom: MediaQuery.of(context).padding.bottom + 20.h,
               left: 0,
               right: 0,
               child: Center(
                 child: Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                      EdgeInsets.symmetric(horizontal: 12.w, vertical: 5.h),
                   decoration: BoxDecoration(
                     color: Colors.black.withValues(alpha: 0.55),
-                    borderRadius: BorderRadius.circular(999),
+                    borderRadius: BorderRadius.circular(999.r),
                   ),
                   child: Text(
                     '${_currentPage + 1} / ${urls.length}',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: AppTypography.chivo,
                       fontWeight: FontWeight.w800,
-                      fontSize: 12,
+                      fontSize: 12.sp,
                       letterSpacing: 0.4,
                       color: Colors.white,
                     ),
@@ -135,13 +136,13 @@ class _CircleIconButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 38,
-        height: 38,
+        width: 38.w,
+        height: 38.w,
         decoration: BoxDecoration(
           color: Colors.black.withValues(alpha: 0.5),
           shape: BoxShape.circle,
         ),
-        child: Icon(icon, color: Colors.white, size: 22),
+        child: Icon(icon, color: Colors.white, size: 22.sp),
       ),
     );
   }

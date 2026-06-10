@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
 import '../../../../theme/app_colors.dart';
 import '../../../../theme/app_typography.dart';
 import '../../../data/models/active_tournament_response.dart';
 import '../../../data/models/live_match_response.dart';
+import '../../../data/models/today_match_response.dart';
 import '../controllers/news_controller.dart';
 import 'widgets/active_tournament_card.dart';
 import 'widgets/live_match_card.dart';
 import 'widgets/news_card_item.dart';
+import 'widgets/today_match_card.dart';
 
 /// 홈(뉴스) 화면.
 ///
@@ -40,7 +43,7 @@ class NewsView extends GetView<NewsController> {
             onNotification: (notification) {
               // 바닥 근처(400px 이내) 도달 시 다음 페이지 로드.
               if (notification.metrics.pixels >=
-                  notification.metrics.maxScrollExtent - 400) {
+                  notification.metrics.maxScrollExtent - 400.h) {
                 controller.loadMoreNewsCards();
               }
               return false;
@@ -48,14 +51,16 @@ class NewsView extends GetView<NewsController> {
             child: CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
-                const SliverToBoxAdapter(child: SizedBox(height: 8)),
+                SliverToBoxAdapter(child: SizedBox(height: 8.h)),
                 SliverToBoxAdapter(
                   child: Obx(() => _buildActiveTournamentsSection(context)),
                 ),
                 SliverToBoxAdapter(child: _buildLiveSection(context, scheme)),
-                const SliverToBoxAdapter(child: SizedBox(height: 24)),
+                SliverToBoxAdapter(child: SizedBox(height: 24.h)),
+                SliverToBoxAdapter(child: _buildTodaySection(context, scheme)),
+                SliverToBoxAdapter(child: SizedBox(height: 24.h)),
                 SliverToBoxAdapter(child: _buildNewsSection(context, scheme)),
-                const SliverToBoxAdapter(child: SizedBox(height: 32)),
+                SliverToBoxAdapter(child: SizedBox(height: 32.h)),
               ],
             ),
           ),
@@ -70,13 +75,13 @@ class NewsView extends GetView<NewsController> {
       elevation: 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       centerTitle: false,
-      title: const Text(
+      title: Text(
         'Kinetic Court',
         style: TextStyle(
           color: _accent,
           fontFamily: AppTypography.chivo,
           fontWeight: FontWeight.w900,
-          fontSize: 18,
+          fontSize: 18.sp,
           letterSpacing: 0.6,
         ),
       ),
@@ -97,13 +102,13 @@ class NewsView extends GetView<NewsController> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (loading && tournaments.isEmpty)
-          const SizedBox(
-            height: 44,
-            child: Center(child: CircularProgressIndicator(color: _accent)),
+          SizedBox(
+            height: 44.h,
+            child: const Center(child: CircularProgressIndicator(color: _accent)),
           )
         else
           _buildActiveTournamentsList(tournaments),
-        const SizedBox(height: 24),
+        SizedBox(height: 24.h),
       ],
     );
   }
@@ -114,13 +119,13 @@ class NewsView extends GetView<NewsController> {
     // 서버(get-active-tournaments-kr)가 start_date ASC로 정렬해 내려주므로
     // 클라이언트에서 별도 정렬 없이 API 응답 순서를 그대로 사용한다.
     return SizedBox(
-      height: 44,
+      height: 44.h,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
+        padding: EdgeInsets.symmetric(horizontal: 20.w),
         physics: const BouncingScrollPhysics(),
         itemCount: items.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 10),
+        separatorBuilder: (_, __) => SizedBox(width: 10.w),
         itemBuilder: (context, index) {
           return Center(
             child: ActiveTournamentCard(
@@ -141,7 +146,7 @@ class NewsView extends GetView<NewsController> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildSectionHeader(),
-        const SizedBox(height: 10),
+        SizedBox(height: 10.h),
         Obx(() => _buildLiveBody(context, scheme)),
       ],
     );
@@ -149,45 +154,45 @@ class NewsView extends GetView<NewsController> {
 
   Widget _buildSectionHeader() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
+      padding: EdgeInsets.fromLTRB(20.w, 4.h, 20.w, 0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            width: 8,
-            height: 8,
+            width: 8.w,
+            height: 8.w,
             decoration: const BoxDecoration(
               color: Color(0xFFFF4D4F),
               shape: BoxShape.circle,
             ),
           ),
-          const SizedBox(width: 8),
-          const Text(
+          SizedBox(width: 8.w),
+          Text(
             '라이브 매치',
             style: TextStyle(
               fontFamily: AppTypography.chivo,
               fontWeight: FontWeight.w800,
-              fontSize: 18,
+              fontSize: 18.sp,
               letterSpacing: 0.2,
               color: Colors.white,
             ),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: 8.w),
           Obx(() {
             final count = controller.liveMatches.length;
             if (count == 0) return const SizedBox.shrink();
             return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
               decoration: BoxDecoration(
                 color: _accent,
-                borderRadius: BorderRadius.circular(999),
+                borderRadius: BorderRadius.circular(999.r),
               ),
               child: Text(
                 '$count',
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: AppTypography.chivo,
                   fontWeight: FontWeight.w900,
-                  fontSize: 11,
+                  fontSize: 11.sp,
                   color: _accentDark,
                   letterSpacing: 0.4,
                 ),
@@ -198,7 +203,7 @@ class NewsView extends GetView<NewsController> {
           Obx(
             () => _RealtimeStatusDot(connected: controller.isRealtimeConnected),
           ),
-          const SizedBox(width: 20 - 12), // 우측 여백(섹션 헤더 padding 보정)
+          SizedBox(width: (20 - 12).w), // 우측 여백(섹션 헤더 padding 보정)
         ],
       ),
     );
@@ -206,9 +211,9 @@ class NewsView extends GetView<NewsController> {
 
   Widget _buildLiveBody(BuildContext context, ColorScheme scheme) {
     if (controller.isLiveLoading && controller.liveMatches.isEmpty) {
-      return const SizedBox(
-        height: 220,
-        child: Center(child: CircularProgressIndicator(color: _accent)),
+      return SizedBox(
+        height: 220.h,
+        child: const Center(child: CircularProgressIndicator(color: _accent)),
       );
     }
 
@@ -263,22 +268,22 @@ class NewsView extends GetView<NewsController> {
 
   Widget _buildErrorState(String message) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+      padding: EdgeInsets.fromLTRB(20.w, 24.h, 20.w, 24.h),
       child: Column(
         children: [
-          const Icon(Icons.cloud_off_outlined, size: 36, color: _subtleText),
-          const SizedBox(height: 10),
+          Icon(Icons.cloud_off_outlined, size: 36.sp, color: _subtleText),
+          SizedBox(height: 10.h),
           Text(
             message,
             textAlign: TextAlign.center,
             style: AppTypography.bodyMd.copyWith(
               color: Colors.white,
-              fontSize: 13,
+              fontSize: 13.sp,
             ),
           ),
-          const SizedBox(height: 14),
+          SizedBox(height: 14.h),
           SizedBox(
-            height: 40,
+            height: 40.h,
             child: ElevatedButton(
               onPressed: controller.refreshLiveMatches,
               style: ElevatedButton.styleFrom(
@@ -286,16 +291,16 @@ class NewsView extends GetView<NewsController> {
                 foregroundColor: _accentDark,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(24.r),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 22),
+                padding: EdgeInsets.symmetric(horizontal: 22.w),
               ),
-              child: const Text(
+              child: Text(
                 '다시 시도',
                 style: TextStyle(
                   fontFamily: AppTypography.chivo,
                   fontWeight: FontWeight.w800,
-                  fontSize: 13,
+                  fontSize: 13.sp,
                   letterSpacing: 0.6,
                 ),
               ),
@@ -308,39 +313,39 @@ class NewsView extends GetView<NewsController> {
 
   Widget _buildEmptyState() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+      padding: EdgeInsets.fromLTRB(20.w, 24.h, 20.w, 24.h),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 16),
+        padding: EdgeInsets.symmetric(vertical: 28.h, horizontal: 16.w),
         decoration: BoxDecoration(
           color: const Color(0xFF1C1B1B),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(16.r),
           border: Border.all(color: const Color(0xFF2A2A2A)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+            Icon(
               Icons.sports_tennis_outlined,
-              size: 36,
+              size: 36.sp,
               color: _subtleText,
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: 10.h),
             Text(
               '현재 진행 중인 라이브 매치가 없습니다.',
               textAlign: TextAlign.center,
               style: AppTypography.bodyMd.copyWith(
                 color: Colors.white,
-                fontSize: 13,
+                fontSize: 13.sp,
               ),
             ),
-            const SizedBox(height: 4),
+            SizedBox(height: 4.h),
             Text(
               '대회가 시작되면 여기에 실시간 스코어가 표시됩니다.',
               textAlign: TextAlign.center,
               style: AppTypography.bodyMd.copyWith(
                 color: _subtleText,
-                fontSize: 12,
+                fontSize: 12.sp,
               ),
             ),
           ],
@@ -349,44 +354,246 @@ class NewsView extends GetView<NewsController> {
     );
   }
 
-  // ── 뉴스(카드뉴스) 섹션 ──────────────────────────────────
+  // ── 오늘 경기 섹션 ───────────────────────────────────────
+  Widget _buildTodaySection(BuildContext context, ColorScheme scheme) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildTodayHeader(),
+        SizedBox(height: 12.h),
+        Obx(() => _buildTodayBody(context)),
+      ],
+    );
+  }
+
+  Widget _buildTodayHeader() {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(20.w, 4.h, 20.w, 0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 8.w,
+            height: 8.w,
+            decoration: const BoxDecoration(
+              color: _accent,
+              shape: BoxShape.circle,
+            ),
+          ),
+          SizedBox(width: 8.w),
+          Text(
+            '오늘 경기',
+            style: TextStyle(
+              fontFamily: AppTypography.chivo,
+              fontWeight: FontWeight.w800,
+              fontSize: 18.sp,
+              letterSpacing: 0.2,
+              color: Colors.white,
+            ),
+          ),
+          SizedBox(width: 8.w),
+          Obx(() {
+            final count = controller.todayMerged.length;
+            if (count == 0) return const SizedBox.shrink();
+            return Container(
+              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+              decoration: BoxDecoration(
+                color: _accent,
+                borderRadius: BorderRadius.circular(999.r),
+              ),
+              child: Text(
+                '$count',
+                style: TextStyle(
+                  fontFamily: AppTypography.chivo,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 11.sp,
+                  color: _accentDark,
+                  letterSpacing: 0.4,
+                ),
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTodayBody(BuildContext context) {
+    final isLoading = controller.isTodayLoading;
+    final items = controller.todayMerged;
+
+    if (isLoading && items.isEmpty) {
+      return SizedBox(
+        height: 118.h,
+        child: const Center(child: CircularProgressIndicator(color: _accent)),
+      );
+    }
+
+    final error = controller.todayError;
+    if (error != null && items.isEmpty) {
+      return _buildTodayErrorState(error);
+    }
+
+    if (items.isEmpty) {
+      return _buildTodayEmptyState();
+    }
+
+    return _buildTodayList(items);
+  }
+
+  Widget _buildTodayList(List<TodayMatchResponse> items) {
+    return SizedBox(
+      height: 118.h,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        padding: EdgeInsets.symmetric(horizontal: 20.w),
+        itemCount: items.length,
+        separatorBuilder: (_, __) => SizedBox(width: 10.w),
+        itemBuilder: (_, i) => TodayMatchCard(
+          key: ValueKey<Object>(items[i].id ?? 'today-$i'),
+          match: items[i],
+          onTap: () {},
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTodayErrorState(String message) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 8.h),
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(vertical: 24.h, horizontal: 16.w),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1C1B1B),
+          borderRadius: BorderRadius.circular(16.r),
+          border: Border.all(color: const Color(0xFF2A2A2A)),
+        ),
+        child: Column(
+          children: [
+            Icon(Icons.cloud_off_outlined, size: 36.sp, color: _subtleText),
+            SizedBox(height: 10.h),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: AppTypography.bodyMd.copyWith(
+                color: Colors.white,
+                fontSize: 13.sp,
+              ),
+            ),
+            SizedBox(height: 14.h),
+            SizedBox(
+              height: 40.h,
+              child: ElevatedButton(
+                onPressed: controller.fetchTodayMatches,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _accent,
+                  foregroundColor: _accentDark,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24.r),
+                  ),
+                  padding: EdgeInsets.symmetric(horizontal: 22.w),
+                ),
+                child: Text(
+                  '다시 시도',
+                  style: TextStyle(
+                    fontFamily: AppTypography.chivo,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 13.sp,
+                    letterSpacing: 0.6,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTodayEmptyState() {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 8.h),
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(vertical: 28.h, horizontal: 16.w),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1C1B1B),
+          borderRadius: BorderRadius.circular(16.r),
+          border: Border.all(color: const Color(0xFF2A2A2A)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.calendar_today_outlined,
+              size: 36.sp,
+              color: _subtleText,
+            ),
+            SizedBox(height: 10.h),
+            Text(
+              '오늘은 더 표시할 경기가 없습니다.',
+              textAlign: TextAlign.center,
+              style: AppTypography.bodyMd.copyWith(
+                color: Colors.white,
+                fontSize: 13.sp,
+              ),
+            ),
+            SizedBox(height: 4.h),
+            Text(
+              '결과가 등록되거나 새로운 경기가 추가되면 표시됩니다.',
+              textAlign: TextAlign.center,
+              style: AppTypography.bodyMd.copyWith(
+                color: _subtleText,
+                fontSize: 12.sp,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+// ── 뉴스(카드뉴스) 섹션 ──────────────────────────────────
   Widget _buildNewsSection(BuildContext context, ColorScheme scheme) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: EdgeInsets.symmetric(horizontal: 20.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Text(
+              Text(
                 '뉴스',
                 style: TextStyle(
                   fontFamily: AppTypography.chivo,
                   fontWeight: FontWeight.w800,
-                  fontSize: 18,
+                  fontSize: 18.sp,
                   letterSpacing: 0.2,
                   color: Colors.white,
                 ),
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: 8.w),
               Obx(() {
                 final count = controller.newsCards.length;
                 if (count == 0) return const SizedBox.shrink();
                 return Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 2,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 8.w,
+                    vertical: 2.h,
                   ),
                   decoration: BoxDecoration(
                     color: _accent,
-                    borderRadius: BorderRadius.circular(999),
+                    borderRadius: BorderRadius.circular(999.r),
                   ),
                   child: Text(
                     '$count',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: AppTypography.chivo,
                       fontWeight: FontWeight.w900,
-                      fontSize: 11,
+                      fontSize: 11.sp,
                       color: _accentDark,
                       letterSpacing: 0.4,
                     ),
@@ -395,7 +602,7 @@ class NewsView extends GetView<NewsController> {
               }),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12.h),
           Obx(() => _buildNewsBody(context)),
         ],
       ),
@@ -404,9 +611,9 @@ class NewsView extends GetView<NewsController> {
 
   Widget _buildNewsBody(BuildContext context) {
     if (controller.isNewsLoading && controller.newsCards.isEmpty) {
-      return const SizedBox(
-        height: 220,
-        child: Center(child: CircularProgressIndicator(color: _accent)),
+      return SizedBox(
+        height: 220.h,
+        child: const Center(child: CircularProgressIndicator(color: _accent)),
       );
     }
 
@@ -427,15 +634,15 @@ class NewsView extends GetView<NewsController> {
             key: ValueKey<Object>(cards[i].id ?? 'news-$i'),
             card: cards[i],
           ),
-          if (i != cards.length - 1) const SizedBox(height: 20),
+          if (i != cards.length - 1) SizedBox(height: 20.h),
         ],
         // 더보기 로딩 인디케이터
         if (controller.isNewsLoadingMore) ...[
-          const SizedBox(height: 20),
-          const SizedBox(
-            height: 28,
-            width: 28,
-            child: CircularProgressIndicator(strokeWidth: 2, color: _accent),
+          SizedBox(height: 20.h),
+          SizedBox(
+            height: 28.h,
+            width: 28.w,
+            child: const CircularProgressIndicator(strokeWidth: 2, color: _accent),
           ),
         ],
       ],
@@ -445,27 +652,27 @@ class NewsView extends GetView<NewsController> {
   Widget _buildNewsErrorState(String message) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 16),
+      padding: EdgeInsets.symmetric(vertical: 28.h, horizontal: 16.w),
       decoration: BoxDecoration(
         color: const Color(0xFF1C1B1B),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16.r),
         border: Border.all(color: const Color(0xFF2A2A2A)),
       ),
       child: Column(
         children: [
-          const Icon(Icons.cloud_off_outlined, size: 36, color: _subtleText),
-          const SizedBox(height: 10),
+          Icon(Icons.cloud_off_outlined, size: 36.sp, color: _subtleText),
+          SizedBox(height: 10.h),
           Text(
             message,
             textAlign: TextAlign.center,
             style: AppTypography.bodyMd.copyWith(
               color: Colors.white,
-              fontSize: 13,
+              fontSize: 13.sp,
             ),
           ),
-          const SizedBox(height: 14),
+          SizedBox(height: 14.h),
           SizedBox(
-            height: 40,
+            height: 40.h,
             child: ElevatedButton(
               onPressed: controller.fetchNewsCards,
               style: ElevatedButton.styleFrom(
@@ -473,16 +680,16 @@ class NewsView extends GetView<NewsController> {
                 foregroundColor: _accentDark,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(24.r),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 22),
+                padding: EdgeInsets.symmetric(horizontal: 22.w),
               ),
-              child: const Text(
+              child: Text(
                 '다시 시도',
                 style: TextStyle(
                   fontFamily: AppTypography.chivo,
                   fontWeight: FontWeight.w800,
-                  fontSize: 13,
+                  fontSize: 13.sp,
                   letterSpacing: 0.6,
                 ),
               ),
@@ -496,31 +703,31 @@ class NewsView extends GetView<NewsController> {
   Widget _buildNewsEmptyState() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 16),
+      padding: EdgeInsets.symmetric(vertical: 36.h, horizontal: 16.w),
       decoration: BoxDecoration(
         color: const Color(0xFF1C1B1B),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(16.r),
         border: Border.all(color: const Color(0xFF2A2A2A)),
       ),
       child: Column(
         children: [
-          const Icon(Icons.newspaper_outlined, size: 36, color: _subtleText),
-          const SizedBox(height: 10),
+          Icon(Icons.newspaper_outlined, size: 36.sp, color: _subtleText),
+          SizedBox(height: 10.h),
           Text(
             '아직 카드뉴스가 없습니다.',
             textAlign: TextAlign.center,
             style: AppTypography.bodyMd.copyWith(
               color: Colors.white,
-              fontSize: 13,
+              fontSize: 13.sp,
             ),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4.h),
           Text(
             '새로운 소식이 준비되면 여기에 카드뉴스로 표시됩니다.',
             textAlign: TextAlign.center,
             style: AppTypography.bodyMd.copyWith(
               color: _subtleText,
-              fontSize: 12,
+              fontSize: 12.sp,
             ),
           ),
         ],
@@ -606,6 +813,7 @@ class _LiveMatchPageViewState extends State<_LiveMatchPageView> {
     final matches = widget.matches;
     return Column(
       children: [
+<<<<<<< HEAD
         // 현재 페이지 카드의 측정 높이에 맞춰 PageView 높이를 부드럽게 조절.
         TweenAnimationBuilder<double>(
           tween: Tween<double>(end: _currentHeight),
@@ -613,6 +821,10 @@ class _LiveMatchPageViewState extends State<_LiveMatchPageView> {
           curve: Curves.easeOutCubic,
           builder: (context, height, child) =>
               SizedBox(height: height, child: child),
+=======
+        SizedBox(
+          height: 350.h,
+>>>>>>> f3a5073a90b53a64ac57092e5c1817acd7d4c092
           child: PageView.builder(
             controller: _pageController,
             physics: const BouncingScrollPhysics(),
@@ -621,6 +833,7 @@ class _LiveMatchPageViewState extends State<_LiveMatchPageView> {
             itemBuilder: (context, index) {
               final m = matches[index];
               final id = m.id;
+<<<<<<< HEAD
               // OverflowBox로 카드에 느슨한 높이 제약을 줘서 자연 높이를 측정.
               // (PageView는 자식에게 뷰포트 높이를 강제하므로 이 래퍼가 없으면
               //  콘텐츠가 아닌 컨테이너 높이가 측정된다.)
@@ -642,24 +855,41 @@ class _LiveMatchPageViewState extends State<_LiveMatchPageView> {
                     );
                   }),
                 ),
+=======
+              return Padding(
+                padding: EdgeInsets.symmetric(horizontal: 6.w),
+                child: Obx(() {
+                  final bumpAt =
+                      id == null ? null : widget.controller.scoreBumpAt[id];
+                  return LiveMatchCard(
+                    // 정렬 변경 시에도 동일 매치의 State가 재사용되도록 매치 id 키 사용.
+                    key: ValueKey<Object>(id ?? 'match-$index'),
+                    match: m,
+                    width: widget.cardWidth,
+                    scoreBumpAt: bumpAt,
+                    // 추후 detail_url 외부 오픈 자리 — 현재는 no-op.
+                    onTap: () {},
+                  );
+                }),
+>>>>>>> f3a5073a90b53a64ac57092e5c1817acd7d4c092
               );
             },
           ),
         ),
         if (matches.length > 1) ...[
-          const SizedBox(height: 12),
+          SizedBox(height: 12.h),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(matches.length, (i) {
               final active = i == _currentPage;
               return AnimatedContainer(
                 duration: const Duration(milliseconds: 220),
-                margin: const EdgeInsets.symmetric(horizontal: 3),
-                width: active ? 18 : 6,
-                height: 6,
+                margin: EdgeInsets.symmetric(horizontal: 3.w),
+                width: active ? 18.w : 6.w,
+                height: 6.h,
                 decoration: BoxDecoration(
                   color: active ? _accent : _inactive,
-                  borderRadius: BorderRadius.circular(3),
+                  borderRadius: BorderRadius.circular(3.r),
                 ),
               );
             }),
@@ -776,8 +1006,8 @@ class _RealtimeStatusDotState extends State<_RealtimeStatusDot>
           builder: (context, _) {
             final t = connected ? _ctrl.value : 0.0;
             return Container(
-              width: 8,
-              height: 8,
+              width: 8.w,
+              height: 8.w,
               decoration: BoxDecoration(
                 color: connected ? _accent : _muted,
                 shape: BoxShape.circle,
@@ -795,13 +1025,13 @@ class _RealtimeStatusDotState extends State<_RealtimeStatusDot>
             );
           },
         ),
-        const SizedBox(width: 6),
+        SizedBox(width: 6.w),
         Text(
           connected ? 'LIVE' : 'OFF',
           style: TextStyle(
             fontFamily: AppTypography.chivo,
             fontWeight: FontWeight.w800,
-            fontSize: 10,
+            fontSize: 10.sp,
             letterSpacing: 0.8,
             color: connected ? _accent : _muted,
           ),

@@ -1,9 +1,12 @@
+import re
 from typing import Any
 
 # BWF detail page; the site auto-redirects to /player/{id}/{slug}/.
 # Mirrors PLAYER_DETAIL_URL in batch/jobs/bwf_players/fetcher.py — duplicated
 # intentionally so this module stays Playwright-free for tests/imports.
 PLAYER_DETAIL_URL = "https://bwfbadminton.com/player/{player_id}/"
+
+_TAG_RE = re.compile(r"<[^>]+>")
 
 
 def transform_row(
@@ -68,6 +71,12 @@ def _player_name(player: dict[str, Any]) -> str:
     display = player.get("name_display")
     if display:
         return display.strip()
+    bold = player.get("name_display_bold")
+    if bold:
+        # Strip HTML tags from "<span class=\"name-2\">KIM</span> <span class=\"name-1\">Won Ho</span>"
+        text = _TAG_RE.sub("", bold)
+        # Collapse whitespace.
+        return " ".join(text.split())
     first = (player.get("first_name") or "").strip()
     last = (player.get("last_name") or "").strip()
     return f"{last} {first}".strip()
@@ -83,8 +92,12 @@ def _country(
         p2.get("country_model") if p2 else None,
     ]
     for c in candidates:
-        if isinstance(c, dict) and c.get("code_iso3"):
+        if not isinstance(c, dict):
+            continue
+        if c.get("code_iso3"):
             return c["code_iso3"], c.get("name")
+        if c.get("name"):
+            return None, c["name"]
     fallback = row.get("p1_country") or (p1.get("country") if p1 else None)
     return (fallback or None), None
 
