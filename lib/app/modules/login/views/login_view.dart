@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
 import '../controllers/login_controller.dart';
@@ -24,20 +25,20 @@ class LoginView extends GetView<LoginController> {
       resizeToAvoidBottomInset: true,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 48, 24, 32),
+          padding: EdgeInsets.fromLTRB(24.w, 48.h, 24.w, 32.h),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _buildHeader(),
-              const SizedBox(height: 64),
+              SizedBox(height: 64.h),
               _buildEmailField(),
-              const SizedBox(height: 24),
+              SizedBox(height: 24.h),
               _buildPasswordField(),
-              const SizedBox(height: 48),
+              SizedBox(height: 48.h),
               _buildLoginButton(),
-              const SizedBox(height: 16),
+              SizedBox(height: 16.h),
               _buildSignUpRow(),
-              const SizedBox(height: 12),
+              SizedBox(height: 12.h),
               _buildForgotPassword(),
             ],
           ),
@@ -49,20 +50,20 @@ class LoginView extends GetView<LoginController> {
   Widget _buildHeader() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: const [
+      children: [
         Text(
           'Kinetic Court',
           style: TextStyle(
             color: _accent,
-            fontSize: 32,
+            fontSize: 32.sp,
             fontWeight: FontWeight.w900,
             letterSpacing: 0.3,
           ),
         ),
-        SizedBox(height: 8),
+        SizedBox(height: 8.h),
         Text(
           '프리미엄 배드민턴 커뮤니티',
-          style: TextStyle(color: _subtle, fontSize: 13),
+          style: TextStyle(color: _subtle, fontSize: 13.sp),
         ),
       ],
     );
@@ -73,19 +74,19 @@ class LoginView extends GetView<LoginController> {
       controller: controller.emailController,
       keyboardType: TextInputType.emailAddress,
       textInputAction: TextInputAction.next,
-      style: const TextStyle(color: Colors.white, fontSize: 15),
+      style: TextStyle(color: Colors.white, fontSize: 15.sp),
       cursorColor: _accent,
       decoration: InputDecoration(
         hintText: '이메일',
-        hintStyle: const TextStyle(color: _hint, fontSize: 15),
-        prefixIcon: const Icon(Icons.mail_outline, color: _hint, size: 20),
+        hintStyle: TextStyle(color: _hint, fontSize: 15.sp),
+        prefixIcon: Icon(Icons.mail_outline, color: _hint, size: 20.sp),
         enabledBorder: const UnderlineInputBorder(
           borderSide: BorderSide(color: _divider),
         ),
         focusedBorder: const UnderlineInputBorder(
           borderSide: BorderSide(color: _accent, width: 1.4),
         ),
-        contentPadding: const EdgeInsets.symmetric(vertical: 14),
+        contentPadding: EdgeInsets.symmetric(vertical: 14.h),
       ),
     );
   }
@@ -97,12 +98,12 @@ class LoginView extends GetView<LoginController> {
         obscureText: controller.isPasswordObscured,
         textInputAction: TextInputAction.done,
         onSubmitted: (_) => controller.login(),
-        style: const TextStyle(color: Colors.white, fontSize: 15),
+        style: TextStyle(color: Colors.white, fontSize: 15.sp),
         cursorColor: _accent,
         decoration: InputDecoration(
           hintText: '비밀번호',
-          hintStyle: const TextStyle(color: _hint, fontSize: 15),
-          prefixIcon: const Icon(Icons.lock_outline, color: _hint, size: 20),
+          hintStyle: TextStyle(color: _hint, fontSize: 15.sp),
+          prefixIcon: Icon(Icons.lock_outline, color: _hint, size: 20.sp),
           suffixIcon: IconButton(
             onPressed: controller.togglePasswordObscured,
             icon: Icon(
@@ -110,7 +111,7 @@ class LoginView extends GetView<LoginController> {
                   ? Icons.visibility_outlined
                   : Icons.visibility_off_outlined,
               color: _hint,
-              size: 20,
+              size: 20.sp,
             ),
           ),
           enabledBorder: const UnderlineInputBorder(
@@ -119,7 +120,7 @@ class LoginView extends GetView<LoginController> {
           focusedBorder: const UnderlineInputBorder(
             borderSide: BorderSide(color: _accent, width: 1.4),
           ),
-          contentPadding: const EdgeInsets.symmetric(vertical: 14),
+          contentPadding: EdgeInsets.symmetric(vertical: 14.h),
         ),
       ),
     );
@@ -128,7 +129,7 @@ class LoginView extends GetView<LoginController> {
   Widget _buildLoginButton() {
     return Obx(
       () => SizedBox(
-        height: 52,
+        height: 52.h,
         child: ElevatedButton(
           onPressed: controller.isLoading ? null : controller.login,
           style: ElevatedButton.styleFrom(
@@ -137,21 +138,21 @@ class LoginView extends GetView<LoginController> {
             foregroundColor: Colors.black,
             elevation: 0,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(28),
+              borderRadius: BorderRadius.circular(28.r),
             ),
           ),
           child: controller.isLoading
-              ? const SizedBox(
-                  width: 22,
-                  height: 22,
-                  child: CircularProgressIndicator(
+              ? SizedBox(
+                  width: 22.w,
+                  height: 22.h,
+                  child: const CircularProgressIndicator(
                     strokeWidth: 2.4,
                     valueColor: AlwaysStoppedAnimation(Colors.black),
                   ),
                 )
-              : const Text(
+              : Text(
                   '로그인',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                  style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w800),
                 ),
         ),
       ),
@@ -162,17 +163,17 @@ class LoginView extends GetView<LoginController> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Text(
+        Text(
           '계정이 없으신가요? ',
-          style: TextStyle(color: _subtle, fontSize: 13),
+          style: TextStyle(color: _subtle, fontSize: 13.sp),
         ),
         GestureDetector(
           onTap: controller.goToSignUp,
-          child: const Text(
+          child: Text(
             '회원가입',
             style: TextStyle(
               color: _accent,
-              fontSize: 13,
+              fontSize: 13.sp,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -185,9 +186,9 @@ class LoginView extends GetView<LoginController> {
     return Center(
       child: GestureDetector(
         onTap: controller.goToForgotPassword,
-        child: const Text(
+        child: Text(
           '비밀번호를 잊으셨나요?',
-          style: TextStyle(color: _subtle, fontSize: 13),
+          style: TextStyle(color: _subtle, fontSize: 13.sp),
         ),
       ),
     );

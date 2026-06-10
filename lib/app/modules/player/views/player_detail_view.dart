@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
 import '../../../../theme/app_colors.dart';
@@ -44,13 +45,13 @@ class PlayerDetailView extends GetView<PlayerDetailController> {
         icon: const Icon(Icons.arrow_back, color: Colors.white),
         onPressed: () => Get.back<void>(),
       ),
-      title: const Text(
+      title: Text(
         'Kinetic Court',
         style: TextStyle(
           color: _accent,
           fontFamily: AppTypography.chivo,
           fontWeight: FontWeight.w800,
-          fontSize: 18,
+          fontSize: 18.sp,
           letterSpacing: 0.2,
         ),
       ),
@@ -65,7 +66,7 @@ class PlayerDetailView extends GetView<PlayerDetailController> {
         SliverToBoxAdapter(child: _buildHero(context, scheme)),
         SliverToBoxAdapter(child: _buildQuickStats(scheme)),
         SliverToBoxAdapter(child: _buildContent(scheme)),
-        const SliverToBoxAdapter(child: SizedBox(height: 40)),
+        SliverToBoxAdapter(child: SizedBox(height: 40.h)),
       ],
     );
   }
@@ -103,9 +104,9 @@ class PlayerDetailView extends GetView<PlayerDetailController> {
           ),
           // 헤드라인 오버레이
           Positioned(
-            left: 20,
-            right: 20,
-            bottom: 24,
+            left: 20.w,
+            right: 20.w,
+            bottom: 24.h,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
@@ -117,7 +118,7 @@ class PlayerDetailView extends GetView<PlayerDetailController> {
                     letterSpacing: 2.0,
                   ),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: 8.h),
                 _buildHeroName(name),
               ],
             ),
@@ -167,7 +168,7 @@ class PlayerDetailView extends GetView<PlayerDetailController> {
       child: Center(
         child: Icon(
           Icons.sports_tennis,
-          size: 96,
+          size: 96.sp,
           color: scheme.onSurfaceVariant.withValues(alpha: 0.18),
         ),
       ),
@@ -190,7 +191,7 @@ class PlayerDetailView extends GetView<PlayerDetailController> {
 
     final baseStyle = AppTypography.displayLg.copyWith(
       color: Colors.white,
-      fontSize: 52,
+      fontSize: 52.sp,
       height: 1.02,
       fontStyle: FontStyle.italic,
       fontWeight: FontWeight.w800,
@@ -243,16 +244,16 @@ class PlayerDetailView extends GetView<PlayerDetailController> {
       ),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
         child: Row(
           children: [
             for (var i = 0; i < items.length; i++) ...[
               items[i],
               if (i != items.length - 1)
                 Container(
-                  width: 1,
-                  height: 36,
-                  margin: const EdgeInsets.symmetric(horizontal: 20),
+                  width: 1.w,
+                  height: 36.h,
+                  margin: EdgeInsets.symmetric(horizontal: 20.w),
                   color: scheme.outlineVariant,
                 ),
             ],
@@ -266,9 +267,9 @@ class PlayerDetailView extends GetView<PlayerDetailController> {
 
   Widget _buildContent(ColorScheme scheme) {
     if (controller.isLoading) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 64),
-        child: Center(child: CircularProgressIndicator(color: _accent)),
+      return Padding(
+        padding: EdgeInsets.symmetric(vertical: 64.h),
+        child: const Center(child: CircularProgressIndicator(color: _accent)),
       );
     }
 
@@ -309,19 +310,19 @@ class PlayerDetailView extends GetView<PlayerDetailController> {
 
   Widget _buildErrorState(String message, ColorScheme scheme) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 48, 20, 48),
+      padding: EdgeInsets.fromLTRB(20.w, 48.h, 20.w, 48.h),
       child: Column(
         children: [
-          const Icon(Icons.cloud_off_outlined, size: 48, color: _subtleText),
-          const SizedBox(height: 12),
+          Icon(Icons.cloud_off_outlined, size: 48.sp, color: _subtleText),
+          SizedBox(height: 12.h),
           Text(
             message,
             textAlign: TextAlign.center,
             style: AppTypography.bodyMd.copyWith(color: Colors.white),
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: 20.h),
           SizedBox(
-            height: 44,
+            height: 44.h,
             child: ElevatedButton(
               onPressed: controller.refreshDetail,
               style: ElevatedButton.styleFrom(
@@ -329,16 +330,16 @@ class PlayerDetailView extends GetView<PlayerDetailController> {
                 foregroundColor: scheme.onSecondary,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(24.r),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 24),
+                padding: EdgeInsets.symmetric(horizontal: 24.w),
               ),
-              child: const Text(
+              child: Text(
                 '다시 시도',
                 style: TextStyle(
                   fontFamily: AppTypography.chivo,
                   fontWeight: FontWeight.w800,
-                  fontSize: 14,
+                  fontSize: 14.sp,
                   letterSpacing: 0.6,
                 ),
               ),
@@ -351,17 +352,17 @@ class PlayerDetailView extends GetView<PlayerDetailController> {
 
   Widget _buildNotFoundBanner(ColorScheme scheme) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(20, 40, 20, 0),
-      padding: const EdgeInsets.all(20),
+      margin: EdgeInsets.fromLTRB(20.w, 40.h, 20.w, 0),
+      padding: EdgeInsets.all(20.w),
       decoration: BoxDecoration(
         color: scheme.surfaceContainer,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12.r),
         border: Border.all(color: scheme.outlineVariant),
       ),
       child: Row(
         children: [
-          const Icon(Icons.hourglass_empty, color: _subtleText, size: 22),
-          const SizedBox(width: 12),
+          Icon(Icons.hourglass_empty, color: _subtleText, size: 22.sp),
+          SizedBox(width: 12.w),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -370,7 +371,7 @@ class PlayerDetailView extends GetView<PlayerDetailController> {
                   '상세 프로필 준비 중',
                   style: AppTypography.labelLg.copyWith(color: Colors.white),
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: 4.h),
                 Text(
                   '이 선수의 상세 데이터가 아직 등록되지 않았습니다.',
                   style: AppTypography.bodyMd.copyWith(color: _subtleText),
@@ -413,7 +414,7 @@ class PlayerDetailView extends GetView<PlayerDetailController> {
       child: Container(
         decoration: BoxDecoration(
           color: scheme.surfaceContainer,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(12.r),
           border: Border.all(color: scheme.outlineVariant),
         ),
         child: Column(
@@ -450,7 +451,7 @@ class PlayerDetailView extends GetView<PlayerDetailController> {
         children: [
           for (var i = 0; i < tiles.length; i++) ...[
             Expanded(child: tiles[i]),
-            if (i != tiles.length - 1) const SizedBox(width: 12),
+            if (i != tiles.length - 1) SizedBox(width: 12.w),
           ],
         ],
       ),
@@ -482,7 +483,7 @@ class PlayerDetailView extends GetView<PlayerDetailController> {
                 paragraphs[i].trim(),
                 style: AppTypography.bodyLg.copyWith(color: scheme.onSurface),
               ),
-            if (i != paragraphs.length - 1) const SizedBox(height: 16),
+            if (i != paragraphs.length - 1) SizedBox(height: 16.h),
           ],
         ],
       ),
@@ -504,10 +505,10 @@ class PlayerDetailView extends GetView<PlayerDetailController> {
         children: [
           TextSpan(
             text: first,
-            style: const TextStyle(
+            style: TextStyle(
               fontFamily: AppTypography.chivo,
               fontWeight: FontWeight.w800,
-              fontSize: 40,
+              fontSize: 40.sp,
               height: 1.0,
               color: _accent,
             ),
@@ -527,7 +528,7 @@ class PlayerDetailView extends GetView<PlayerDetailController> {
       child: Container(
         decoration: BoxDecoration(
           color: scheme.surfaceContainer,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(12.r),
           border: Border.all(color: scheme.outlineVariant),
         ),
         child: ListTile(
@@ -542,7 +543,7 @@ class PlayerDetailView extends GetView<PlayerDetailController> {
             overflow: TextOverflow.ellipsis,
             style: AppTypography.bodyMd.copyWith(
               color: _subtleText,
-              fontSize: 13,
+              fontSize: 13.sp,
             ),
           ),
         ),
@@ -608,11 +609,11 @@ class _StatBlock extends StatelessWidget {
           label.toUpperCase(),
           style: AppTypography.labelLg.copyWith(
             color: scheme.onSurfaceVariant,
-            fontSize: 11,
+            fontSize: 11.sp,
             letterSpacing: 0.8,
           ),
         ),
-        const SizedBox(height: 6),
+        SizedBox(height: 6.h),
         Text(
           value,
           style: AppTypography.statsNumber.copyWith(
@@ -635,22 +636,22 @@ class _VitalRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = AppColors.dark;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 110,
+            width: 110.w,
             child: Text(
               label.toUpperCase(),
               style: AppTypography.labelLg.copyWith(
                 color: scheme.onSurfaceVariant,
-                fontSize: 12,
+                fontSize: 12.sp,
                 letterSpacing: 0.6,
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12.w),
           Expanded(
             child: Text(
               value,
@@ -676,10 +677,10 @@ class _CareerTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = AppColors.dark;
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 12),
+      padding: EdgeInsets.symmetric(vertical: 18.h, horizontal: 12.w),
       decoration: BoxDecoration(
         color: scheme.surfaceContainer,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12.r),
         border: Border.all(color: scheme.outlineVariant),
       ),
       child: Column(
@@ -691,12 +692,12 @@ class _CareerTile extends StatelessWidget {
               style: AppTypography.headlineLg.copyWith(color: _accent),
             ),
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: 6.h),
           Text(
             label.toUpperCase(),
             style: AppTypography.labelLg.copyWith(
               color: scheme.onSurfaceVariant,
-              fontSize: 11,
+              fontSize: 11.sp,
               letterSpacing: 0.8,
             ),
           ),
@@ -722,7 +723,7 @@ class _Section extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = AppColors.dark;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 40, 20, 0),
+      padding: EdgeInsets.fromLTRB(20.w, 40.h, 20.w, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -736,19 +737,19 @@ class _Section extends StatelessWidget {
                     letterSpacing: 2.0,
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12.w),
               ],
               Text(
                 title.toUpperCase(),
                 style: AppTypography.headlineLg.copyWith(color: Colors.white),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12.w),
               Expanded(
-                child: Container(height: 1, color: scheme.outlineVariant),
+                child: Container(height: 1.h, color: scheme.outlineVariant),
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: 20.h),
           child,
         ],
       ),

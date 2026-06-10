@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
 import '../controllers/sign_up_controller.dart';
@@ -27,29 +28,29 @@ class SignUpView extends GetView<SignUpController> {
         backgroundColor: _bg,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
+          icon: Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20.sp),
           onPressed: () => Get.back(),
         ),
       ),
       body: SafeArea(
         top: false,
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
+          padding: EdgeInsets.fromLTRB(24.w, 0, 24.w, 32.h),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _buildHeroImage(),
-              const SizedBox(height: 24),
+              SizedBox(height: 24.h),
               _buildHeader(),
-              const SizedBox(height: 32),
+              SizedBox(height: 32.h),
               _buildEmailField(),
-              const SizedBox(height: 16),
+              SizedBox(height: 16.h),
               _buildVerificationInfoBox(),
-              const SizedBox(height: 20),
+              SizedBox(height: 20.h),
               _buildVerificationSection(),
-              const SizedBox(height: 24),
+              SizedBox(height: 24.h),
               _buildSubmitButton(),
-              const SizedBox(height: 20),
+              SizedBox(height: 20.h),
               _buildLoginRow(),
             ],
           ),
@@ -61,9 +62,9 @@ class SignUpView extends GetView<SignUpController> {
   Widget _buildHeroImage() {
     // Stitch 디자인의 상단 배드민턴 선수 실루엣 영역 (이미지 자산 없음 — 그라데이션으로 대체)
     return Container(
-      height: 160,
+      height: 160.h,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12.r),
         gradient: const RadialGradient(
           center: Alignment.center,
           radius: 0.9,
@@ -71,11 +72,11 @@ class SignUpView extends GetView<SignUpController> {
         ),
         border: Border.all(color: _divider),
       ),
-      child: const Center(
+      child: Center(
         child: Icon(
           Icons.sports_tennis,
           color: _accent,
-          size: 56,
+          size: 56.sp,
         ),
       ),
     );
@@ -84,22 +85,22 @@ class SignUpView extends GetView<SignUpController> {
   Widget _buildHeader() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: const [
+      children: [
         Text(
           'Kinetic Court',
           style: TextStyle(
             color: _accent,
-            fontSize: 26,
+            fontSize: 26.sp,
             fontWeight: FontWeight.w900,
             letterSpacing: 0.3,
           ),
         ),
-        SizedBox(height: 4),
+        SizedBox(height: 4.h),
         Text(
           '회원가입 - 이메일 인증',
           style: TextStyle(
             color: Colors.white,
-            fontSize: 14,
+            fontSize: 14.sp,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -112,41 +113,41 @@ class SignUpView extends GetView<SignUpController> {
       controller: controller.emailController,
       keyboardType: TextInputType.emailAddress,
       textInputAction: TextInputAction.done,
-      style: const TextStyle(color: Colors.white, fontSize: 15),
+      style: TextStyle(color: Colors.white, fontSize: 15.sp),
       cursorColor: _accent,
-      decoration: const InputDecoration(
+      decoration: InputDecoration(
         hintText: '이메일을 입력하세요',
-        hintStyle: TextStyle(color: _hint, fontSize: 15),
-        enabledBorder: UnderlineInputBorder(
+        hintStyle: TextStyle(color: _hint, fontSize: 15.sp),
+        enabledBorder: const UnderlineInputBorder(
           borderSide: BorderSide(color: _divider),
         ),
-        focusedBorder: UnderlineInputBorder(
+        focusedBorder: const UnderlineInputBorder(
           borderSide: BorderSide(color: _accent, width: 1.4),
         ),
-        contentPadding: EdgeInsets.symmetric(vertical: 14),
+        contentPadding: EdgeInsets.symmetric(vertical: 14.h),
       ),
     );
   }
 
   Widget _buildVerificationInfoBox() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
       decoration: BoxDecoration(
         color: _cardBg,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(10.r),
         border: Border.all(color: _divider),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
-          Icon(Icons.lock_outline, color: _accent, size: 18),
-          SizedBox(width: 10),
+        children: [
+          Icon(Icons.lock_outline, color: _accent, size: 18.sp),
+          SizedBox(width: 10.w),
           Expanded(
             child: Text(
               '보안 인증 링크를 이메일로 보내드립니다. 비밀번호 없이 첫 단계를 시작할 수 있습니다.',
               style: TextStyle(
                 color: _subtle,
-                fontSize: 12,
+                fontSize: 12.sp,
                 height: 1.45,
               ),
             ),
@@ -166,20 +167,20 @@ class SignUpView extends GetView<SignUpController> {
             controller: controller.codeController,
             keyboardType: TextInputType.number,
             textInputAction: TextInputAction.done,
-            style: const TextStyle(color: Colors.white, fontSize: 15),
+            style: TextStyle(color: Colors.white, fontSize: 15.sp),
             cursorColor: _accent,
             decoration: InputDecoration(
               hintText: '인증번호 입력',
-              hintStyle: const TextStyle(color: _hint, fontSize: 15),
+              hintStyle: TextStyle(color: _hint, fontSize: 15.sp),
               suffixIcon: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
+                padding: EdgeInsets.symmetric(horizontal: 12.w),
                 child: Align(
                   widthFactor: 1,
                   child: Text(
                     controller.formattedRemaining,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: _accent,
-                      fontSize: 13,
+                      fontSize: 13.sp,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -191,19 +192,19 @@ class SignUpView extends GetView<SignUpController> {
               focusedBorder: const UnderlineInputBorder(
                 borderSide: BorderSide(color: _accent, width: 1.4),
               ),
-              contentPadding: const EdgeInsets.symmetric(vertical: 14),
+              contentPadding: EdgeInsets.symmetric(vertical: 14.h),
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8.h),
           Align(
             alignment: Alignment.centerRight,
             child: GestureDetector(
               onTap: controller.resendVerification,
-              child: const Text(
+              child: Text(
                 '재발송',
                 style: TextStyle(
                   color: _accent,
-                  fontSize: 12,
+                  fontSize: 12.sp,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -224,7 +225,7 @@ class SignUpView extends GetView<SignUpController> {
           : (sent ? controller.verifyCode : controller.requestVerification);
 
       return SizedBox(
-        height: 52,
+        height: 52.h,
         child: ElevatedButton(
           onPressed: onPressed,
           style: ElevatedButton.styleFrom(
@@ -233,14 +234,14 @@ class SignUpView extends GetView<SignUpController> {
             foregroundColor: Colors.black,
             elevation: 0,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(28),
+              borderRadius: BorderRadius.circular(28.r),
             ),
           ),
           child: loading
-              ? const SizedBox(
-                  width: 22,
-                  height: 22,
-                  child: CircularProgressIndicator(
+              ? SizedBox(
+                  width: 22.w,
+                  height: 22.h,
+                  child: const CircularProgressIndicator(
                     strokeWidth: 2.4,
                     valueColor: AlwaysStoppedAnimation(Colors.black),
                   ),
@@ -250,14 +251,14 @@ class SignUpView extends GetView<SignUpController> {
                   children: [
                     Text(
                       label,
-                      style: const TextStyle(
-                        fontSize: 16,
+                      style: TextStyle(
+                        fontSize: 16.sp,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
-                    if (!sent) ...const [
-                      SizedBox(width: 6),
-                      Icon(Icons.arrow_forward, size: 18),
+                    if (!sent) ...[
+                      SizedBox(width: 6.w),
+                      Icon(Icons.arrow_forward, size: 18.sp),
                     ],
                   ],
                 ),
@@ -270,17 +271,17 @@ class SignUpView extends GetView<SignUpController> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Text(
+        Text(
           '이미 계정이 있으신가요? ',
-          style: TextStyle(color: _subtle, fontSize: 13),
+          style: TextStyle(color: _subtle, fontSize: 13.sp),
         ),
         GestureDetector(
           onTap: controller.goToLogin,
-          child: const Text(
+          child: Text(
             '로그인',
             style: TextStyle(
               color: _accent,
-              fontSize: 13,
+              fontSize: 13.sp,
               fontWeight: FontWeight.w700,
             ),
           ),

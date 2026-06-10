@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../../../theme/app_colors.dart';
 import '../../../../../theme/app_spacing.dart';
@@ -41,9 +42,9 @@ class ActiveTournamentCard extends StatelessWidget {
     return GestureDetector(
       onTap: tapHandler,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 320),
+        constraints: BoxConstraints(maxWidth: 320.w),
         child: Container(
-          padding: const EdgeInsets.symmetric(
+          padding: EdgeInsets.symmetric(
             horizontal: AppSpacing.stackGapSm,
             vertical: AppSpacing.base,
           ),
@@ -65,7 +66,7 @@ class ActiveTournamentCard extends StatelessWidget {
                 // NOW: 빨간 원 배지로 강조
                 Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                      EdgeInsets.symmetric(horizontal: 9.w, vertical: 4.h),
                   decoration: BoxDecoration(
                     color: accent,
                     borderRadius: BorderRadius.circular(AppRadius.full),
@@ -74,7 +75,7 @@ class ActiveTournamentCard extends StatelessWidget {
                     prefix,
                     style: AppTypography.labelLg.copyWith(
                       fontWeight: FontWeight.w900,
-                      fontSize: 11,
+                      fontSize: 11.sp,
                       letterSpacing: 0.3,
                       color: Colors.white,
                     ),
@@ -83,26 +84,26 @@ class ActiveTournamentCard extends StatelessWidget {
               else ...[
                 // 상태 닷
                 Container(
-                  width: 6,
-                  height: 6,
+                  width: 6.w,
+                  height: 6.w,
                   decoration:
                       BoxDecoration(color: accent, shape: BoxShape.circle),
                 ),
-                const SizedBox(width: 6),
+                SizedBox(width: 6.w),
                 Text(
                   '$prefix:',
                   style: AppTypography.labelLg.copyWith(
                     fontWeight: FontWeight.w900,
-                    fontSize: 12,
+                    fontSize: 12.sp,
                     color: accent,
                   ),
                 ),
               ],
               if (level != null) ...[
-                const SizedBox(width: 8),
+                SizedBox(width: 8.w),
                 Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
                   decoration: BoxDecoration(
                     color: scheme.primaryContainer,
                     borderRadius: BorderRadius.circular(AppRadius.full),
@@ -111,14 +112,14 @@ class ActiveTournamentCard extends StatelessWidget {
                     level,
                     style: AppTypography.labelLg.copyWith(
                       fontWeight: FontWeight.w800,
-                      fontSize: 11,
+                      fontSize: 11.sp,
                       letterSpacing: 0.2,
                       color: scheme.onPrimaryContainer,
                     ),
                   ),
                 ),
               ],
-              const SizedBox(width: 8),
+              SizedBox(width: 8.w),
               Flexible(
                 child: Text(
                   tournament.name ?? '이름 미정',
@@ -127,13 +128,13 @@ class ActiveTournamentCard extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: AppTypography.chivo,
                     fontWeight: FontWeight.w700,
-                    fontSize: 13,
+                    fontSize: 13.sp,
                     color: scheme.onSurface,
                   ),
                 ),
               ),
               if (hasKoreans) ...[
-                const SizedBox(width: 8),
+                SizedBox(width: 8.w),
                 _koreanMiniBadge(scheme),
               ],
             ],
@@ -160,7 +161,7 @@ class ActiveTournamentCard extends StatelessWidget {
   Widget _koreanMiniBadge(ColorScheme scheme) {
     final count = tournament.koreanPlayerCount ?? 0;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      padding: EdgeInsets.symmetric(horizontal: 7.w, vertical: 3.h),
       decoration: BoxDecoration(
         color: scheme.primaryContainer.withValues(alpha: 0.16),
         borderRadius: BorderRadius.circular(AppRadius.full),
@@ -170,13 +171,13 @@ class ActiveTournamentCard extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('🇰🇷', style: TextStyle(fontSize: 10)),
-          const SizedBox(width: 3),
+          Text('🇰🇷', style: TextStyle(fontSize: 10.sp)),
+          SizedBox(width: 3.w),
           Text(
             '$count',
             style: AppTypography.labelLg.copyWith(
               fontWeight: FontWeight.w900,
-              fontSize: 10,
+              fontSize: 10.sp,
               color: scheme.primaryContainer,
             ),
           ),
@@ -217,9 +218,9 @@ class KoreanPlayersDialog extends StatelessWidget {
 
     return Dialog(
       backgroundColor: cardBg,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 28, vertical: 40),
+      insetPadding: EdgeInsets.symmetric(horizontal: 28.w, vertical: 40.h),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(20.r),
         side: BorderSide(color: cardBorder),
       ),
       child: ConstrainedBox(
@@ -232,7 +233,7 @@ class KoreanPlayersDialog extends StatelessWidget {
           children: [
             // 헤더
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 12, 12),
+              padding: EdgeInsets.fromLTRB(20.w, 20.h, 12.w, 12.h),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -244,25 +245,25 @@ class KoreanPlayersDialog extends StatelessWidget {
                           tournament.name ?? '대회',
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontFamily: AppTypography.chivo,
                             fontWeight: FontWeight.w800,
-                            fontSize: 16,
+                            fontSize: 16.sp,
                             height: 1.25,
                             color: Colors.white,
                           ),
                         ),
-                        const SizedBox(height: 6),
+                        SizedBox(height: 6.h),
                         Row(
                           children: [
-                            const Text('🇰🇷', style: TextStyle(fontSize: 13)),
-                            const SizedBox(width: 6),
+                            Text('🇰🇷', style: TextStyle(fontSize: 13.sp)),
+                            SizedBox(width: 6.w),
                             Text(
                               '한국 선수 $count명 참가',
                               style: TextStyle(
                                 fontFamily: AppTypography.chivo,
                                 fontWeight: FontWeight.w900,
-                                fontSize: 13,
+                                fontSize: 13.sp,
                                 color: accent,
                               ),
                             ),
@@ -273,7 +274,7 @@ class KoreanPlayersDialog extends StatelessWidget {
                   ),
                   IconButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    icon: Icon(Icons.close, color: subtleText, size: 22),
+                    icon: Icon(Icons.close, color: subtleText, size: 22.sp),
                     splashRadius: 20,
                   ),
                 ],
@@ -286,12 +287,12 @@ class KoreanPlayersDialog extends StatelessWidget {
                   ? _emptyBody()
                   : ListView.separated(
                       shrinkWrap: true,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16.w,
+                        vertical: 12.h,
                       ),
                       itemCount: players.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      separatorBuilder: (_, __) => SizedBox(height: 8.h),
                       itemBuilder: (context, index) {
                         final p = players[index];
                         return _playerRow(index + 1, p.name ?? '-');
@@ -306,7 +307,7 @@ class KoreanPlayersDialog extends StatelessWidget {
 
   Widget _playerRow(int rank, String name) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 11.h),
       decoration: BoxDecoration(
         color: rowBg,
         borderRadius: BorderRadius.circular(AppRadius.lg),
@@ -315,37 +316,37 @@ class KoreanPlayersDialog extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 24,
-            height: 24,
+            width: 24.w,
+            height: 24.w,
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: accent.withValues(alpha: 0.16),
-              borderRadius: BorderRadius.circular(7),
+              borderRadius: BorderRadius.circular(7.r),
             ),
             child: Text(
               '$rank',
               style: TextStyle(
                 fontFamily: AppTypography.chivo,
                 fontWeight: FontWeight.w900,
-                fontSize: 11,
+                fontSize: 11.sp,
                 color: accent,
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12.w),
           Expanded(
             child: Text(
               name,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.w600,
-                fontSize: 14,
+                fontSize: 14.sp,
                 color: Colors.white,
               ),
             ),
           ),
-          const Text('🇰🇷', style: TextStyle(fontSize: 14)),
+          Text('🇰🇷', style: TextStyle(fontSize: 14.sp)),
         ],
       ),
     );
@@ -353,22 +354,22 @@ class KoreanPlayersDialog extends StatelessWidget {
 
   Widget _emptyBody() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 28, 20, 32),
+      padding: EdgeInsets.fromLTRB(20.w, 28.h, 20.w, 32.h),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.person_off_outlined, size: 36, color: subtleText),
-          const SizedBox(height: 10),
-          const Text(
+          Icon(Icons.person_off_outlined, size: 36.sp, color: subtleText),
+          SizedBox(height: 10.h),
+          Text(
             '참가 선수 명단 정보가 아직 없습니다.',
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 13, color: Colors.white),
+            style: TextStyle(fontSize: 13.sp, color: Colors.white),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4.h),
           Text(
             '대진이 발표되면 명단이 표시됩니다.',
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 12, color: subtleText),
+            style: TextStyle(fontSize: 12.sp, color: subtleText),
           ),
         ],
       ),
