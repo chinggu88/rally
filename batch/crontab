@@ -1,0 +1,11 @@
+# supercronic crontab — KST (컨테이너 TZ=Asia/Seoul)
+# 분 시 일 월 요일  명령
+
+# 매일 08:00, 17:00 (10분 간격 분산)
+0  8,17 * * *   cd /app && python -m batch.jobs.badminton_planet_news.main
+10 8,17 * * *   cd /app && python -m batch.jobs.bwf_matches.main
+
+# 매주 월요일 08:20, 08:30, 08:40 (10분 간격 분산)
+20 8 * * 1      cd /app && python -m batch.jobs.bwf_calendar.main
+30 8 * * 1      cd /app && python -m batch.jobs.bwf_players.main
+40 8 * * 1      cd /app && python -m batch.jobs.bwf_rankings.main
