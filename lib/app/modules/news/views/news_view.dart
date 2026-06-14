@@ -7,11 +7,13 @@ import '../../../../theme/app_colors.dart';
 import '../../../../theme/app_typography.dart';
 import '../../../data/models/active_tournament_response.dart';
 import '../../../data/models/live_match_response.dart';
+import '../../../data/models/news_card_response.dart';
 import '../../../data/models/today_match_response.dart';
 import '../controllers/news_controller.dart';
+import 'news_card_detail_view.dart';
 import 'widgets/active_tournament_card.dart';
 import 'widgets/live_match_card.dart';
-import 'widgets/news_card_item.dart';
+import 'widgets/news_card_horizontal_item.dart';
 import 'widgets/today_match_card.dart';
 
 /// 홈(뉴스) 화면.
@@ -544,12 +546,12 @@ class NewsView extends GetView<NewsController> {
 
 // ── 뉴스(카드뉴스) 섹션 ──────────────────────────────────
   Widget _buildNewsSection(BuildContext context, ColorScheme scheme) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20.w),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20.w),
+          child: Row(
             children: [
               Text(
                 '뉴스',
@@ -588,10 +590,10 @@ class NewsView extends GetView<NewsController> {
               }),
             ],
           ),
-          SizedBox(height: 12.h),
-          Obx(() => _buildNewsBody(context)),
-        ],
-      ),
+        ),
+        SizedBox(height: 12.h),
+        Obx(() => _buildNewsBody(context)),
+      ],
     );
   }
 
@@ -605,33 +607,65 @@ class NewsView extends GetView<NewsController> {
 
     final error = controller.newsError;
     if (error != null && controller.newsCards.isEmpty) {
-      return _buildNewsErrorState(error);
+      return Padding(
+        padding: EdgeInsets.symmetric(horizontal: 20.w),
+        child: _buildNewsErrorState(error),
+      );
     }
 
     if (controller.newsCards.isEmpty) {
-      return _buildNewsEmptyState();
+      return Padding(
+        padding: EdgeInsets.symmetric(horizontal: 20.w),
+        child: _buildNewsEmptyState(),
+      );
     }
 
     final cards = controller.newsCards;
-    return Column(
-      children: [
-        for (var i = 0; i < cards.length; i++) ...[
-          NewsCardItem(
-            key: ValueKey<Object>(cards[i].id ?? 'news-$i'),
-            card: cards[i],
-          ),
-          if (i != cards.length - 1) SizedBox(height: 20.h),
-        ],
-        // 더보기 로딩 인디케이터
-        if (controller.isNewsLoadingMore) ...[
-          SizedBox(height: 20.h),
-          SizedBox(
-            height: 28.h,
-            width: 28.w,
-            child: const CircularProgressIndicator(strokeWidth: 2, color: _accent),
-          ),
-        ],
-      ],
+    // 오늘 경기 카드와 동일한 폭(310.w)으로 통일.
+    final cardWidth = 310.w;
+    final cardHeight = cardWidth * 16 / 9;
+
+    return SizedBox(
+      height: cardHeight,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: EdgeInsets.symmetric(horizontal: 20.w),
+        physics: const BouncingScrollPhysics(),
+        itemCount: cards.length + (controller.isNewsLoadingMore ? 1 : 0),
+        separatorBuilder: (_, __) => SizedBox(width: 10.w),
+        itemBuilder: (context, index) {
+          if (index >= cards.length) {
+            return SizedBox(
+              width: cardWidth,
+              child: const Center(
+                child: SizedBox(
+                  width: 28,
+                  height: 28,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: _accent,
+                  ),
+                ),
+              ),
+            );
+          }
+          final card = cards[index];
+          return NewsCardHorizontalItem(
+            key: ValueKey<Object>(card.id ?? 'news-$index'),
+            card: card,
+            width: cardWidth,
+            onTap: () => _openNewsDetail(context, card),
+          );
+        },
+      ),
+    );
+  }
+
+  void _openNewsDetail(BuildContext context, NewsCardResponse card) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => NewsCardDetailView(card: card),
+      ),
     );
   }
 
