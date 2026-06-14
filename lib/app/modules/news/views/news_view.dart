@@ -442,21 +442,7 @@ class NewsView extends GetView<NewsController> {
   }
 
   Widget _buildTodayList(List<TodayMatchResponse> items) {
-    return SizedBox(
-      height: 118.h,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        padding: EdgeInsets.symmetric(horizontal: 20.w),
-        itemCount: items.length,
-        separatorBuilder: (_, __) => SizedBox(width: 10.w),
-        itemBuilder: (_, i) => TodayMatchCard(
-          key: ValueKey<Object>(items[i].id ?? 'today-$i'),
-          match: items[i],
-          onTap: () {},
-        ),
-      ),
-    );
+    return _TodayMatchList(items: items);
   }
 
   Widget _buildTodayErrorState(String message) {
@@ -936,6 +922,91 @@ class _RealtimeStatusDotState extends State<_RealtimeStatusDot>
           ),
         ),
       ],
+    );
+  }
+}
+
+/// 오늘 경기 가로 스크롤 리스트.
+///
+/// 결과 있는 경기와 경기 전 경기가 섞여 있으면, 첫 번째 "경기 전" 카드 위치로
+/// 자동 스크롤한다. 모두 결과 있거나 모두 경기 전이면 스크롤하지 않는다.
+/// 판정 기준: `winner != null` → 결과 있음 / `winner == null` → 경기 전.
+class _TodayMatchList extends StatefulWidget {
+  const _TodayMatchList({required this.items});
+
+  final List<TodayMatchResponse> items;
+
+  @override
+  State<_TodayMatchList> createState() => _TodayMatchListState();
+}
+
+class _TodayMatchListState extends State<_TodayMatchList> {
+  static const double _cardWidth = 310;
+  static const double _separator = 10;
+  static const double _horizontalPadding = 20;
+
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToUpcoming());
+  }
+
+  @override
+  void didUpdateWidget(covariant _TodayMatchList oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!identical(oldWidget.items, widget.items)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToUpcoming());
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollToUpcoming() {
+    if (!_scrollController.hasClients) return;
+    final items = widget.items;
+    if (items.isEmpty) return;
+
+    final hasCompleted = items.any((m) => m.winner != null);
+    final firstUpcomingIndex = items.indexWhere((m) => m.winner == null);
+
+    // 모두 결과 있음(hasCompleted=true, firstUpcomingIndex=-1) 또는
+    // 모두 경기 전(hasCompleted=false) → 이동 없음
+    if (!hasCompleted || firstUpcomingIndex <= 0) return;
+
+    final offset =
+        (_cardWidth.w + _separator.w) * firstUpcomingIndex;
+    final maxOffset = _scrollController.position.maxScrollExtent;
+    _scrollController.animateTo(
+      offset.clamp(0.0, maxOffset),
+      duration: const Duration(milliseconds: 350),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final items = widget.items;
+    return SizedBox(
+      height: 118.h,
+      child: ListView.separated(
+        controller: _scrollController,
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        padding: EdgeInsets.symmetric(horizontal: _horizontalPadding.w),
+        itemCount: items.length,
+        separatorBuilder: (_, __) => SizedBox(width: _separator.w),
+        itemBuilder: (_, i) => TodayMatchCard(
+          key: ValueKey<Object>(items[i].id ?? 'today-$i'),
+          match: items[i],
+          onTap: () {},
+        ),
+      ),
     );
   }
 }
