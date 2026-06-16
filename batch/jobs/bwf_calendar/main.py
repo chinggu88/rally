@@ -14,11 +14,7 @@ from typing import Any
 
 from dotenv import load_dotenv
 
-from batch.jobs.bwf_calendar.fetcher import (
-    browser_page,
-    extract_api_token,
-    fetch_year_tournaments,
-)
+from batch.jobs.bwf_calendar.fetcher import fetch_year_tournaments
 from batch.jobs.bwf_calendar.parser import transform_results
 from batch.jobs.bwf_calendar.upserter import upsert_tournaments
 from batch.shared.logger import get_logger
@@ -59,9 +55,7 @@ def _finish_log(
 
 
 def _collect_rows(year: int) -> list[dict[str, Any]]:
-    with browser_page() as page:
-        token = extract_api_token(page)
-    payload = fetch_year_tournaments(token, year)
+    payload = fetch_year_tournaments(year)
     return transform_results(payload, year)
 
 

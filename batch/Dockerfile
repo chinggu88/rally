@@ -11,7 +11,7 @@ ENV PYTHONUNBUFFERED=1 \
 ARG TARGETARCH
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        ca-certificates curl && \
+        tzdata ca-certificates curl && \
     ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
     case "${TARGETARCH}" in \
         amd64) SC_SHA="cd48d45c4b10f3f0bfdd3a57d054cd05ac96812b" ;; \
