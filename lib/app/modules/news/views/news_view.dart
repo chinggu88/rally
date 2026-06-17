@@ -106,7 +106,9 @@ class NewsView extends GetView<NewsController> {
         if (loading && tournaments.isEmpty)
           SizedBox(
             height: 44.h,
-            child: const Center(child: CircularProgressIndicator(color: _accent)),
+            child: const Center(
+              child: CircularProgressIndicator(color: _accent),
+            ),
           )
         else
           _buildActiveTournamentsList(tournaments),
@@ -114,8 +116,6 @@ class NewsView extends GetView<NewsController> {
       ],
     );
   }
-
-  
 
   Widget _buildActiveTournamentsList(List<ActiveTournamentResponse> items) {
     // 서버(get-active-tournaments-kr)가 start_date ASC로 정렬해 내려주므로
@@ -131,9 +131,7 @@ class NewsView extends GetView<NewsController> {
         itemBuilder: (context, index) {
           return Center(
             child: ActiveTournamentCard(
-              key: ValueKey<Object>(
-                items[index].tournamentId ?? 'tour-$index',
-              ),
+              key: ValueKey<Object>(items[index].tournamentId ?? 'tour-$index'),
               tournament: items[index],
             ),
           );
@@ -327,11 +325,7 @@ class NewsView extends GetView<NewsController> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.sports_tennis_outlined,
-              size: 36.sp,
-              color: _subtleText,
-            ),
+            Icon(Icons.sports_tennis_outlined, size: 36.sp, color: _subtleText),
             SizedBox(height: 10.h),
             Text(
               '현재 진행 중인 라이브 매치가 없습니다.',
@@ -544,7 +538,7 @@ class NewsView extends GetView<NewsController> {
     );
   }
 
-// ── 뉴스(카드뉴스) 섹션 ──────────────────────────────────
+  // ── 뉴스(카드뉴스) 섹션 ──────────────────────────────────
   Widget _buildNewsSection(BuildContext context, ColorScheme scheme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -568,10 +562,7 @@ class NewsView extends GetView<NewsController> {
                 final count = controller.newsCards.length;
                 if (count == 0) return const SizedBox.shrink();
                 return Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 8.w,
-                    vertical: 2.h,
-                  ),
+                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
                   decoration: BoxDecoration(
                     color: _accent,
                     borderRadius: BorderRadius.circular(999.r),
@@ -662,11 +653,9 @@ class NewsView extends GetView<NewsController> {
   }
 
   void _openNewsDetail(BuildContext context, NewsCardResponse card) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => NewsCardDetailView(card: card),
-      ),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => NewsCardDetailView(card: card)));
   }
 
   Widget _buildNewsErrorState(String message) {
@@ -962,8 +951,8 @@ class _RealtimeStatusDotState extends State<_RealtimeStatusDot>
 
 /// 오늘 경기 가로 스크롤 리스트.
 ///
-/// 결과 있는 경기와 경기 전 경기가 섞여 있으면, 첫 번째 "경기 전" 카드 위치로
-/// 자동 스크롤한다. 모두 결과 있거나 모두 경기 전이면 스크롤하지 않는다.
+/// - 결과 있는 경기와 경기 전 경기가 섞여 있으면 첫 번째 "경기 전" 카드로 이동
+/// - 모두 결과 있음/모두 경기 전이면 맨 앞으로 이동
 /// 판정 기준: `winner != null` → 결과 있음 / `winner == null` → 경기 전.
 class _TodayMatchList extends StatefulWidget {
   const _TodayMatchList({required this.items});
@@ -1005,16 +994,13 @@ class _TodayMatchListState extends State<_TodayMatchList> {
     if (!_scrollController.hasClients) return;
     final items = widget.items;
     if (items.isEmpty) return;
+    final firstUpcomingIndex = items.indexWhere((m) => m.score == null);
 
-    final hasCompleted = items.any((m) => m.winner != null);
-    final firstUpcomingIndex = items.indexWhere((m) => m.winner == null);
-
-    // 모두 결과 있음(hasCompleted=true, firstUpcomingIndex=-1) 또는
-    // 모두 경기 전(hasCompleted=false) → 이동 없음
-    if (!hasCompleted || firstUpcomingIndex <= 0) return;
-
-    final offset =
-        (_cardWidth.w + _separator.w) * firstUpcomingIndex;
+    // case1(모두 경기 전: firstUpcomingIndex=0) /
+    // case2(모두 결과 있음: firstUpcomingIndex=-1) → 맨 앞
+    // case3(섞임) → 첫 "경기 전" 카드 위치
+    final targetIndex = (firstUpcomingIndex > 0) ? firstUpcomingIndex : 0;
+    final offset = (_cardWidth.w + _separator.w) * targetIndex;
     final maxOffset = _scrollController.position.maxScrollExtent;
     _scrollController.animateTo(
       offset.clamp(0.0, maxOffset),
@@ -1035,11 +1021,12 @@ class _TodayMatchListState extends State<_TodayMatchList> {
         padding: EdgeInsets.symmetric(horizontal: _horizontalPadding.w),
         itemCount: items.length,
         separatorBuilder: (_, __) => SizedBox(width: _separator.w),
-        itemBuilder: (_, i) => TodayMatchCard(
-          key: ValueKey<Object>(items[i].id ?? 'today-$i'),
-          match: items[i],
-          onTap: () {},
-        ),
+        itemBuilder:
+            (_, i) => TodayMatchCard(
+              key: ValueKey<Object>(items[i].id ?? 'today-$i'),
+              match: items[i],
+              onTap: () {},
+            ),
       ),
     );
   }
