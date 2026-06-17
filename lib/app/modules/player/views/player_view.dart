@@ -44,7 +44,7 @@ class PlayerView extends GetView<PlayerController> {
       elevation: 0,
       centerTitle: true,
       title: Text(
-        'Kinetic Court',
+        'Rally',
         style: TextStyle(
           color: _accent,
           fontFamily: AppTypography.chivo,
@@ -337,7 +337,10 @@ class _PlayerCard extends StatelessWidget {
     final displayCountry = countryName.isNotEmpty
         ? countryName
         : (country.isEmpty ? '—' : country.toUpperCase());
-    final flag = flagEmoji(country);
+    // country_name 우선(대부분의 행에서 country_code는 null), 폴백으로 ISO3 사용.
+    final flag = countryName.isNotEmpty
+        ? flagEmojiFromName(countryName)
+        : flagEmoji(country);
     final rankLabel = rank != null ? '#$rank' : '#—';
     final pointsText = _formatPoints(player.points);
 
@@ -522,7 +525,9 @@ class _PlayerCard extends StatelessWidget {
     final displayCountry = countryName.isNotEmpty
         ? countryName
         : (country.isEmpty ? '—' : country.toUpperCase());
-    final flag = flagEmoji(country);
+    final flag = countryName.isNotEmpty
+        ? flagEmojiFromName(countryName)
+        : flagEmoji(country);
     final pointsText = _formatPoints(player.points);
     final rankLabel = rank != null ? '#$rank' : '#—';
 

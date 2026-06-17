@@ -78,7 +78,7 @@ class NewsView extends GetView<NewsController> {
       systemOverlayStyle: SystemUiOverlayStyle.light,
       centerTitle: false,
       title: Text(
-        'Kinetic Court',
+        'Rally',
         style: TextStyle(
           color: _accent,
           fontFamily: AppTypography.chivo,

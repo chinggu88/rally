@@ -26,7 +26,7 @@ class MyInfoView extends GetView<MyInfoController> {
         elevation: 0,
         centerTitle: true,
         title: Text(
-          'Kinetic Court',
+          'Rally',
           style: TextStyle(
             color: _accent,
             fontWeight: FontWeight.w800,

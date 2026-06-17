@@ -59,7 +59,7 @@ class TournamentDetailView extends GetView<TournamentDetailController> {
         onPressed: () => Get.back<void>(),
       ),
       title: Text(
-        'Kinetic Court',
+        'Rally',
         style: TextStyle(
           color: _accent,
           fontFamily: AppTypography.chivo,

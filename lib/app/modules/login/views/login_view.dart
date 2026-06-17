@@ -52,7 +52,7 @@ class LoginView extends GetView<LoginController> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Kinetic Court',
+          'Rally',
           style: TextStyle(
             color: _accent,
             fontSize: 32.sp,

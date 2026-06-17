@@ -46,7 +46,7 @@ class PlayerDetailView extends GetView<PlayerDetailController> {
         onPressed: () => Get.back<void>(),
       ),
       title: Text(
-        'Kinetic Court',
+        'Rally',
         style: TextStyle(
           color: _accent,
           fontFamily: AppTypography.chivo,

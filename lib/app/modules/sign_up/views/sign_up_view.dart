@@ -87,7 +87,7 @@ class SignUpView extends GetView<SignUpController> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Kinetic Court',
+          'Rally',
           style: TextStyle(
             color: _accent,
             fontSize: 26.sp,
