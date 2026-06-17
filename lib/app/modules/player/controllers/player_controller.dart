@@ -70,12 +70,10 @@ class PlayerController extends GetxController {
   int _inflightToken = 0;
 
   /// 카테고리 코드의 한국어 라벨 반환 (없으면 코드 그대로)
-  static String labelKoOf(String code) =>
-      _categoryLabelsKo[code] ?? code;
+  static String labelKoOf(String code) => _categoryLabelsKo[code] ?? code;
 
   /// 카테고리 코드의 영문 라벨 반환 (없으면 코드 그대로)
-  static String labelEnOf(String code) =>
-      _categoryLabelsEn[code] ?? code;
+  static String labelEnOf(String code) => _categoryLabelsEn[code] ?? code;
 
   @override
   void onInit() {
@@ -161,8 +159,10 @@ class PlayerController extends GetxController {
   /// 참고 Stitch 화면: projects/307006344264476289/screens/b3ae5f6699f448e5bae6703091c35026
   void openPlayerDetail(PlayerResponse p) {
     final detailId = p.detailId;
-    log('PlayerController.openPlayerDetail: rank=${p.rank}, '
-        'name=${p.playerName}, country=${p.countryCode}, id=$detailId');
+    log(
+      'PlayerController.openPlayerDetail: rank=${p.rank}, '
+      'name=${p.playerName}, country=${p.countryCode}, id=$detailId',
+    );
 
     Get.toNamed(
       Routes.PLAYER_DETAIL,
