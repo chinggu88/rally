@@ -8,6 +8,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
+import 'app/data/repositories/auth_repository.dart';
 import 'app/routes/app_pages.dart';
 import 'app/routes/app_routes.dart';
 import 'firebase_options.dart';
@@ -43,6 +44,7 @@ Future<void> main() async {
 
     // 전역 GetxService 등록 (Get.find()로 접근 가능)
     Get.put(SupabaseService(), permanent: true);
+    Get.put(AuthRepository(), permanent: true);
 
     runApp(const MyApp());
   }, (error, stack) {

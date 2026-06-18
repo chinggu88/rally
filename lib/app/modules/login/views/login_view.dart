@@ -36,10 +36,89 @@ class LoginView extends GetView<LoginController> {
               _buildPasswordField(),
               SizedBox(height: 48.h),
               _buildLoginButton(),
-              SizedBox(height: 16.h),
+              SizedBox(height: 32.h),
+              _buildDivider(),
+              SizedBox(height: 24.h),
+              _buildSocialButton(
+                label: 'Apple로 계속하기',
+                icon: Icons.apple,
+                bg: Colors.white,
+                fg: Colors.black,
+                onTap: controller.signInWithApple,
+              ),
+              SizedBox(height: 12.h),
+              _buildSocialButton(
+                label: 'Google로 계속하기',
+                icon: Icons.g_mobiledata,
+                bg: Colors.white,
+                fg: Colors.black,
+                onTap: controller.signInWithGoogle,
+              ),
+              SizedBox(height: 12.h),
+              _buildSocialButton(
+                label: '카카오로 계속하기',
+                icon: Icons.chat_bubble,
+                bg: const Color(0xFFFEE500),
+                fg: Colors.black,
+                onTap: controller.signInWithKakao,
+              ),
+              SizedBox(height: 24.h),
               _buildSignUpRow(),
               SizedBox(height: 12.h),
               _buildForgotPassword(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDivider() {
+    return Row(
+      children: [
+        const Expanded(child: Divider(color: _divider, height: 1)),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 12.w),
+          child: Text(
+            '또는',
+            style: TextStyle(color: _subtle, fontSize: 12.sp),
+          ),
+        ),
+        const Expanded(child: Divider(color: _divider, height: 1)),
+      ],
+    );
+  }
+
+  Widget _buildSocialButton({
+    required String label,
+    required IconData icon,
+    required Color bg,
+    required Color fg,
+    required VoidCallback onTap,
+  }) {
+    return Obx(
+      () => SizedBox(
+        height: 52.h,
+        child: ElevatedButton(
+          onPressed: controller.isLoading ? null : onTap,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: bg,
+            disabledBackgroundColor: bg.withValues(alpha: 0.5),
+            foregroundColor: fg,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(28.r),
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 22.sp, color: fg),
+              SizedBox(width: 8.w),
+              Text(
+                label,
+                style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w700),
+              ),
             ],
           ),
         ),

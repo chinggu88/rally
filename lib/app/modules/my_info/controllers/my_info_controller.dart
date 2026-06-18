@@ -1,19 +1,35 @@
-import 'package:get/get.dart';
+import 'dart:async';
 
+import 'package:get/get.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../../../data/repositories/auth_repository.dart';
 import '../../../routes/app_routes.dart';
 
 class MyInfoController extends GetxController {
   static MyInfoController get to => Get.find();
 
-  // 로그인 상태 (현재는 항상 false — 추후 GetStorage 연동 예정)
+  final AuthRepository _authRepository = Get.find<AuthRepository>();
+  StreamSubscription<AuthState>? _authSub;
+
   final _isLoggedIn = false.obs;
   bool get isLoggedIn => _isLoggedIn.value;
+
+  String? get email => _authRepository.currentUser?.email;
 
   @override
   void onInit() {
     super.onInit();
-    // TODO: GetStorage에서 토큰 조회하여 _isLoggedIn 초기화 (별도 태스크)
-    // 추후 isLoggedIn 값에 따라 비로그인 진입 화면 / 로그인 후 프로필 화면 분기
+    _isLoggedIn.value = _authRepository.currentSession != null;
+    _authSub = _authRepository.authStateChanges.listen((state) {
+      _isLoggedIn.value = state.session != null;
+    });
+  }
+
+  @override
+  void onClose() {
+    _authSub?.cancel();
+    super.onClose();
   }
 
   /// 비로그인 안내 화면 → 로그인 화면으로 이동
@@ -26,5 +42,22 @@ class MyInfoController extends GetxController {
   void goToSignUp() {
     if (Get.currentRoute == Routes.SIGN_UP) return;
     Get.toNamed(Routes.SIGN_UP);
+  }
+
+  Future<void> signOut() async {
+    try {
+      await _authRepository.signOut();
+      Get.snackbar(
+        '로그아웃',
+        '안녕히 가세요.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } on AuthException catch (e) {
+      Get.snackbar(
+        '로그아웃 실패',
+        e.message,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
   }
 }

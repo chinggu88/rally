@@ -42,20 +42,104 @@ class MyInfoView extends GetView<MyInfoController> {
         ],
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 32.h),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildHeroBanner(),
-              SizedBox(height: 24.h),
-              _buildLoginCta(),
-              SizedBox(height: 12.h),
-              _buildSignUpCta(),
-              SizedBox(height: 28.h),
-              _buildSettingsSection(),
-            ],
+        child: Obx(
+          () => SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 32.h),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: controller.isLoggedIn
+                  ? _buildLoggedInChildren()
+                  : _buildAnonymousChildren(),
+            ),
           ),
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildAnonymousChildren() {
+    return [
+      _buildHeroBanner(),
+      SizedBox(height: 24.h),
+      _buildLoginCta(),
+      SizedBox(height: 12.h),
+      _buildSignUpCta(),
+      SizedBox(height: 28.h),
+      _buildSettingsSection(),
+    ];
+  }
+
+  List<Widget> _buildLoggedInChildren() {
+    return [
+      _buildProfileCard(),
+      SizedBox(height: 24.h),
+      _buildLogoutCta(),
+      SizedBox(height: 28.h),
+      _buildSettingsSection(),
+    ];
+  }
+
+  Widget _buildProfileCard() {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12.r),
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF1B1F1C), Color(0xFF0A0A0A)],
+        ),
+        border: Border.all(color: _divider),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 28.r,
+            backgroundColor: _accent,
+            child: Icon(Icons.person, color: Colors.black, size: 28.sp),
+          ),
+          SizedBox(width: 16.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '환영합니다',
+                  style: TextStyle(color: _subtle, fontSize: 12.sp),
+                ),
+                SizedBox(height: 4.h),
+                Text(
+                  controller.email ?? '-',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 15.sp,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLogoutCta() {
+    return SizedBox(
+      height: 52.h,
+      child: OutlinedButton(
+        onPressed: controller.signOut,
+        style: OutlinedButton.styleFrom(
+          foregroundColor: _accent,
+          side: const BorderSide(color: _accent, width: 1.4),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(28.r),
+          ),
+        ),
+        child: Text(
+          '로그아웃',
+          style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w800),
         ),
       ),
     );
