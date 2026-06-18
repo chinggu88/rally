@@ -2,12 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
+import '../../../routes/app_routes.dart';
 import '../controllers/sign_up_controller.dart';
 
-/// 회원가입 - 이메일 인증 — Stitch: 회원가입 - 이메일 인증 (Kinetic Court)
-///
-/// Stitch projectId: 307006344264476289
-/// Stitch screenId : 3616350c62da4e95906ab4d458eb7ebc
+/// 회원가입 — Email + Password + 인증 메일 (Supabase Email Confirm)
 class SignUpView extends GetView<SignUpController> {
   const SignUpView({super.key});
 
@@ -34,33 +32,41 @@ class SignUpView extends GetView<SignUpController> {
       ),
       body: SafeArea(
         top: false,
-        child: SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(24.w, 0, 24.w, 32.h),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildHeroImage(),
-              SizedBox(height: 24.h),
-              _buildHeader(),
-              SizedBox(height: 32.h),
-              _buildEmailField(),
-              SizedBox(height: 16.h),
-              _buildVerificationInfoBox(),
-              SizedBox(height: 20.h),
-              _buildVerificationSection(),
-              SizedBox(height: 24.h),
-              _buildSubmitButton(),
-              SizedBox(height: 20.h),
-              _buildLoginRow(),
-            ],
-          ),
+        child: Obx(
+          () => controller.isEmailSent
+              ? _buildEmailSentBody()
+              : _buildFormBody(),
         ),
       ),
     );
   }
 
+  // ----- Form -----
+  Widget _buildFormBody() {
+    return SingleChildScrollView(
+      padding: EdgeInsets.fromLTRB(24.w, 0, 24.w, 32.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildHeroImage(),
+          SizedBox(height: 24.h),
+          _buildHeader(),
+          SizedBox(height: 32.h),
+          _buildEmailField(),
+          SizedBox(height: 16.h),
+          _buildPasswordField(),
+          SizedBox(height: 16.h),
+          _buildInfoBox(),
+          SizedBox(height: 24.h),
+          _buildSubmitButton(),
+          SizedBox(height: 20.h),
+          _buildLoginRow(),
+        ],
+      ),
+    );
+  }
+
   Widget _buildHeroImage() {
-    // Stitch 디자인의 상단 배드민턴 선수 실루엣 영역 (이미지 자산 없음 — 그라데이션으로 대체)
     return Container(
       height: 160.h,
       decoration: BoxDecoration(
@@ -97,7 +103,7 @@ class SignUpView extends GetView<SignUpController> {
         ),
         SizedBox(height: 4.h),
         Text(
-          '회원가입 - 이메일 인증',
+          '회원가입',
           style: TextStyle(
             color: Colors.white,
             fontSize: 14.sp,
@@ -112,12 +118,13 @@ class SignUpView extends GetView<SignUpController> {
     return TextField(
       controller: controller.emailController,
       keyboardType: TextInputType.emailAddress,
-      textInputAction: TextInputAction.done,
+      textInputAction: TextInputAction.next,
       style: TextStyle(color: Colors.white, fontSize: 15.sp),
       cursorColor: _accent,
       decoration: InputDecoration(
         hintText: '이메일을 입력하세요',
         hintStyle: TextStyle(color: _hint, fontSize: 15.sp),
+        prefixIcon: Icon(Icons.mail_outline, color: _hint, size: 20.sp),
         enabledBorder: const UnderlineInputBorder(
           borderSide: BorderSide(color: _divider),
         ),
@@ -129,7 +136,42 @@ class SignUpView extends GetView<SignUpController> {
     );
   }
 
-  Widget _buildVerificationInfoBox() {
+  Widget _buildPasswordField() {
+    return Obx(
+      () => TextField(
+        controller: controller.passwordController,
+        obscureText: controller.isPasswordObscured,
+        textInputAction: TextInputAction.done,
+        onSubmitted: (_) => controller.signUp(),
+        style: TextStyle(color: Colors.white, fontSize: 15.sp),
+        cursorColor: _accent,
+        decoration: InputDecoration(
+          hintText: '비밀번호 (6자 이상)',
+          hintStyle: TextStyle(color: _hint, fontSize: 15.sp),
+          prefixIcon: Icon(Icons.lock_outline, color: _hint, size: 20.sp),
+          suffixIcon: IconButton(
+            onPressed: controller.togglePasswordObscured,
+            icon: Icon(
+              controller.isPasswordObscured
+                  ? Icons.visibility_outlined
+                  : Icons.visibility_off_outlined,
+              color: _hint,
+              size: 20.sp,
+            ),
+          ),
+          enabledBorder: const UnderlineInputBorder(
+            borderSide: BorderSide(color: _divider),
+          ),
+          focusedBorder: const UnderlineInputBorder(
+            borderSide: BorderSide(color: _accent, width: 1.4),
+          ),
+          contentPadding: EdgeInsets.symmetric(vertical: 14.h),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoBox() {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
       decoration: BoxDecoration(
@@ -144,7 +186,7 @@ class SignUpView extends GetView<SignUpController> {
           SizedBox(width: 10.w),
           Expanded(
             child: Text(
-              '보안 인증 링크를 이메일로 보내드립니다. 비밀번호 없이 첫 단계를 시작할 수 있습니다.',
+              '회원가입 후 입력하신 이메일로 인증 메일을 보내드립니다. 메일의 링크를 눌러 인증을 완료하면 자동 로그인됩니다.',
               style: TextStyle(
                 color: _subtle,
                 fontSize: 12.sp,
@@ -157,77 +199,12 @@ class SignUpView extends GetView<SignUpController> {
     );
   }
 
-  Widget _buildVerificationSection() {
-    return Obx(() {
-      if (!controller.isVerificationSent) return const SizedBox.shrink();
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          TextField(
-            controller: controller.codeController,
-            keyboardType: TextInputType.number,
-            textInputAction: TextInputAction.done,
-            style: TextStyle(color: Colors.white, fontSize: 15.sp),
-            cursorColor: _accent,
-            decoration: InputDecoration(
-              hintText: '인증번호 입력',
-              hintStyle: TextStyle(color: _hint, fontSize: 15.sp),
-              suffixIcon: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 12.w),
-                child: Align(
-                  widthFactor: 1,
-                  child: Text(
-                    controller.formattedRemaining,
-                    style: TextStyle(
-                      color: _accent,
-                      fontSize: 13.sp,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-              enabledBorder: const UnderlineInputBorder(
-                borderSide: BorderSide(color: _divider),
-              ),
-              focusedBorder: const UnderlineInputBorder(
-                borderSide: BorderSide(color: _accent, width: 1.4),
-              ),
-              contentPadding: EdgeInsets.symmetric(vertical: 14.h),
-            ),
-          ),
-          SizedBox(height: 8.h),
-          Align(
-            alignment: Alignment.centerRight,
-            child: GestureDetector(
-              onTap: controller.resendVerification,
-              child: Text(
-                '재발송',
-                style: TextStyle(
-                  color: _accent,
-                  fontSize: 12.sp,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ),
-        ],
-      );
-    });
-  }
-
   Widget _buildSubmitButton() {
-    return Obx(() {
-      final sent = controller.isVerificationSent;
-      final loading = controller.isLoading;
-      final label = sent ? '인증 확인' : '인증 링크 보내기';
-      final onPressed = loading
-          ? null
-          : (sent ? controller.verifyCode : controller.requestVerification);
-
-      return SizedBox(
+    return Obx(
+      () => SizedBox(
         height: 52.h,
         child: ElevatedButton(
-          onPressed: onPressed,
+          onPressed: controller.isLoading ? null : controller.signUp,
           style: ElevatedButton.styleFrom(
             backgroundColor: _accent,
             disabledBackgroundColor: _accent.withValues(alpha: 0.5),
@@ -237,7 +214,7 @@ class SignUpView extends GetView<SignUpController> {
               borderRadius: BorderRadius.circular(28.r),
             ),
           ),
-          child: loading
+          child: controller.isLoading
               ? SizedBox(
                   width: 22.w,
                   height: 22.h,
@@ -246,25 +223,16 @@ class SignUpView extends GetView<SignUpController> {
                     valueColor: AlwaysStoppedAnimation(Colors.black),
                   ),
                 )
-              : Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      label,
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    if (!sent) ...[
-                      SizedBox(width: 6.w),
-                      Icon(Icons.arrow_forward, size: 18.sp),
-                    ],
-                  ],
+              : Text(
+                  '회원가입',
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
         ),
-      );
-    });
+      ),
+    );
   }
 
   Widget _buildLoginRow() {
@@ -287,6 +255,62 @@ class SignUpView extends GetView<SignUpController> {
           ),
         ),
       ],
+    );
+  }
+
+  // ----- Email Sent -----
+  Widget _buildEmailSentBody() {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(24.w, 24.h, 24.w, 32.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(height: 32.h),
+          Icon(Icons.mark_email_read_outlined, color: _accent, size: 64.sp),
+          SizedBox(height: 24.h),
+          Text(
+            '인증 메일을 보냈습니다',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 20.sp,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          SizedBox(height: 12.h),
+          Text(
+            '${controller.emailController.text.trim()}로\n인증 메일을 발송했습니다.\n메일함을 확인해 인증을 완료해주세요.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: _subtle,
+              fontSize: 13.sp,
+              height: 1.6,
+            ),
+          ),
+          const Spacer(),
+          SizedBox(
+            height: 52.h,
+            child: ElevatedButton(
+              onPressed: () => Get.offAllNamed(Routes.LOGIN),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _accent,
+                foregroundColor: Colors.black,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(28.r),
+                ),
+              ),
+              child: Text(
+                '로그인 화면으로 이동',
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

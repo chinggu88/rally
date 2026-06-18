@@ -1,10 +1,17 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../data/repositories/auth_repository.dart';
 import '../../../routes/app_routes.dart';
 
 class LoginController extends GetxController {
   static LoginController get to => Get.find();
+
+  final AuthRepository _authRepository = Get.find<AuthRepository>();
+  StreamSubscription<AuthState>? _authSub;
 
   // Form controllers
   final TextEditingController emailController = TextEditingController();
@@ -30,10 +37,18 @@ class LoginController extends GetxController {
     super.onInit();
     emailController.addListener(_validateEmail);
     passwordController.addListener(_validatePassword);
+
+    // 이메일/소셜 모두 동일하게 SIGNED_IN 이벤트로 처리되도록 단일 진실 공급원 구독.
+    _authSub = _authRepository.authStateChanges.listen((state) {
+      if (state.event == AuthChangeEvent.signedIn) {
+        Get.offAllNamed(Routes.APP);
+      }
+    });
   }
 
   @override
   void onClose() {
+    _authSub?.cancel();
     emailController.removeListener(_validateEmail);
     passwordController.removeListener(_validatePassword);
     emailController.dispose();
@@ -61,7 +76,7 @@ class LoginController extends GetxController {
     Get.toNamed(Routes.SIGN_UP);
   }
 
-  /// 로그인 실행 — API 연동 전 placeholder
+  /// 이메일 로그인 실행
   Future<void> login() async {
     if (isLoading) return;
     if (!canSubmit) {
@@ -75,15 +90,49 @@ class LoginController extends GetxController {
 
     try {
       isLoading = true;
-      // TODO: 인증 API 연동 (별도 태스크)
-      // final result = await _authRepository.login(
-      //   email: emailController.text.trim(),
-      //   password: passwordController.text,
-      // );
-      await Future<void>.delayed(const Duration(milliseconds: 400));
+      await _authRepository.signInWithEmail(
+        email: emailController.text.trim(),
+        password: passwordController.text,
+      );
+      // 성공 시 _authSub 콜백이 Get.offAllNamed(Routes.APP) 호출
+    } on AuthException catch (e) {
       Get.snackbar(
-        '안내',
-        '로그인 API는 추후 연동 예정입니다.',
+        '로그인 실패',
+        e.message,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } catch (e) {
+      Get.snackbar(
+        '오류',
+        '로그인 중 문제가 발생했습니다.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } finally {
+      isLoading = false;
+    }
+  }
+
+  Future<void> signInWithGoogle() =>
+      _runSocial(_authRepository.signInWithGoogle);
+  Future<void> signInWithApple() => _runSocial(_authRepository.signInWithApple);
+  Future<void> signInWithKakao() => _runSocial(_authRepository.signInWithKakao);
+
+  Future<void> _runSocial(Future<dynamic> Function() fn) async {
+    if (isLoading) return;
+    try {
+      isLoading = true;
+      await fn();
+      // OAuth: 외부 브라우저로 이동 → 콜백 시 authStateChanges → SIGNED_IN
+    } on AuthException catch (e) {
+      Get.snackbar(
+        '로그인 실패',
+        e.message,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } catch (e) {
+      Get.snackbar(
+        '로그인 실패',
+        e.toString(),
         snackPosition: SnackPosition.BOTTOM,
       );
     } finally {

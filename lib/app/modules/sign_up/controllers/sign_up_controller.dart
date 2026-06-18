@@ -1,52 +1,48 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../../../data/repositories/auth_repository.dart';
 
 class SignUpController extends GetxController {
   static SignUpController get to => Get.find();
 
+  final AuthRepository _authRepository = Get.find<AuthRepository>();
+
   // Form controllers
   final TextEditingController emailController = TextEditingController();
-  final TextEditingController codeController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
 
   // Reactive state
   final _isLoading = false.obs;
   final _isEmailValid = false.obs;
-  final _isVerificationSent = false.obs;
-  final _remainingSeconds = 0.obs;
-
-  Timer? _verificationTimer;
+  final _isPasswordValid = false.obs;
+  final _isPasswordObscured = true.obs;
+  final _isEmailSent = false.obs;
 
   bool get isLoading => _isLoading.value;
   set isLoading(bool value) => _isLoading.value = value;
 
   bool get isEmailValid => _isEmailValid.value;
-  bool get isVerificationSent => _isVerificationSent.value;
-  int get remainingSeconds => _remainingSeconds.value;
+  bool get isPasswordValid => _isPasswordValid.value;
+  bool get isPasswordObscured => _isPasswordObscured.value;
+  bool get isEmailSent => _isEmailSent.value;
 
-  /// "mm:ss" 형식의 잔여 시간
-  String get formattedRemaining {
-    final minutes = (_remainingSeconds.value ~/ 60).toString().padLeft(2, '0');
-    final seconds = (_remainingSeconds.value % 60).toString().padLeft(2, '0');
-    return '$minutes:$seconds';
-  }
-
-  static const int _verificationDurationSec = 180; // 3분
+  bool get canSubmit => isEmailValid && isPasswordValid && !isLoading;
 
   @override
   void onInit() {
     super.onInit();
     emailController.addListener(_validateEmail);
+    passwordController.addListener(_validatePassword);
   }
 
   @override
   void onClose() {
-    _verificationTimer?.cancel();
-    _verificationTimer = null;
     emailController.removeListener(_validateEmail);
+    passwordController.removeListener(_validatePassword);
     emailController.dispose();
-    codeController.dispose();
+    passwordController.dispose();
     super.onClose();
   }
 
@@ -56,88 +52,47 @@ class SignUpController extends GetxController {
     _isEmailValid.value = regex.hasMatch(text);
   }
 
-  /// 인증 메일/링크 발송 요청 — API 연동 전 placeholder
-  Future<void> requestVerification() async {
-    if (isLoading) return;
-    if (!isEmailValid) {
-      Get.snackbar(
-        '이메일 확인',
-        '올바른 이메일 형식을 입력해주세요.',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-      return;
-    }
+  void _validatePassword() {
+    _isPasswordValid.value = passwordController.text.length >= 6;
+  }
 
+  void togglePasswordObscured() {
+    _isPasswordObscured.value = !_isPasswordObscured.value;
+  }
+
+  /// 회원가입 실행 — Supabase signUp 호출.
+  /// Email Confirm이 켜져 있으면 session이 null로 반환되고, 안내 화면으로 전환한다.
+  /// Confirm이 꺼져 있으면 session이 발급되어 LoginController의 authStateChanges 구독자가 라우팅한다.
+  Future<void> signUp() async {
+    if (isLoading || !canSubmit) return;
     try {
       isLoading = true;
-      // TODO: 인증 메일 발송 API 연동 (별도 태스크)
-      // await _authRepository.requestEmailVerification(
-      //   email: emailController.text.trim(),
-      // );
-      await Future<void>.delayed(const Duration(milliseconds: 400));
-
-      _isVerificationSent.value = true;
-      _startVerificationTimer();
-
+      final res = await _authRepository.signUpWithEmail(
+        email: emailController.text.trim(),
+        password: passwordController.text,
+      );
+      if (res.session == null) {
+        _isEmailSent.value = true;
+      }
+    } on AuthException catch (e) {
       Get.snackbar(
-        '메일 발송',
-        '입력하신 이메일로 인증 링크를 보냈습니다.',
+        '회원가입 실패',
+        e.message,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } catch (e) {
+      Get.snackbar(
+        '오류',
+        '회원가입 중 문제가 발생했습니다.',
         snackPosition: SnackPosition.BOTTOM,
       );
     } finally {
       isLoading = false;
     }
-  }
-
-  /// 인증 코드 검증 — API 연동 전 placeholder
-  Future<void> verifyCode() async {
-    if (isLoading) return;
-    if (codeController.text.trim().isEmpty) {
-      Get.snackbar(
-        '인증번호 확인',
-        '인증번호를 입력해주세요.',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-      return;
-    }
-
-    try {
-      isLoading = true;
-      // TODO: 인증 코드 검증 API 연동 (별도 태스크)
-      await Future<void>.delayed(const Duration(milliseconds: 400));
-
-      Get.snackbar(
-        '안내',
-        '인증 검증 API는 추후 연동 예정입니다.',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-    } finally {
-      isLoading = false;
-    }
-  }
-
-  /// 재발송
-  Future<void> resendVerification() async {
-    _verificationTimer?.cancel();
-    _remainingSeconds.value = 0;
-    _isVerificationSent.value = false;
-    await requestVerification();
   }
 
   /// 로그인 화면으로 복귀
   void goToLogin() {
     Get.back();
-  }
-
-  void _startVerificationTimer() {
-    _verificationTimer?.cancel();
-    _remainingSeconds.value = _verificationDurationSec;
-    _verificationTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_remainingSeconds.value <= 0) {
-        timer.cancel();
-        return;
-      }
-      _remainingSeconds.value -= 1;
-    });
   }
 }
