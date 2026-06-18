@@ -20,9 +20,9 @@ class TodayMatchCard extends StatelessWidget {
   final TodayMatchResponse match;
   final VoidCallback? onTap;
 
-  static const Color _accent = Color(0xFFC3F400);
+  static const Color _accent = AppColors.accent;
   static const Color _accentDark = Color(0xFF0E0E0E);
-  static const Color _subtleText = Color(0xFF9CA3A1);
+  static const Color _subtleText = AppColors.subtleText;
 
   static const double _cardWidth = 310;
 
@@ -214,8 +214,8 @@ class _GameCell extends StatelessWidget {
   final int point;
   final bool won;
 
-  static const Color _accent = Color(0xFFC3F400);
-  static const Color _subtleText = Color(0xFF9CA3A1);
+  static const Color _accent = AppColors.accent;
+  static const Color _subtleText = AppColors.subtleText;
 
   @override
   Widget build(BuildContext context) {

@@ -17,7 +17,7 @@ class NewsCardDetailView extends StatelessWidget {
 
   final NewsCardResponse card;
 
-  static const Color _accent = Color(0xFFC3F400);
+  static const Color _accent = AppColors.accent;
 
   @override
   Widget build(BuildContext context) {
@@ -74,7 +74,7 @@ class NewsCardDetailView extends StatelessWidget {
                           placeholder: (_, __) => Container(
                             width: w,
                             height: h,
-                            color: const Color(0xFF222121),
+                            color: AppColors.surfaceAlt,
                             alignment: Alignment.center,
                             child: SizedBox(
                               width: 30.w,
@@ -88,7 +88,7 @@ class NewsCardDetailView extends StatelessWidget {
                           errorWidget: (_, __, ___) => Container(
                             width: w,
                             height: h,
-                            color: const Color(0xFF222121),
+                            color: AppColors.surfaceAlt,
                             alignment: Alignment.center,
                             child: Icon(
                               Icons.broken_image_outlined,

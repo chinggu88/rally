@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
+import '../../../../theme/app_colors.dart';
 import '../controllers/login_controller.dart';
 
 /// 로그인 — Stitch: 로그인 (Kinetic Court)
@@ -12,11 +13,11 @@ class LoginView extends GetView<LoginController> {
   const LoginView({super.key});
 
   // --- Design tokens ---
-  static const Color _bg = Color(0xFF0A0A0A);
-  static const Color _accent = Color(0xFFD7FF00);
-  static const Color _subtle = Color(0xFF9CA3A1);
+  static const Color _bg = AppColors.bg;
+  static const Color _accent = AppColors.accentLime;
+  static const Color _subtle = AppColors.subtleText;
   static const Color _hint = Color(0xFF5C5F5D);
-  static const Color _divider = Color(0xFF1F2421);
+  static const Color _divider = AppColors.divider;
 
   @override
   Widget build(BuildContext context) {

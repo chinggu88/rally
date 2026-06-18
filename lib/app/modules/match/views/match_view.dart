@@ -25,11 +25,11 @@ class _MatchViewState extends State<MatchView> {
   MatchController get controller => MatchController.to;
 
   // Stitch 디자인 토큰 (AppColors와 정합되지 않는 시안 디테일만 별도 상수로 보존)
-  static const Color _accent = Color(0xFFC3F400); // primaryContainer
-  static const Color _accentDark = Color(0xFF283500); // onPrimary on accent
-  static const Color _badgeBg = Color(0xFF201F1F); // surfaceContainer 톤
-  static const Color _subtleText = Color(0xFF9CA3A1);
-  static const Color _divider = Color(0xFF1F2421);
+  static const Color _accent = AppColors.accent;
+  static const Color _accentDark = AppColors.accentDark;
+  static const Color _badgeBg = AppColors.chipBg;
+  static const Color _subtleText = AppColors.subtleText;
+  static const Color _divider = AppColors.divider;
 
   /// 리스트 스크롤 컨트롤러
   final ScrollController _scrollController = ScrollController();
@@ -441,12 +441,12 @@ class _TournamentCard extends StatelessWidget {
   final TournamentResponse tournament;
   final VoidCallback onTap;
 
-  static const Color _accent = Color(0xFFC3F400);
-  static const Color _accentDark = Color(0xFF283500);
-  static const Color _cardBg = Color(0xFF1C1B1B);
-  static const Color _cardBorder = Color(0xFF2A2A2A);
-  static const Color _subtleText = Color(0xFF9CA3A1);
-  static const Color _liveRed = Color(0xFFFF3B30);
+  static const Color _accent = AppColors.accent;
+  static const Color _accentDark = AppColors.accentDark;
+  static const Color _cardBg = AppColors.cardBg;
+  static const Color _cardBorder = AppColors.cardBorder;
+  static const Color _subtleText = AppColors.subtleText;
+  static const Color _liveRed = AppColors.liveRed;
 
   @override
   Widget build(BuildContext context) {
@@ -650,7 +650,7 @@ class _TournamentCard extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
       decoration: BoxDecoration(
-        color: const Color(0xFF201F1F),
+        color: AppColors.chipBg,
         borderRadius: BorderRadius.circular(999.r),
         border: Border.all(color: _cardBorder),
       ),

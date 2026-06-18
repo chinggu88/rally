@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../../../../theme/app_colors.dart';
 import '../../../../../theme/app_typography.dart';
 import '../../../../data/models/news_card_response.dart';
 import 'news_card_viewer.dart';
@@ -17,10 +18,10 @@ class NewsCardItem extends StatefulWidget {
   final NewsCardResponse card;
 
   // 매거진 디자인 토큰 (NewsView와 정합).
-  static const Color accent = Color(0xFFC3F400);
-  static const Color cardBg = Color(0xFF1C1B1B);
-  static const Color border = Color(0xFF2A2A2A);
-  static const Color subtleText = Color(0xFF9CA3A1);
+  static const Color accent = AppColors.accent;
+  static const Color cardBg = AppColors.cardBg;
+  static const Color border = AppColors.cardBorder;
+  static const Color subtleText = AppColors.subtleText;
 
   @override
   State<NewsCardItem> createState() => _NewsCardItemState();
@@ -148,7 +149,7 @@ class _CardImage extends StatelessWidget {
         height: double.infinity,
         fit: BoxFit.cover,
         placeholder: (_, __) => Container(
-          color: const Color(0xFF222121),
+          color: AppColors.surfaceAlt,
           alignment: Alignment.center,
           child: SizedBox(
             width: 26.w,
@@ -160,7 +161,7 @@ class _CardImage extends StatelessWidget {
           ),
         ),
         errorWidget: (_, __, ___) => Container(
-          color: const Color(0xFF222121),
+          color: AppColors.surfaceAlt,
           alignment: Alignment.center,
           child: Icon(
             Icons.broken_image_outlined,

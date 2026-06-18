@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
+import '../../../../theme/app_colors.dart';
 import '../controllers/my_info_controller.dart';
 
 /// 내 정보 (비로그인 상태) — Stitch: 내 정보 (매거진)
@@ -12,10 +13,10 @@ class MyInfoView extends GetView<MyInfoController> {
   const MyInfoView({super.key});
 
   // --- Design tokens (다크 + 라임 옐로우 테마) ---
-  static const Color _bg = Color(0xFF0A0A0A);
-  static const Color _accent = Color(0xFFD7FF00);
-  static const Color _subtle = Color(0xFF9CA3A1);
-  static const Color _divider = Color(0xFF1F2421);
+  static const Color _bg = AppColors.bg;
+  static const Color _accent = AppColors.accentLime;
+  static const Color _subtle = AppColors.subtleText;
+  static const Color _divider = AppColors.divider;
 
   @override
   Widget build(BuildContext context) {
@@ -87,7 +88,7 @@ class MyInfoView extends GetView<MyInfoController> {
         gradient: const LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0xFF1B1F1C), Color(0xFF0A0A0A)],
+          colors: [AppColors.gradientStart, AppColors.bg],
         ),
         border: Border.all(color: _divider),
       ),
@@ -153,7 +154,7 @@ class MyInfoView extends GetView<MyInfoController> {
         gradient: const LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0xFF1B1F1C), Color(0xFF0A0A0A)],
+          colors: [AppColors.gradientStart, AppColors.bg],
         ),
         border: Border.all(color: _divider),
       ),
