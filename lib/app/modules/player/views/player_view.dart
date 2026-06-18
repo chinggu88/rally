@@ -23,7 +23,9 @@ class _PlayerViewState extends State<PlayerView> {
   PlayerController get controller => PlayerController.to;
 
   // Stitch 디자인 토큰 (AppColors와 정합되지 않는 시안 디테일만 별도 상수로 보존)
-  static const Color _accent = Color(0xFFC3F400); // primaryContainer / secondary 톤
+  static const Color _accent = Color(
+    0xFFC3F400,
+  ); // primaryContainer / secondary 톤
   static const Color _accentDark = Color(0xFF283500); // onPrimary on accent
   static const Color _subtleText = Color(0xFF9CA3A1);
 
@@ -117,7 +119,7 @@ class _PlayerViewState extends State<PlayerView> {
         SliverToBoxAdapter(child: SizedBox(height: 12.h)),
         // 상태 분기: 로딩/에러/빈 상태일 땐 단일 sliver, 정상이면 SliverList
         Obx(() {
-          if (controller.isLoading && controller.players.isEmpty) {
+          if (controller.isLoading) {
             return SliverToBoxAdapter(
               child: Padding(
                 padding: EdgeInsets.symmetric(vertical: 80.h),
@@ -234,17 +236,15 @@ class _PlayerViewState extends State<PlayerView> {
       padding: EdgeInsets.fromLTRB(20.w, 60.h, 20.w, 60.h),
       child: Column(
         children: [
-          Icon(
-            Icons.groups_outlined,
-            size: 48.sp,
-            color: _subtleText,
-          ),
+          Icon(Icons.groups_outlined, size: 48.sp, color: _subtleText),
           SizedBox(height: 12.h),
-          Obx(() => Text(
-                '${PlayerController.labelKoOf(controller.selectedCategory)} '
-                '랭킹 데이터가 없습니다.',
-                style: AppTypography.bodyMd.copyWith(color: Colors.white),
-              )),
+          Obx(
+            () => Text(
+              '${PlayerController.labelKoOf(controller.selectedCategory)} '
+              '랭킹 데이터가 없습니다.',
+              style: AppTypography.bodyMd.copyWith(color: Colors.white),
+            ),
+          ),
           SizedBox(height: 6.h),
           Text(
             '다른 종목을 선택해보세요.',
@@ -262,11 +262,12 @@ class _PlayerViewState extends State<PlayerView> {
       padding: EdgeInsets.fromLTRB(20.w, 4.h, 20.w, 0),
       sliver: SliverList.separated(
         itemCount: list.length,
-        itemBuilder: (_, i) => _PlayerCard(
-          player: list[i],
-          isDoubles: isDoubles,
-          onTap: () => controller.openPlayerDetail(list[i]),
-        ),
+        itemBuilder:
+            (_, i) => _PlayerCard(
+              player: list[i],
+              isDoubles: isDoubles,
+              onTap: () => controller.openPlayerDetail(list[i]),
+            ),
         separatorBuilder: (_, __) => SizedBox(height: 12.h),
       ),
     );
@@ -310,9 +311,7 @@ class _CategoryChip extends StatelessWidget {
           decoration: BoxDecoration(
             color: selected ? _accent : _chipBg,
             borderRadius: BorderRadius.circular(999.r),
-            border: Border.all(
-              color: selected ? _accent : _chipBorder,
-            ),
+            border: Border.all(color: selected ? _accent : _chipBorder),
           ),
           alignment: Alignment.center,
           child: Row(
@@ -387,13 +386,15 @@ class _PlayerCard extends StatelessWidget {
     final country = (player.countryCode ?? '').trim();
     final countryName = (player.countryName ?? '').trim();
     final displayName = name.isEmpty ? '—' : name;
-    final displayCountry = countryName.isNotEmpty
-        ? countryName
-        : (country.isEmpty ? '—' : country.toUpperCase());
+    final displayCountry =
+        countryName.isNotEmpty
+            ? countryName
+            : (country.isEmpty ? '—' : country.toUpperCase());
     // country_name 우선(대부분의 행에서 country_code는 null), 폴백으로 ISO3 사용.
-    final flag = countryName.isNotEmpty
-        ? flagEmojiFromName(countryName)
-        : flagEmoji(country);
+    final flag =
+        countryName.isNotEmpty
+            ? flagEmojiFromName(countryName)
+            : flagEmoji(country);
     final rankLabel = rank != null ? '#$rank' : '#—';
     final pointsText = _formatPoints(player.points);
 
@@ -457,10 +458,7 @@ class _PlayerCard extends StatelessWidget {
                     Row(
                       children: [
                         if (flag.isNotEmpty)
-                          Text(
-                            flag,
-                            style: TextStyle(fontSize: 14.sp),
-                          )
+                          Text(flag, style: TextStyle(fontSize: 14.sp))
                         else
                           Container(
                             width: 14.w,
@@ -497,11 +495,7 @@ class _PlayerCard extends StatelessWidget {
                       Row(
                         children: [
                           if (pointsText.isNotEmpty) ...[
-                            Icon(
-                              Icons.bolt,
-                              color: _accent,
-                              size: 14.sp,
-                            ),
+                            Icon(Icons.bolt, color: _accent, size: 14.sp),
                             SizedBox(width: 3.w),
                             Text(
                               pointsText,
@@ -531,11 +525,7 @@ class _PlayerCard extends StatelessWidget {
               ),
               SizedBox(width: 12.w),
               // 우측: 진입 화살표
-              Icon(
-                Icons.arrow_forward,
-                color: Colors.white,
-                size: 18.sp,
-              ),
+              Icon(Icons.arrow_forward, color: Colors.white, size: 18.sp),
             ],
           ),
         ),
@@ -552,17 +542,18 @@ class _PlayerCard extends StatelessWidget {
         width: 64.w,
         height: 64.w,
         color: const Color(0xFF252423),
-        child: hasPhoto
-            ? Image.network(
-                photoUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => _avatarPlaceholder(),
-                loadingBuilder: (context, child, progress) {
-                  if (progress == null) return child;
-                  return _avatarPlaceholder();
-                },
-              )
-            : _avatarPlaceholder(),
+        child:
+            hasPhoto
+                ? Image.network(
+                  photoUrl,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => _avatarPlaceholder(),
+                  loadingBuilder: (context, child, progress) {
+                    if (progress == null) return child;
+                    return _avatarPlaceholder();
+                  },
+                )
+                : _avatarPlaceholder(),
       ),
     );
   }
@@ -575,12 +566,14 @@ class _PlayerCard extends StatelessWidget {
     final rank = player.rank;
     final country = (player.countryCode ?? '').trim();
     final countryName = (player.countryName ?? '').trim();
-    final displayCountry = countryName.isNotEmpty
-        ? countryName
-        : (country.isEmpty ? '—' : country.toUpperCase());
-    final flag = countryName.isNotEmpty
-        ? flagEmojiFromName(countryName)
-        : flagEmoji(country);
+    final displayCountry =
+        countryName.isNotEmpty
+            ? countryName
+            : (country.isEmpty ? '—' : country.toUpperCase());
+    final flag =
+        countryName.isNotEmpty
+            ? flagEmojiFromName(countryName)
+            : flagEmoji(country);
     final pointsText = _formatPoints(player.points);
     final rankLabel = rank != null ? '#$rank' : '#—';
 
@@ -744,10 +737,7 @@ class _PlayerCard extends StatelessWidget {
               letterSpacing: -0.2,
             ),
           ),
-        if (hasChange) ...[
-          SizedBox(height: 4.h),
-          _buildRankChange(),
-        ],
+        if (hasChange) ...[SizedBox(height: 4.h), _buildRankChange()],
       ],
     );
   }
@@ -760,18 +750,19 @@ class _PlayerCard extends StatelessWidget {
         width: size,
         height: size,
         color: const Color(0xFF252423),
-        child: hasPhoto
-            ? Image.network(
-                photoUrl,
-                fit: BoxFit.cover,
-                alignment: const Alignment(0, -0.4),
-                errorBuilder: (_, __, ___) => _avatarPlaceholder(),
-                loadingBuilder: (context, child, progress) {
-                  if (progress == null) return child;
-                  return _avatarPlaceholder();
-                },
-              )
-            : _avatarPlaceholder(),
+        child:
+            hasPhoto
+                ? Image.network(
+                  photoUrl,
+                  fit: BoxFit.cover,
+                  alignment: const Alignment(0, -0.4),
+                  errorBuilder: (_, __, ___) => _avatarPlaceholder(),
+                  loadingBuilder: (context, child, progress) {
+                    if (progress == null) return child;
+                    return _avatarPlaceholder();
+                  },
+                )
+                : _avatarPlaceholder(),
       ),
     );
   }
@@ -820,9 +811,7 @@ class _PlayerCard extends StatelessWidget {
   }
 
   Widget _avatarPlaceholder() {
-    return Center(
-      child: Icon(Icons.person, color: _subtleText, size: 30.sp),
-    );
+    return Center(child: Icon(Icons.person, color: _subtleText, size: 30.sp));
   }
 
   /// 순위 변동 칩 — ▲상승(초록) / ▼하락(빨강) / –변동없음. null이면 빈 위젯.
@@ -851,10 +840,7 @@ class _PlayerCard extends StatelessWidget {
         Icon(icon, color: color, size: 18.sp),
         Text(
           '$magnitude',
-          style: AppTypography.labelLg.copyWith(
-            color: color,
-            fontSize: 12.sp,
-          ),
+          style: AppTypography.labelLg.copyWith(color: color, fontSize: 12.sp),
         ),
       ],
     );
