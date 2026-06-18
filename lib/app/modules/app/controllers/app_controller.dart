@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:rally/app/modules/news/controllers/news_controller.dart';
 
 import '../../match/controllers/match_controller.dart';
+import '../../player/controllers/player_controller.dart';
 
 /// 앱 셸 컨트롤러.
 ///
@@ -17,6 +18,9 @@ class AppController extends GetxController with WidgetsBindingObserver {
   /// 경기 탭 인덱스 (BottomNavigationBar 순서: 뉴스0 / 경기1 / 선수2 / 내정보3)
   static const int matchTabIndex = 1;
 
+  /// 선수 탭 인덱스
+  static const int playerTabIndex = 2;
+
   final _currentIndex = 0.obs;
 
   int get currentIndex => _currentIndex.value;
@@ -28,6 +32,11 @@ class AppController extends GetxController with WidgetsBindingObserver {
     // 경기 탭 진입 시 LIVE/진행중/임박 대회 카드로 자동 스크롤.
     if (index == matchTabIndex && Get.isRegistered<MatchController>()) {
       MatchController.to.autoScrollToFeaturedTournament();
+    }
+
+    // 선수 탭 진입 시 첫 페이지를 다시 로드(로딩 인디케이터 노출).
+    if (index == playerTabIndex && Get.isRegistered<PlayerController>()) {
+      PlayerController.to.reloadFromTab();
     }
   }
 

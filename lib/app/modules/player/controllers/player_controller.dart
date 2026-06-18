@@ -146,7 +146,6 @@ class PlayerController extends GetxController {
       });
 
       players = fetched;
-      log('asdf player ${players.length}');
       _offset = fetched.length;
       final hasMoreFromServer = response.hasMore;
       if (hasMoreFromServer != null) {
