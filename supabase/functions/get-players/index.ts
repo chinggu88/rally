@@ -1,7 +1,10 @@
-// GET /functions/v1/get-players?category=MS
+// GET /functions/v1/get-players?category=MS&limit=30&offset=0
 // - category: MS | WS | MD | WD | XD (기본 MS)
-// - 응답: { category, count, players: [{ rank, player_name, country_code, country_name, points, rank_change, player1_id, player2_id, photo_url, photo_url2 }] }
-//         rank ASC 정렬
+// - limit: 1~100 (기본 30) — 이번 페이지에서 가져올 선수 수
+// - offset: 0~10000 (기본 0) — 건너뛸 행 수 (rank ASC 기준)
+// - 응답: { category, limit, offset, count, has_more, players: [{ rank, player_name, country_code, country_name, points, rank_change, player1_id, player2_id, photo_url, photo_url2 }] }
+//         rank ASC 정렬, range(offset, offset+limit-1) 적용
+//         count = 이번 페이지 행 수, has_more = 다음 페이지 존재 가능성(count === limit)
 //         points = 랭킹 포인트(numeric), rank_change = 직전 발표 대비 순위 변동(+상승/-하락/0/null)
 //         player1_id / player2_id 는 member_id("123" 또는 "123-456")에서 파싱한 bwf_players.id
 //         (단식은 player1_id만, 복식은 둘 다) — 상세 화면(get-player) 진입용 식별자
@@ -14,6 +17,22 @@ import { json, error } from "../_shared/response.ts";
 
 const VALID_CATEGORIES = ["MS", "WS", "MD", "WD", "XD"] as const;
 type Category = typeof VALID_CATEGORIES[number];
+
+const DEFAULT_LIMIT = 30;
+const MAX_LIMIT = 100;
+const MAX_OFFSET = 10000;
+
+// raw 입력이 정수이고 [min, max] 범위 안이면 반환. 누락(null/"")이면 def. 그 외엔 null.
+function parseBoundedInt(
+  raw: string | null,
+  { def, min, max }: { def: number; min: number; max: number },
+): number | null {
+  if (raw == null || raw === "") return def;
+  if (!/^-?\d+$/.test(raw)) return null;
+  const n = Number(raw);
+  if (!Number.isInteger(n) || n < min || n > max) return null;
+  return n;
+}
 
 // bwf_rankings.player1_id 백필이 비어 있어도 동작하도록 member_id 에서 직접 파싱한다.
 const SELECT_COLUMNS =
@@ -51,12 +70,30 @@ Deno.serve(async (req) => {
     }
     const category = categoryParam as Category;
 
+    const limit = parseBoundedInt(url.searchParams.get("limit"), {
+      def: DEFAULT_LIMIT,
+      min: 1,
+      max: MAX_LIMIT,
+    });
+    if (limit === null) {
+      return error(`limit must be an integer in [1, ${MAX_LIMIT}]`, 400);
+    }
+    const offset = parseBoundedInt(url.searchParams.get("offset"), {
+      def: 0,
+      min: 0,
+      max: MAX_OFFSET,
+    });
+    if (offset === null) {
+      return error(`offset must be an integer in [0, ${MAX_OFFSET}]`, 400);
+    }
+
     const supabase = serviceClient();
     const { data, error: dbErr } = await supabase
       .from("bwf_rankings")
       .select(SELECT_COLUMNS)
       .eq("category", category)
-      .order("rank", { ascending: true });
+      .order("rank", { ascending: true })
+      .range(offset, offset + limit - 1);
 
     if (dbErr) return error(dbErr.message, 500);
 
@@ -107,7 +144,10 @@ Deno.serve(async (req) => {
 
     return json({
       category,
+      limit,
+      offset,
       count: players.length,
+      has_more: players.length === limit,
       players,
     });
   } catch (e) {

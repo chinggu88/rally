@@ -17,16 +17,27 @@ class PlayerRepository {
   ///
   /// [category] 조회 종목 (`MS`, `WS`, `MD`, `WD`, `XD`).
   /// null이면 서버 기본값(`MS`)을 사용한다.
+  /// [limit] 이번 페이지 건수 (서버 기본 30, 범위 1~100). null이면 서버 기본값.
+  /// [offset] 건너뛸 행 수 (서버 기본 0, 범위 0~10000). null이면 서버 기본값.
   ///
   /// 실패 시 `Exception('get-players failed: ...')` 를 throw 한다.
-  Future<GetPlayersResponse> getPlayers({String? category}) async {
+  Future<GetPlayersResponse> getPlayers({
+    String? category,
+    int? limit,
+    int? offset,
+  }) async {
     try {
+      final qp = <String, dynamic>{};
+      if (category != null && category.isNotEmpty) {
+        qp['category'] = category;
+      }
+      if (limit != null) qp['limit'] = '$limit';
+      if (offset != null) qp['offset'] = '$offset';
+
       final res = await _client.functions.invoke(
         'get-players',
         method: HttpMethod.get,
-        queryParameters: category != null && category.isNotEmpty
-            ? <String, dynamic>{'category': category}
-            : null,
+        queryParameters: qp.isEmpty ? null : qp,
       );
       if (res.status != 200 || res.data == null) {
         throw Exception(
