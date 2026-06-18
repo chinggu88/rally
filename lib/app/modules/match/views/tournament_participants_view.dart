@@ -24,9 +24,9 @@ class TournamentParticipantsView
 
   // 매거진 디자인 토큰 (AppColors와 정합되지 않는 시안 디테일만 별도 상수).
   // 카드/칩 토큰은 내부 위젯(`_EventChip`, `_ParticipantCard`)에서 자체 보존한다.
-  static const Color _accent = Color(0xFFC3F400);
-  static const Color _accentDark = Color(0xFF283500);
-  static const Color _subtleText = Color(0xFF9CA3A1);
+  static const Color _accent = AppColors.accent;
+  static const Color _accentDark = AppColors.accentDark;
+  static const Color _subtleText = AppColors.subtleText;
 
   @override
   Widget build(BuildContext context) {
@@ -241,10 +241,10 @@ class _EventChip extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
 
-  static const Color _accent = Color(0xFFC3F400);
-  static const Color _accentDark = Color(0xFF283500);
-  static const Color _chipBg = Color(0xFF201F1F);
-  static const Color _chipBorder = Color(0xFF2A2A2A);
+  static const Color _accent = AppColors.accent;
+  static const Color _accentDark = AppColors.accentDark;
+  static const Color _chipBg = AppColors.chipBg;
+  static const Color _chipBorder = AppColors.cardBorder;
 
   @override
   Widget build(BuildContext context) {
@@ -306,11 +306,11 @@ class _ParticipantCard extends StatelessWidget {
 
   final TournamentParticipantResponse participant;
 
-  static const Color _accent = Color(0xFFC3F400);
-  static const Color _accentDark = Color(0xFF283500);
-  static const Color _cardBg = Color(0xFF1C1B1B);
-  static const Color _cardBorder = Color(0xFF2A2A2A);
-  static const Color _subtleText = Color(0xFF9CA3A1);
+  static const Color _accent = AppColors.accent;
+  static const Color _accentDark = AppColors.accentDark;
+  static const Color _cardBg = AppColors.cardBg;
+  static const Color _cardBorder = AppColors.cardBorder;
+  static const Color _subtleText = AppColors.subtleText;
 
   @override
   Widget build(BuildContext context) {
@@ -525,7 +525,7 @@ class _ParticipantCard extends StatelessWidget {
       child: Container(
         width: size,
         height: size,
-        color: const Color(0xFF252423),
+        color: AppColors.surfaceAlt2,
         child: hasPhoto
             ? CachedNetworkImage(
                 imageUrl: photoUrl,
@@ -623,7 +623,7 @@ class _ParticipantCard extends StatelessWidget {
 
   Widget _avatarPlaceholder() {
     return Container(
-      color: const Color(0xFF252423),
+      color: AppColors.surfaceAlt2,
       alignment: Alignment.center,
       child: Icon(Icons.person, color: _subtleText, size: 26.sp),
     );

@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../../../../theme/app_colors.dart';
 import '../../../../data/models/news_card_response.dart';
 import 'news_card_item.dart';
 
@@ -41,7 +42,7 @@ class NewsCardHorizontalItem extends StatelessWidget {
                   height: height,
                   fit: BoxFit.cover,
                   placeholder: (_, __) => Container(
-                    color: const Color(0xFF222121),
+                    color: AppColors.surfaceAlt,
                     alignment: Alignment.center,
                     child: SizedBox(
                       width: 26.w,
@@ -61,7 +62,7 @@ class NewsCardHorizontalItem extends StatelessWidget {
 
   Widget _placeholder() {
     return Container(
-      color: const Color(0xFF222121),
+      color: AppColors.surfaceAlt,
       alignment: Alignment.center,
       child: Icon(
         Icons.image_outlined,

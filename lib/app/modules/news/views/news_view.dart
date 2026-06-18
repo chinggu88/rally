@@ -25,9 +25,9 @@ class NewsView extends GetView<NewsController> {
   const NewsView({super.key});
 
   // 매거진 디자인 토큰 (Stitch 시안과 정합되는 미세 디테일).
-  static const Color _accent = Color(0xFFC3F400);
-  static const Color _accentDark = Color(0xFF283500);
-  static const Color _subtleText = Color(0xFF9CA3A1);
+  static const Color _accent = AppColors.accent;
+  static const Color _accentDark = AppColors.accentDark;
+  static const Color _subtleText = AppColors.subtleText;
 
   @override
   Widget build(BuildContext context) {
@@ -318,9 +318,9 @@ class NewsView extends GetView<NewsController> {
         width: double.infinity,
         padding: EdgeInsets.symmetric(vertical: 28.h, horizontal: 16.w),
         decoration: BoxDecoration(
-          color: const Color(0xFF1C1B1B),
+          color: AppColors.cardBg,
           borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(color: const Color(0xFF2A2A2A)),
+          border: Border.all(color: AppColors.cardBorder),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -448,9 +448,9 @@ class NewsView extends GetView<NewsController> {
         width: double.infinity,
         padding: EdgeInsets.symmetric(vertical: 24.h, horizontal: 16.w),
         decoration: BoxDecoration(
-          color: const Color(0xFF1C1B1B),
+          color: AppColors.cardBg,
           borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(color: const Color(0xFF2A2A2A)),
+          border: Border.all(color: AppColors.cardBorder),
         ),
         child: Column(
           children: [
@@ -502,9 +502,9 @@ class NewsView extends GetView<NewsController> {
         width: double.infinity,
         padding: EdgeInsets.symmetric(vertical: 28.h, horizontal: 16.w),
         decoration: BoxDecoration(
-          color: const Color(0xFF1C1B1B),
+          color: AppColors.cardBg,
           borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(color: const Color(0xFF2A2A2A)),
+          border: Border.all(color: AppColors.cardBorder),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -663,9 +663,9 @@ class NewsView extends GetView<NewsController> {
       width: double.infinity,
       padding: EdgeInsets.symmetric(vertical: 28.h, horizontal: 16.w),
       decoration: BoxDecoration(
-        color: const Color(0xFF1C1B1B),
+        color: AppColors.cardBg,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: const Color(0xFF2A2A2A)),
+        border: Border.all(color: AppColors.cardBorder),
       ),
       child: Column(
         children: [
@@ -714,9 +714,9 @@ class NewsView extends GetView<NewsController> {
       width: double.infinity,
       padding: EdgeInsets.symmetric(vertical: 36.h, horizontal: 16.w),
       decoration: BoxDecoration(
-        color: const Color(0xFF1C1B1B),
+        color: AppColors.cardBg,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: const Color(0xFF2A2A2A)),
+        border: Border.all(color: AppColors.cardBorder),
       ),
       child: Column(
         children: [
@@ -768,7 +768,7 @@ class _LiveMatchPageView extends StatefulWidget {
 }
 
 class _LiveMatchPageViewState extends State<_LiveMatchPageView> {
-  static const Color _accent = Color(0xFFC3F400);
+  static const Color _accent = AppColors.accent;
   static const Color _inactive = Color(0xFF3A3A3A);
 
   late PageController _pageController;
@@ -873,7 +873,7 @@ class _RealtimeStatusDotState extends State<_RealtimeStatusDot>
     with SingleTickerProviderStateMixin {
   late final AnimationController _ctrl;
 
-  static const Color _accent = Color(0xFFC3F400);
+  static const Color _accent = AppColors.accent;
   static const Color _muted = Color(0xFF6B6B6B);
 
   @override

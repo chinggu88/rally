@@ -23,11 +23,9 @@ class _PlayerViewState extends State<PlayerView> {
   PlayerController get controller => PlayerController.to;
 
   // Stitch 디자인 토큰 (AppColors와 정합되지 않는 시안 디테일만 별도 상수로 보존)
-  static const Color _accent = Color(
-    0xFFC3F400,
-  ); // primaryContainer / secondary 톤
-  static const Color _accentDark = Color(0xFF283500); // onPrimary on accent
-  static const Color _subtleText = Color(0xFF9CA3A1);
+  static const Color _accent = AppColors.accent;
+  static const Color _accentDark = AppColors.accentDark;
+  static const Color _subtleText = AppColors.subtleText;
 
   final ScrollController _scroll = ScrollController();
   Worker? _resetSignalWorker;
@@ -293,10 +291,10 @@ class _CategoryChip extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
 
-  static const Color _accent = Color(0xFFC3F400);
-  static const Color _accentDark = Color(0xFF283500);
-  static const Color _chipBg = Color(0xFF201F1F);
-  static const Color _chipBorder = Color(0xFF2A2A2A);
+  static const Color _accent = AppColors.accent;
+  static const Color _accentDark = AppColors.accentDark;
+  static const Color _chipBg = AppColors.chipBg;
+  static const Color _chipBorder = AppColors.cardBorder;
 
   @override
   Widget build(BuildContext context) {
@@ -365,10 +363,10 @@ class _PlayerCard extends StatelessWidget {
 
   final VoidCallback onTap;
 
-  static const Color _accent = Color(0xFFC3F400);
-  static const Color _cardBg = Color(0xFF1C1B1B);
-  static const Color _cardBorder = Color(0xFF2A2A2A);
-  static const Color _subtleText = Color(0xFF9CA3A1);
+  static const Color _accent = AppColors.accent;
+  static const Color _cardBg = AppColors.cardBg;
+  static const Color _cardBorder = AppColors.cardBorder;
+  static const Color _subtleText = AppColors.subtleText;
 
   // 순위 변동 색상
   static const Color _upGreen = Color(0xFF4ADE80);
@@ -541,7 +539,7 @@ class _PlayerCard extends StatelessWidget {
       child: Container(
         width: 64.w,
         height: 64.w,
-        color: const Color(0xFF252423),
+        color: AppColors.surfaceAlt2,
         child:
             hasPhoto
                 ? Image.network(
@@ -749,7 +747,7 @@ class _PlayerCard extends StatelessWidget {
       child: Container(
         width: size,
         height: size,
-        color: const Color(0xFF252423),
+        color: AppColors.surfaceAlt2,
         child:
             hasPhoto
                 ? Image.network(

@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../../../../theme/app_colors.dart';
 import '../../../../../theme/app_typography.dart';
 
 /// 카드뉴스 전체화면 뷰어.
@@ -18,7 +19,7 @@ class NewsCardViewer extends StatefulWidget {
   final List<String> imageUrls;
   final int initialIndex;
 
-  static const Color _accent = Color(0xFFC3F400);
+  static const Color _accent = AppColors.accent;
 
   @override
   State<NewsCardViewer> createState() => _NewsCardViewerState();

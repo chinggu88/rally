@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../../../../theme/app_colors.dart';
 import '../../../../../theme/app_typography.dart';
 import '../../../../data/models/live_match_response.dart';
 
@@ -30,12 +31,12 @@ class LiveMatchCard extends StatefulWidget {
   final double width;
   final DateTime? scoreBumpAt;
 
-  static const Color accent = Color(0xFFC3F400);
-  static const Color accentDark = Color(0xFF283500);
-  static const Color cardBg = Color(0xFF1C1B1B);
-  static const Color cardBorder = Color(0xFF2A2A2A);
-  static const Color innerBg = Color(0xFF201F1F);
-  static const Color subtleText = Color(0xFF9CA3A1);
+  static const Color accent = AppColors.accent;
+  static const Color accentDark = AppColors.accentDark;
+  static const Color cardBg = AppColors.cardBg;
+  static const Color cardBorder = AppColors.cardBorder;
+  static const Color innerBg = AppColors.chipBg;
+  static const Color subtleText = AppColors.subtleText;
   static const Color liveRed = Color(0xFFFF4D4F);
 
   @override
