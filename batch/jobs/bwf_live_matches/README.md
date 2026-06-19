@@ -131,6 +131,25 @@ PYTHONPATH=. python -m batch.jobs.bwf_live_matches.main --once --dry-run
 PYTHONPATH=. python -m batch.jobs.bwf_live_matches.main --once --headed
 ```
 
+### 백그라운드 상주 / 종료
+
+```bash
+# 백그라운드로 상주 실행 (로그는 batch/jobs/bwf_live_matches/worker.log)
+nohup env PYTHONPATH=. python -m batch.jobs.bwf_live_matches.main \
+  > batch/jobs/bwf_live_matches/worker.log 2>&1 &
+
+# 실행 중인 프로세스 확인
+ps aux | grep -i bwf_live_matches | grep -v grep
+
+# 정상 종료 (batch_logs에 'stopped' 마킹)
+pkill -TERM -f "batch.jobs.bwf_live_matches.main"
+
+# 강제 종료 (SIGTERM 무시될 때만)
+pkill -9 -f "batch.jobs.bwf_live_matches.main"
+```
+
+중복 실행 방지를 위해 새로 띄우기 전 항상 `ps`로 기존 프로세스를 먼저 확인한다.
+
 ## batch_logs
 
 상주 워커라 매 틱마다 row를 박지 않는다:

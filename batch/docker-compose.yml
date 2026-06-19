@@ -1,0 +1,27 @@
+services:
+  bwf-live:
+    build:
+      context: ..
+      dockerfile: batch/Dockerfile
+    image: rally-batch:latest
+    container_name: rally-bwf-live
+    env_file: ./.env
+    environment:
+      TZ: Asia/Seoul
+    command: ["python", "-m", "batch.jobs.bwf_live_matches.main"]
+    restart: unless-stopped
+    stop_grace_period: 60s
+
+  cron:
+    build:
+      context: ..
+      dockerfile: batch/Dockerfile
+    image: rally-batch:latest
+    depends_on:
+      - bwf-live
+    container_name: rally-batch-cron
+    env_file: ./.env
+    environment:
+      TZ: Asia/Seoul
+    command: ["supercronic", "/app/batch/crontab"]
+    restart: unless-stopped

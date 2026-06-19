@@ -3,6 +3,23 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
+  // View 공용 상수 (ColorScheme으로 매핑하기 애매하거나 자주 반복되는 톤)
+  static const Color bg = Color(0xFF0A0A0A);
+  static const Color accent = Color(0xFFC3F400);
+  static const Color accentDark = Color(0xFF283500);
+  static const Color accentLime = Color(0xFFD7FF00);
+  static const Color accentNeon = Color(0xFFE0EC30);
+  static const Color subtleText = Color(0xFF9CA3A1);
+  static const Color divider = Color(0xFF1F2421);
+  static const Color cardBg = Color(0xFF1C1B1B);
+  static const Color cardBorder = Color(0xFF2A2A2A);
+  static const Color chipBg = Color(0xFF201F1F);
+  static const Color surfaceAlt = Color(0xFF222121);
+  static const Color surfaceAlt2 = Color(0xFF252423);
+  static const Color gradientStart = Color(0xFF1B1F1C);
+  static const Color gradientStartAlt = Color(0xFF202521);
+  static const Color liveRed = Color(0xFFFF3B30);
+
   static const ColorScheme dark = ColorScheme(
     brightness: Brightness.dark,
     primary: Color(0xFFFFFFFF),
