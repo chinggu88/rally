@@ -34,6 +34,7 @@ class TodayMatchCard extends StatelessWidget {
     final games = match.games;
     final event = (match.eventName ?? '').trim();
     final showStatusBadge = match.isWalkover || match.isRetired;
+    final isKoreanMatch = match.hasKoreanPlayer;
 
     return Material(
       color: Colors.transparent,
@@ -53,6 +54,10 @@ class TodayMatchCard extends StatelessWidget {
             children: [
               Row(
                 children: [
+                  if (isKoreanMatch) ...[
+                    _koreanBadge(),
+                    SizedBox(width: 6.w),
+                  ],
                   if (event.isNotEmpty)
                     Flexible(
                       child: Text(
@@ -203,6 +208,34 @@ class TodayMatchCard extends StatelessWidget {
     final c = match.courtName?.trim();
     if (c != null && c.isNotEmpty) parts.add(c);
     return parts.join(' · ');
+  }
+
+  /// 한국 선수 포함 경기 표식(🇰🇷 KR).
+  Widget _koreanBadge() {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+      decoration: BoxDecoration(
+        color: _accent.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(999.r),
+        border: Border.all(color: _accent.withValues(alpha: 0.5)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('🇰🇷', style: TextStyle(fontSize: 10.sp)),
+          SizedBox(width: 3.w),
+          Text(
+            'KR',
+            style: AppTypography.labelLg.copyWith(
+              fontWeight: FontWeight.w900,
+              fontSize: 10.sp,
+              letterSpacing: 0.3,
+              color: _accent,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

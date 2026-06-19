@@ -72,10 +72,17 @@ class NewsController extends GetxController {
   final _todayUpcoming = <TodayMatchResponse>[].obs;
   List<TodayMatchResponse> get todayUpcoming => _todayUpcoming;
 
-  /// 결과+예정을 경기 시간 오름차순으로 각각 정렬한 뒤 합친 단일 캐러셀용 목록.
-  /// 시간이 없는 항목은 각 그룹 내에서 뒤로 보낸다.
+  /// 결과+예정을 합친 단일 캐러셀용 목록.
+  ///
+  /// 각 그룹(결과 / 예정) 내부에서:
+  /// 1. 한국 선수 포함 경기를 앞으로 보내고,
+  /// 2. 동률은 경기 시간 오름차순으로 정렬한다.
+  /// 시간이 없는 항목은 그룹 내 뒤로 보낸다.
   List<TodayMatchResponse> get todayMerged {
-    int compareByTime(TodayMatchResponse a, TodayMatchResponse b) {
+    int compareEntries(TodayMatchResponse a, TodayMatchResponse b) {
+      final ka = a.hasKoreanPlayer ? 0 : 1;
+      final kb = b.hasKoreanPlayer ? 0 : 1;
+      if (ka != kb) return ka.compareTo(kb);
       final da = a.matchDateTime;
       final db = b.matchDateTime;
       if (da == null && db == null) return 0;
@@ -84,8 +91,8 @@ class NewsController extends GetxController {
       return da.compareTo(db);
     }
 
-    final results = [..._todayResults]..sort(compareByTime);
-    final upcoming = [..._todayUpcoming]..sort(compareByTime);
+    final results = [..._todayResults]..sort(compareEntries);
+    final upcoming = [..._todayUpcoming]..sort(compareEntries);
     return [...results, ...upcoming];
   }
 
