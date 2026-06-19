@@ -83,6 +83,169 @@ const Map<String, String> _iso3ToIso2 = <String, String>{
   'DZA': 'DZ', 'ALG': 'DZ', // Algeria (ISO/IOC)
 };
 
+/// 국가명(영문) → ISO2 매핑.
+///
+/// `bwf_rankings.country_name`에 들어오는 BWF 표기를 ISO2로 직접 매핑한다.
+/// 소문자/공백 정규화 후 룩업하므로 키도 소문자로 보관한다.
+/// 매핑되지 않는 경우 [flagEmojiFromName]은 빈 문자열을 반환한다.
+const Map<String, String> _nameToIso2 = <String, String>{
+  // East Asia
+  'korea': 'KR',
+  'north korea': 'KP',
+  'japan': 'JP',
+  'china': 'CN',
+  'chinese taipei': 'TW',
+  'hong kong china': 'HK',
+  'macau china': 'MO',
+  'mongolia': 'MN',
+  // Southeast / South Asia
+  'indonesia': 'ID',
+  'malaysia': 'MY',
+  'thailand': 'TH',
+  'india': 'IN',
+  'singapore': 'SG',
+  'vietnam': 'VN',
+  'philippines': 'PH',
+  'myanmar': 'MM',
+  'sri lanka': 'LK',
+  'maldives': 'MV',
+  'kazakhstan': 'KZ',
+  'kyrgyzstan': 'KG',
+  'tajikistan': 'TJ',
+  'uzbekistan': 'UZ',
+  'afghanistan': 'AF',
+  'bangladesh': 'BD',
+  'nepal': 'NP',
+  'pakistan': 'PK',
+  'brunei darussalam': 'BN',
+  'cambodia': 'KH',
+  'laos': 'LA',
+  // Europe
+  'denmark': 'DK',
+  'spain': 'ES',
+  'france': 'FR',
+  'germany': 'DE',
+  'england': 'GB',
+  'scotland': 'GB',
+  'wales': 'GB',
+  'netherlands': 'NL',
+  'ireland': 'IE',
+  'belgium': 'BE',
+  'switzerland': 'CH',
+  'austria': 'AT',
+  'sweden': 'SE',
+  'norway': 'NO',
+  'finland': 'FI',
+  'portugal': 'PT',
+  'italy': 'IT',
+  'czechia': 'CZ',
+  'poland': 'PL',
+  'russia': 'RU',
+  'ukraine': 'UA',
+  'turkiye': 'TR',
+  'turkey': 'TR',
+  'bulgaria': 'BG',
+  'estonia': 'EE',
+  'lithuania': 'LT',
+  'latvia': 'LV',
+  'slovakia': 'SK',
+  'slovenia': 'SI',
+  'croatia': 'HR',
+  'hungary': 'HU',
+  'greece': 'GR',
+  'iceland': 'IS',
+  'cyprus': 'CY',
+  'israel': 'IL',
+  'serbia': 'RS',
+  'romania': 'RO',
+  'moldova': 'MD',
+  'malta': 'MT',
+  'luxembourg': 'LU',
+  'faroe islands': 'FO',
+  'greenland': 'GL',
+  'bosnia and herzegovina': 'BA',
+  'north macedonia': 'MK',
+  'azerbaijan': 'AZ',
+  // Americas
+  'usa': 'US',
+  'united states': 'US',
+  'canada': 'CA',
+  'brazil': 'BR',
+  'mexico': 'MX',
+  'peru': 'PE',
+  'guatemala': 'GT',
+  'argentina': 'AR',
+  'chile': 'CL',
+  'colombia': 'CO',
+  'venezuela': 'VE',
+  'ecuador': 'EC',
+  'bolivia': 'BO',
+  'paraguay': 'PY',
+  'uruguay': 'UY',
+  'suriname': 'SR',
+  'french guiana': 'GF',
+  'cuba': 'CU',
+  'dominican republic': 'DO',
+  'costa rica': 'CR',
+  'panama': 'PA',
+  'el salvador': 'SV',
+  'jamaica': 'JM',
+  'trinidad and tobago': 'TT',
+  'barbados': 'BB',
+  'puerto rico': 'PR',
+  'guyana': 'GY',
+  // Oceania
+  'australia': 'AU',
+  'new zealand': 'NZ',
+  'fiji': 'FJ',
+  'guam': 'GU',
+  'cook islands': 'CK',
+  'new caledonia': 'NC',
+  'french polynesia (tahiti)': 'PF',
+  'northern marianas': 'MP',
+  // Africa / Middle East
+  'egypt': 'EG',
+  'south africa': 'ZA',
+  'nigeria': 'NG',
+  'mauritius': 'MU',
+  'algeria': 'DZ',
+  'morocco': 'MA',
+  'tunisia': 'TN',
+  'ghana': 'GH',
+  'kenya': 'KE',
+  'national olympic commitee kenya': 'KE',
+  'uganda': 'UG',
+  'cameroon': 'CM',
+  'ivory coast': 'CI',
+  'botswana': 'BW',
+  'zambia': 'ZM',
+  'zimbabwe': 'ZW',
+  'namibia': 'NA',
+  'madagascar': 'MG',
+  'lesotho': 'LS',
+  'seychelles': 'SC',
+  'dr congo': 'CD',
+  'mayotte': 'YT',
+  'réunion': 'RE',
+  'reunion': 'RE',
+  'burundi': 'BI',
+  'equatorial guinea': 'GQ',
+  'saudi arabia': 'SA',
+  'united arab emirates': 'AE',
+  'bahrain': 'BH',
+  'iran': 'IR',
+  'syrian arab republic': 'SY',
+};
+
+/// ISO2 → 이모지 국기.
+String _iso2ToFlag(String iso2) {
+  if (iso2.length != 2) return '';
+  const int base = 0x1F1E6 - 0x41;
+  final first = iso2.codeUnitAt(0) + base;
+  final second = iso2.codeUnitAt(1) + base;
+  return String.fromCharCode(first) + String.fromCharCode(second);
+}
+
 /// ISO3 국가코드 → 이모지 국기.
 ///
 /// 매핑되지 않거나 입력이 비어있으면 빈 문자열을 반환한다(호출부에서 폴백 처리).
@@ -94,9 +257,18 @@ String flagEmoji(String? iso3) {
   final iso2 = _iso3ToIso2[code];
   if (iso2 == null || iso2.length != 2) return '';
 
-  // 'A'(0x41) → regional indicator 'A'(0x1F1E6) 오프셋.
-  const int base = 0x1F1E6 - 0x41;
-  final first = iso2.codeUnitAt(0) + base;
-  final second = iso2.codeUnitAt(1) + base;
-  return String.fromCharCode(first) + String.fromCharCode(second);
+  return _iso2ToFlag(iso2);
+}
+
+/// 국가명(영문) → 이모지 국기.
+///
+/// BWF `country_name`(예: "Korea", "Denmark", "Chinese Taipei")을 ISO2로 매핑한 뒤
+/// regional-indicator 유니코드로 변환한다. 매핑 실패 시 빈 문자열.
+String flagEmojiFromName(String? name) {
+  if (name == null) return '';
+  final key = name.trim().toLowerCase();
+  if (key.isEmpty) return '';
+  final iso2 = _nameToIso2[key];
+  if (iso2 == null || iso2.length != 2) return '';
+  return _iso2ToFlag(iso2);
 }

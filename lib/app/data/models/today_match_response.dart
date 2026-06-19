@@ -295,11 +295,26 @@ class TodayMatchResponse {
     return DateTime.tryParse(m);
   }
 
-  /// KST 기준 경기 시각 DateTime (matchTimeKst 파싱).
+  /// KST(UTC+9) 기준 경기 시각 DateTime.
+  ///
+  /// `match_time_kst`(offset 포함 ISO) → `match_time_utc` → `match_time` 순으로
+  /// 파싱하며, 결과는 항상 UTC+9를 더한 "KST wall clock" DateTime이다.
+  /// `DateTime.tryParse`는 offset 붙은 문자열을 UTC로 환산해 돌려주므로
+  /// 표시 시 항상 9시간을 더해야 한국 시각이 된다.
   DateTime? get kstDateTime {
+    DateTime? base;
     final k = _matchTimeKst;
-    if (k == null) return null;
-    return DateTime.tryParse(k);
+    if (k != null) base = DateTime.tryParse(k);
+    if (base == null) {
+      final u = _matchTimeUtc;
+      if (u != null) base = DateTime.tryParse(u);
+    }
+    if (base == null) {
+      final m = _matchTime;
+      if (m != null) base = DateTime.tryParse(m);
+    }
+    if (base == null) return null;
+    return base.toUtc().add(const Duration(hours: 9));
   }
 
   /// 승자 팀 번호 (1 또는 2). 미확정 시 null.
@@ -363,6 +378,18 @@ class TodayMatchResponse {
   bool get isRetired {
     final ss = (_scoreStatusValue ?? _scoreStatus ?? '').toLowerCase().trim();
     return ss.contains('retired');
+  }
+
+  /// 한국 선수가 한 명이라도 포함된 경기인지 여부.
+  ///
+  /// team1/team2 국가 코드가 'KR'/'KOR'이면 true. 향후 표기 다양성이
+  /// 발견되면 여기서 확장한다.
+  bool get hasKoreanPlayer {
+    bool isKr(String? c) {
+      final v = (c ?? '').trim().toUpperCase();
+      return v == 'KR' || v == 'KOR';
+    }
+    return isKr(_team1Country) || isKr(_team2Country);
   }
 
   /// KST 기준 표시 시간 (예: "14:30"). 파싱 실패 시 null.

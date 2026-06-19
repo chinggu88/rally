@@ -1,0 +1,14 @@
+# Docker 빌드 컨텍스트 — 빌드는 batch/ 만 필요.
+# 기본 전부 제외 후 batch/ 만 화이트리스트.
+*
+!batch
+
+# batch 내부에서도 캐시/시크릿/상태 파일 제외
+batch/__pycache__
+batch/**/__pycache__
+batch/**/*.pyc
+batch/.venv
+batch/.env
+batch/*.log
+batch/*.pid
+batch/tests

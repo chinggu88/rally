@@ -7,11 +7,13 @@ import '../../../../theme/app_colors.dart';
 import '../../../../theme/app_typography.dart';
 import '../../../data/models/active_tournament_response.dart';
 import '../../../data/models/live_match_response.dart';
+import '../../../data/models/news_card_response.dart';
 import '../../../data/models/today_match_response.dart';
 import '../controllers/news_controller.dart';
+import 'news_card_detail_view.dart';
 import 'widgets/active_tournament_card.dart';
 import 'widgets/live_match_card.dart';
-import 'widgets/news_card_item.dart';
+import 'widgets/news_card_horizontal_item.dart';
 import 'widgets/today_match_card.dart';
 
 /// 홈(뉴스) 화면.
@@ -23,9 +25,9 @@ class NewsView extends GetView<NewsController> {
   const NewsView({super.key});
 
   // 매거진 디자인 토큰 (Stitch 시안과 정합되는 미세 디테일).
-  static const Color _accent = Color(0xFFC3F400);
-  static const Color _accentDark = Color(0xFF283500);
-  static const Color _subtleText = Color(0xFF9CA3A1);
+  static const Color _accent = AppColors.accent;
+  static const Color _accentDark = AppColors.accentDark;
+  static const Color _subtleText = AppColors.subtleText;
 
   @override
   Widget build(BuildContext context) {
@@ -76,7 +78,7 @@ class NewsView extends GetView<NewsController> {
       systemOverlayStyle: SystemUiOverlayStyle.light,
       centerTitle: false,
       title: Text(
-        'Kinetic Court',
+        'Rally',
         style: TextStyle(
           color: _accent,
           fontFamily: AppTypography.chivo,
@@ -104,7 +106,9 @@ class NewsView extends GetView<NewsController> {
         if (loading && tournaments.isEmpty)
           SizedBox(
             height: 44.h,
-            child: const Center(child: CircularProgressIndicator(color: _accent)),
+            child: const Center(
+              child: CircularProgressIndicator(color: _accent),
+            ),
           )
         else
           _buildActiveTournamentsList(tournaments),
@@ -112,8 +116,6 @@ class NewsView extends GetView<NewsController> {
       ],
     );
   }
-
-  
 
   Widget _buildActiveTournamentsList(List<ActiveTournamentResponse> items) {
     // 서버(get-active-tournaments-kr)가 start_date ASC로 정렬해 내려주므로
@@ -129,9 +131,7 @@ class NewsView extends GetView<NewsController> {
         itemBuilder: (context, index) {
           return Center(
             child: ActiveTournamentCard(
-              key: ValueKey<Object>(
-                items[index].tournamentId ?? 'tour-$index',
-              ),
+              key: ValueKey<Object>(items[index].tournamentId ?? 'tour-$index'),
               tournament: items[index],
             ),
           );
@@ -318,18 +318,14 @@ class NewsView extends GetView<NewsController> {
         width: double.infinity,
         padding: EdgeInsets.symmetric(vertical: 28.h, horizontal: 16.w),
         decoration: BoxDecoration(
-          color: const Color(0xFF1C1B1B),
+          color: AppColors.cardBg,
           borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(color: const Color(0xFF2A2A2A)),
+          border: Border.all(color: AppColors.cardBorder),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.sports_tennis_outlined,
-              size: 36.sp,
-              color: _subtleText,
-            ),
+            Icon(Icons.sports_tennis_outlined, size: 36.sp, color: _subtleText),
             SizedBox(height: 10.h),
             Text(
               '현재 진행 중인 라이브 매치가 없습니다.',
@@ -442,21 +438,7 @@ class NewsView extends GetView<NewsController> {
   }
 
   Widget _buildTodayList(List<TodayMatchResponse> items) {
-    return SizedBox(
-      height: 118.h,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        padding: EdgeInsets.symmetric(horizontal: 20.w),
-        itemCount: items.length,
-        separatorBuilder: (_, __) => SizedBox(width: 10.w),
-        itemBuilder: (_, i) => TodayMatchCard(
-          key: ValueKey<Object>(items[i].id ?? 'today-$i'),
-          match: items[i],
-          onTap: () {},
-        ),
-      ),
-    );
+    return _TodayMatchList(items: items);
   }
 
   Widget _buildTodayErrorState(String message) {
@@ -466,9 +448,9 @@ class NewsView extends GetView<NewsController> {
         width: double.infinity,
         padding: EdgeInsets.symmetric(vertical: 24.h, horizontal: 16.w),
         decoration: BoxDecoration(
-          color: const Color(0xFF1C1B1B),
+          color: AppColors.cardBg,
           borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(color: const Color(0xFF2A2A2A)),
+          border: Border.all(color: AppColors.cardBorder),
         ),
         child: Column(
           children: [
@@ -520,9 +502,9 @@ class NewsView extends GetView<NewsController> {
         width: double.infinity,
         padding: EdgeInsets.symmetric(vertical: 28.h, horizontal: 16.w),
         decoration: BoxDecoration(
-          color: const Color(0xFF1C1B1B),
+          color: AppColors.cardBg,
           borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(color: const Color(0xFF2A2A2A)),
+          border: Border.all(color: AppColors.cardBorder),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -556,14 +538,14 @@ class NewsView extends GetView<NewsController> {
     );
   }
 
-// ── 뉴스(카드뉴스) 섹션 ──────────────────────────────────
+  // ── 뉴스(카드뉴스) 섹션 ──────────────────────────────────
   Widget _buildNewsSection(BuildContext context, ColorScheme scheme) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20.w),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20.w),
+          child: Row(
             children: [
               Text(
                 '뉴스',
@@ -580,10 +562,7 @@ class NewsView extends GetView<NewsController> {
                 final count = controller.newsCards.length;
                 if (count == 0) return const SizedBox.shrink();
                 return Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 8.w,
-                    vertical: 2.h,
-                  ),
+                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
                   decoration: BoxDecoration(
                     color: _accent,
                     borderRadius: BorderRadius.circular(999.r),
@@ -602,10 +581,10 @@ class NewsView extends GetView<NewsController> {
               }),
             ],
           ),
-          SizedBox(height: 12.h),
-          Obx(() => _buildNewsBody(context)),
-        ],
-      ),
+        ),
+        SizedBox(height: 12.h),
+        Obx(() => _buildNewsBody(context)),
+      ],
     );
   }
 
@@ -619,34 +598,64 @@ class NewsView extends GetView<NewsController> {
 
     final error = controller.newsError;
     if (error != null && controller.newsCards.isEmpty) {
-      return _buildNewsErrorState(error);
+      return Padding(
+        padding: EdgeInsets.symmetric(horizontal: 20.w),
+        child: _buildNewsErrorState(error),
+      );
     }
 
     if (controller.newsCards.isEmpty) {
-      return _buildNewsEmptyState();
+      return Padding(
+        padding: EdgeInsets.symmetric(horizontal: 20.w),
+        child: _buildNewsEmptyState(),
+      );
     }
 
     final cards = controller.newsCards;
-    return Column(
-      children: [
-        for (var i = 0; i < cards.length; i++) ...[
-          NewsCardItem(
-            key: ValueKey<Object>(cards[i].id ?? 'news-$i'),
-            card: cards[i],
-          ),
-          if (i != cards.length - 1) SizedBox(height: 20.h),
-        ],
-        // 더보기 로딩 인디케이터
-        if (controller.isNewsLoadingMore) ...[
-          SizedBox(height: 20.h),
-          SizedBox(
-            height: 28.h,
-            width: 28.w,
-            child: const CircularProgressIndicator(strokeWidth: 2, color: _accent),
-          ),
-        ],
-      ],
+    // 오늘 경기 카드와 동일한 폭(310.w)으로 통일.
+    final cardWidth = 310.w;
+    final cardHeight = cardWidth * 16 / 9;
+
+    return SizedBox(
+      height: cardHeight,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: EdgeInsets.symmetric(horizontal: 20.w),
+        physics: const BouncingScrollPhysics(),
+        itemCount: cards.length + (controller.isNewsLoadingMore ? 1 : 0),
+        separatorBuilder: (_, __) => SizedBox(width: 10.w),
+        itemBuilder: (context, index) {
+          if (index >= cards.length) {
+            return SizedBox(
+              width: cardWidth,
+              child: const Center(
+                child: SizedBox(
+                  width: 28,
+                  height: 28,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: _accent,
+                  ),
+                ),
+              ),
+            );
+          }
+          final card = cards[index];
+          return NewsCardHorizontalItem(
+            key: ValueKey<Object>(card.id ?? 'news-$index'),
+            card: card,
+            width: cardWidth,
+            onTap: () => _openNewsDetail(context, card),
+          );
+        },
+      ),
     );
+  }
+
+  void _openNewsDetail(BuildContext context, NewsCardResponse card) {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => NewsCardDetailView(card: card)));
   }
 
   Widget _buildNewsErrorState(String message) {
@@ -654,9 +663,9 @@ class NewsView extends GetView<NewsController> {
       width: double.infinity,
       padding: EdgeInsets.symmetric(vertical: 28.h, horizontal: 16.w),
       decoration: BoxDecoration(
-        color: const Color(0xFF1C1B1B),
+        color: AppColors.cardBg,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: const Color(0xFF2A2A2A)),
+        border: Border.all(color: AppColors.cardBorder),
       ),
       child: Column(
         children: [
@@ -705,9 +714,9 @@ class NewsView extends GetView<NewsController> {
       width: double.infinity,
       padding: EdgeInsets.symmetric(vertical: 36.h, horizontal: 16.w),
       decoration: BoxDecoration(
-        color: const Color(0xFF1C1B1B),
+        color: AppColors.cardBg,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: const Color(0xFF2A2A2A)),
+        border: Border.all(color: AppColors.cardBorder),
       ),
       child: Column(
         children: [
@@ -759,7 +768,7 @@ class _LiveMatchPageView extends StatefulWidget {
 }
 
 class _LiveMatchPageViewState extends State<_LiveMatchPageView> {
-  static const Color _accent = Color(0xFFC3F400);
+  static const Color _accent = AppColors.accent;
   static const Color _inactive = Color(0xFF3A3A3A);
 
   /// 측정 전 첫 프레임에서 사용할 기본 높이.
@@ -965,7 +974,7 @@ class _RealtimeStatusDotState extends State<_RealtimeStatusDot>
     with SingleTickerProviderStateMixin {
   late final AnimationController _ctrl;
 
-  static const Color _accent = Color(0xFFC3F400);
+  static const Color _accent = AppColors.accent;
   static const Color _muted = Color(0xFF6B6B6B);
 
   @override
@@ -1037,6 +1046,89 @@ class _RealtimeStatusDotState extends State<_RealtimeStatusDot>
           ),
         ),
       ],
+    );
+  }
+}
+
+/// 오늘 경기 가로 스크롤 리스트.
+///
+/// - 결과 있는 경기와 경기 전 경기가 섞여 있으면 첫 번째 "경기 전" 카드로 이동
+/// - 모두 결과 있음/모두 경기 전이면 맨 앞으로 이동
+/// 판정 기준: `winner != null` → 결과 있음 / `winner == null` → 경기 전.
+class _TodayMatchList extends StatefulWidget {
+  const _TodayMatchList({required this.items});
+
+  final List<TodayMatchResponse> items;
+
+  @override
+  State<_TodayMatchList> createState() => _TodayMatchListState();
+}
+
+class _TodayMatchListState extends State<_TodayMatchList> {
+  static const double _cardWidth = 310;
+  static const double _separator = 10;
+  static const double _horizontalPadding = 20;
+
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToUpcoming());
+  }
+
+  @override
+  void didUpdateWidget(covariant _TodayMatchList oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!identical(oldWidget.items, widget.items)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToUpcoming());
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollToUpcoming() {
+    if (!_scrollController.hasClients) return;
+    final items = widget.items;
+    if (items.isEmpty) return;
+    final firstUpcomingIndex = items.indexWhere((m) => m.matchStatus != "F");
+
+    // case1(모두 경기 전: firstUpcomingIndex=0) /
+    // case2(모두 결과 있음: firstUpcomingIndex=-1) → 맨 앞
+    // case3(섞임) → 첫 "경기 전" 카드 위치
+    final targetIndex = (firstUpcomingIndex > 0) ? firstUpcomingIndex : 0;
+    final offset = (_cardWidth.w + _separator.w) * targetIndex;
+    final maxOffset = _scrollController.position.maxScrollExtent;
+    _scrollController.animateTo(
+      offset.clamp(0.0, maxOffset),
+      duration: const Duration(milliseconds: 350),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final items = widget.items;
+    return SizedBox(
+      height: 118.h,
+      child: ListView.separated(
+        controller: _scrollController,
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        padding: EdgeInsets.symmetric(horizontal: _horizontalPadding.w),
+        itemCount: items.length,
+        separatorBuilder: (_, __) => SizedBox(width: _separator.w),
+        itemBuilder:
+            (_, i) => TodayMatchCard(
+              key: ValueKey<Object>(items[i].id ?? 'today-$i'),
+              match: items[i],
+              onTap: () {},
+            ),
+      ),
     );
   }
 }

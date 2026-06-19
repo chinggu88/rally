@@ -11,9 +11,7 @@ from dotenv import load_dotenv
 from batch.jobs.bwf_players.fetcher import (
     api_session,
     backfill_ranking_player_ids,
-    browser_page,
     collect_detail_urls,
-    extract_api_token,
     fetch_player_bio,
     fetch_player_summary,
 )
@@ -91,11 +89,7 @@ def run() -> int:
             log.info(f"BWF_PLAYERS_LIMIT={limit} — crawling only {len(targets)} players")
         total = len(targets)
 
-        with browser_page() as page:
-            token = extract_api_token(page)
-            log.info(f"Got API token: {token[:20]}...")
-
-        session = api_session(token)
+        session = api_session()
 
         for idx, (player_id, detail_url) in enumerate(targets, start=1):
             try:

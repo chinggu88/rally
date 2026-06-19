@@ -21,8 +21,8 @@ class PlayerDetailView extends GetView<PlayerDetailController> {
   const PlayerDetailView({super.key});
 
   // Stitch 디자인 토큰 (AppColors와 정합되지 않는 시안 디테일만 별도 상수로 보존)
-  static const Color _accent = Color(0xFFE0EC30); // secondary / neon green
-  static const Color _subtleText = Color(0xFF9CA3A1);
+  static const Color _accent = AppColors.accentNeon;
+  static const Color _subtleText = AppColors.subtleText;
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +46,7 @@ class PlayerDetailView extends GetView<PlayerDetailController> {
         onPressed: () => Get.back<void>(),
       ),
       title: Text(
-        'Kinetic Court',
+        'Rally',
         style: TextStyle(
           color: _accent,
           fontFamily: AppTypography.chivo,
@@ -596,7 +596,7 @@ class _StatBlock extends StatelessWidget {
   final String value;
   final bool accent;
 
-  static const Color _accent = Color(0xFFE0EC30);
+  static const Color _accent = AppColors.accentNeon;
 
   @override
   Widget build(BuildContext context) {
@@ -671,7 +671,7 @@ class _CareerTile extends StatelessWidget {
   final String label;
   final String value;
 
-  static const Color _accent = Color(0xFFE0EC30);
+  static const Color _accent = AppColors.accentNeon;
 
   @override
   Widget build(BuildContext context) {

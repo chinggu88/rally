@@ -20,9 +20,9 @@ class TodayMatchCard extends StatelessWidget {
   final TodayMatchResponse match;
   final VoidCallback? onTap;
 
-  static const Color _accent = Color(0xFFC3F400);
+  static const Color _accent = AppColors.accent;
   static const Color _accentDark = Color(0xFF0E0E0E);
-  static const Color _subtleText = Color(0xFF9CA3A1);
+  static const Color _subtleText = AppColors.subtleText;
 
   static const double _cardWidth = 310;
 
@@ -34,6 +34,7 @@ class TodayMatchCard extends StatelessWidget {
     final games = match.games;
     final event = (match.eventName ?? '').trim();
     final showStatusBadge = match.isWalkover || match.isRetired;
+    final isKoreanMatch = match.hasKoreanPlayer;
 
     return Material(
       color: Colors.transparent,
@@ -53,6 +54,10 @@ class TodayMatchCard extends StatelessWidget {
             children: [
               Row(
                 children: [
+                  if (isKoreanMatch) ...[
+                    _koreanBadge(),
+                    SizedBox(width: 6.w),
+                  ],
                   if (event.isNotEmpty)
                     Flexible(
                       child: Text(
@@ -204,6 +209,34 @@ class TodayMatchCard extends StatelessWidget {
     if (c != null && c.isNotEmpty) parts.add(c);
     return parts.join(' · ');
   }
+
+  /// 한국 선수 포함 경기 표식(🇰🇷 KR).
+  Widget _koreanBadge() {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+      decoration: BoxDecoration(
+        color: _accent.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(999.r),
+        border: Border.all(color: _accent.withValues(alpha: 0.5)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('🇰🇷', style: TextStyle(fontSize: 10.sp)),
+          SizedBox(width: 3.w),
+          Text(
+            'KR',
+            style: AppTypography.labelLg.copyWith(
+              fontWeight: FontWeight.w900,
+              fontSize: 10.sp,
+              letterSpacing: 0.3,
+              color: _accent,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 /// 게임 단위 점수 셀 — 양 팀 행에서 같은 폭으로 정렬되는 숫자 칸.
@@ -214,8 +247,8 @@ class _GameCell extends StatelessWidget {
   final int point;
   final bool won;
 
-  static const Color _accent = Color(0xFFC3F400);
-  static const Color _subtleText = Color(0xFF9CA3A1);
+  static const Color _accent = AppColors.accent;
+  static const Color _subtleText = AppColors.subtleText;
 
   @override
   Widget build(BuildContext context) {

@@ -22,10 +22,10 @@ class TournamentDetailView extends GetView<TournamentDetailController> {
   const TournamentDetailView({super.key});
 
   // 매거진 디자인 토큰 (MatchView와 정합)
-  static const Color _accent = Color(0xFFC3F400);
-  static const Color _accentDark = Color(0xFF283500);
-  static const Color _subtleText = Color(0xFF9CA3A1);
-  static const Color _liveRed = Color(0xFFFF3B30);
+  static const Color _accent = AppColors.accent;
+  static const Color _accentDark = AppColors.accentDark;
+  static const Color _subtleText = AppColors.subtleText;
+  static const Color _liveRed = AppColors.liveRed;
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +59,7 @@ class TournamentDetailView extends GetView<TournamentDetailController> {
         onPressed: () => Get.back<void>(),
       ),
       title: Text(
-        'Kinetic Court',
+        'Rally',
         style: TextStyle(
           color: _accent,
           fontFamily: AppTypography.chivo,
@@ -745,9 +745,9 @@ class _TabChip extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
 
-  static const Color _accent = Color(0xFFC3F400);
-  static const Color _accentDark = Color(0xFF283500);
-  static const Color _liveRed = Color(0xFFFF3B30);
+  static const Color _accent = AppColors.accent;
+  static const Color _accentDark = AppColors.accentDark;
+  static const Color _liveRed = AppColors.liveRed;
 
   @override
   Widget build(BuildContext context) {
@@ -810,8 +810,8 @@ class _PodiumCard extends StatelessWidget {
 
   final PodiumEntry entry;
 
-  static const Color _accent = Color(0xFFC3F400);
-  static const Color _subtleText = Color(0xFF9CA3A1);
+  static const Color _accent = AppColors.accent;
+  static const Color _subtleText = AppColors.subtleText;
 
   @override
   Widget build(BuildContext context) {
@@ -1043,7 +1043,7 @@ class _StatusCard extends StatelessWidget {
             Text(
               subtitle,
               style: AppTypography.bodyMd.copyWith(
-                color: const Color(0xFF9CA3A1),
+                color: AppColors.subtleText,
               ),
             ),
             if (onCta != null) ...[
@@ -1167,8 +1167,8 @@ class _MatchCard extends StatelessWidget {
 
   final TournamentMatchResponse match;
 
-  static const Color _accent = Color(0xFFC3F400);
-  static const Color _subtleText = Color(0xFF9CA3A1);
+  static const Color _accent = AppColors.accent;
+  static const Color _subtleText = AppColors.subtleText;
 
   @override
   Widget build(BuildContext context) {
@@ -1363,8 +1363,8 @@ class _GameCell extends StatelessWidget {
   final int point;
   final bool won;
 
-  static const Color _accent = Color(0xFFC3F400);
-  static const Color _subtleText = Color(0xFF9CA3A1);
+  static const Color _accent = AppColors.accent;
+  static const Color _subtleText = AppColors.subtleText;
 
   @override
   Widget build(BuildContext context) {

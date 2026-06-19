@@ -1,20 +1,18 @@
 """HTTP access to the BWF year calendar.
 
-Same token-then-HTTP pattern as the other BWF jobs: a headless browser lifts the
-Bearer token from the rankings landing page once, then the calendar API is called
-directly. The calendar endpoint groups tournaments by month under
-results/remaining/completed.
+As of 2026, BWF moved this endpoint from POST+Bearer-token to plain GET with
+no auth — only Referer/User-Agent are required. Mirrors the same pattern as
+batch/jobs/bwf_matches/fetcher.py.
 """
 from typing import Any
 
 import requests
 
-from batch.jobs.bwf_rankings.fetcher import (  # noqa: F401  (re-exported for probes)
-    USER_AGENT,
-    browser_page,
-    extract_api_token,
+USER_AGENT = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/120.0.0.0 Safari/537.36"
 )
-
 EXTRANET_BASE = "https://extranet-lv.bwfbadminton.com"
 
 # HSBC BWF World Tour calendar category ids (Finals + Super 1000/750/500/300,
@@ -22,30 +20,29 @@ EXTRANET_BASE = "https://extranet-lv.bwfbadminton.com"
 CATEGORY_IDS = [20, 21, 22, 23, 24, 25, 26, 27]
 
 
-def _session(token: str) -> requests.Session:
+def _session() -> requests.Session:
     s = requests.Session()
     s.headers.update(
         {
-            "Authorization": f"Bearer {token}",
             "Accept": "application/json, text/plain, */*",
-            "Content-Type": "application/json;charset=UTF-8",
-            "Origin": "https://bwfbadminton.com",
-            "Referer": "https://bwfbadminton.com/",
+            "Origin": "https://bwfworldtour.bwfbadminton.com",
+            "Referer": "https://bwfworldtour.bwfbadminton.com/",
             "User-Agent": USER_AGENT,
         }
     )
     return s
 
 
-def fetch_year_tournaments(token: str, year: int) -> dict[str, Any]:
+def fetch_year_tournaments(year: int) -> dict[str, Any]:
     """Fetch the full year's tournaments for HSBC World Tour categories.
 
     Response shape: {"results": [...], "remaining": [...], "completed": [...]}
     where each is a list of monthly groups: {"month", "monthNo", "tournaments": [...]}.
     """
-    r = _session(token).post(
+    params = [("year", year)] + [("category[]", c) for c in CATEGORY_IDS]
+    r = _session().get(
         f"{EXTRANET_BASE}/api/vue-grouped-year-tournaments",
-        json={"year": year, "category": CATEGORY_IDS},
+        params=params,
         timeout=60,
     )
     r.raise_for_status()
