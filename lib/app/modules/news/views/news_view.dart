@@ -994,11 +994,12 @@ class _TodayMatchListState extends State<_TodayMatchList> {
     if (!_scrollController.hasClients) return;
     final items = widget.items;
     if (items.isEmpty) return;
-    final firstUpcomingIndex = items.indexWhere((m) => m.score == null);
+    final firstUpcomingIndex = items.indexWhere((m) => m.matchStatus != "F");
 
     // case1(모두 경기 전: firstUpcomingIndex=0) /
     // case2(모두 결과 있음: firstUpcomingIndex=-1) → 맨 앞
     // case3(섞임) → 첫 "경기 전" 카드 위치
+    print('asdf firstUpcomingIndex${firstUpcomingIndex}');
     final targetIndex = (firstUpcomingIndex > 0) ? firstUpcomingIndex : 0;
     final offset = (_cardWidth.w + _separator.w) * targetIndex;
     final maxOffset = _scrollController.position.maxScrollExtent;

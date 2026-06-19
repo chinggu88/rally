@@ -72,19 +72,21 @@ class NewsController extends GetxController {
   final _todayUpcoming = <TodayMatchResponse>[].obs;
   List<TodayMatchResponse> get todayUpcoming => _todayUpcoming;
 
-  /// 결과+예정을 경기 시간 오름차순으로 합친 단일 캐러셀용 목록.
-  /// 시간이 없는 항목은 뒤로 보낸다.
+  /// 결과+예정을 경기 시간 오름차순으로 각각 정렬한 뒤 합친 단일 캐러셀용 목록.
+  /// 시간이 없는 항목은 각 그룹 내에서 뒤로 보낸다.
   List<TodayMatchResponse> get todayMerged {
-    final list = <TodayMatchResponse>[..._todayResults, ..._todayUpcoming];
-    list.sort((a, b) {
+    int compareByTime(TodayMatchResponse a, TodayMatchResponse b) {
       final da = a.matchDateTime;
       final db = b.matchDateTime;
       if (da == null && db == null) return 0;
       if (da == null) return 1;
       if (db == null) return -1;
       return da.compareTo(db);
-    });
-    return list;
+    }
+
+    final results = [..._todayResults]..sort(compareByTime);
+    final upcoming = [..._todayUpcoming]..sort(compareByTime);
+    return [...results, ...upcoming];
   }
 
   /// 오늘 경기 로딩 중 여부.
@@ -235,7 +237,7 @@ class NewsController extends GetxController {
     }
   }
 
-/// 진행중/진행예정 "남은 대회" 목록을 조회한다(한국 선수 참여 정보 포함).
+  /// 진행중/진행예정 "남은 대회" 목록을 조회한다(한국 선수 참여 정보 포함).
   Future<void> fetchActiveTournaments() async {
     final token = ++_activeTournamentsToken;
 
