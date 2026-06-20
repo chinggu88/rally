@@ -822,7 +822,6 @@ class _LiveMatchPageViewState extends State<_LiveMatchPageView> {
     final matches = widget.matches;
     return Column(
       children: [
-<<<<<<< HEAD
         // 현재 페이지 카드의 측정 높이에 맞춰 PageView 높이를 부드럽게 조절.
         TweenAnimationBuilder<double>(
           tween: Tween<double>(end: _currentHeight),
@@ -830,10 +829,6 @@ class _LiveMatchPageViewState extends State<_LiveMatchPageView> {
           curve: Curves.easeOutCubic,
           builder: (context, height, child) =>
               SizedBox(height: height, child: child),
-=======
-        SizedBox(
-          height: 350.h,
->>>>>>> f3a5073a90b53a64ac57092e5c1817acd7d4c092
           child: PageView.builder(
             controller: _pageController,
             physics: const BouncingScrollPhysics(),
@@ -842,7 +837,6 @@ class _LiveMatchPageViewState extends State<_LiveMatchPageView> {
             itemBuilder: (context, index) {
               final m = matches[index];
               final id = m.id;
-<<<<<<< HEAD
               // OverflowBox로 카드에 느슨한 높이 제약을 줘서 자연 높이를 측정.
               // (PageView는 자식에게 뷰포트 높이를 강제하므로 이 래퍼가 없으면
               //  콘텐츠가 아닌 컨테이너 높이가 측정된다.)
@@ -864,23 +858,6 @@ class _LiveMatchPageViewState extends State<_LiveMatchPageView> {
                     );
                   }),
                 ),
-=======
-              return Padding(
-                padding: EdgeInsets.symmetric(horizontal: 6.w),
-                child: Obx(() {
-                  final bumpAt =
-                      id == null ? null : widget.controller.scoreBumpAt[id];
-                  return LiveMatchCard(
-                    // 정렬 변경 시에도 동일 매치의 State가 재사용되도록 매치 id 키 사용.
-                    key: ValueKey<Object>(id ?? 'match-$index'),
-                    match: m,
-                    width: widget.cardWidth,
-                    scoreBumpAt: bumpAt,
-                    // 추후 detail_url 외부 오픈 자리 — 현재는 no-op.
-                    onTap: () {},
-                  );
-                }),
->>>>>>> f3a5073a90b53a64ac57092e5c1817acd7d4c092
               );
             },
           ),
