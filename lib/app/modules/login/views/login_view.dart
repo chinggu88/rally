@@ -42,7 +42,8 @@ class LoginView extends GetView<LoginController> {
               SizedBox(height: 24.h),
               _buildSocialButton(
                 label: 'Apple로 계속하기',
-                icon: Icons.apple,
+                iconWidget:
+                    Icon(Icons.apple, size: 22.sp, color: Colors.black),
                 bg: Colors.white,
                 fg: Colors.black,
                 onTap: controller.signInWithApple,
@@ -50,7 +51,11 @@ class LoginView extends GetView<LoginController> {
               SizedBox(height: 12.h),
               _buildSocialButton(
                 label: 'Google로 계속하기',
-                icon: Icons.g_mobiledata,
+                iconWidget: Image.asset(
+                  'assets/images/google_logo.png',
+                  width: 20.sp,
+                  height: 20.sp,
+                ),
                 bg: Colors.white,
                 fg: Colors.black,
                 onTap: controller.signInWithGoogle,
@@ -58,7 +63,11 @@ class LoginView extends GetView<LoginController> {
               SizedBox(height: 12.h),
               _buildSocialButton(
                 label: '카카오로 계속하기',
-                icon: Icons.chat_bubble,
+                iconWidget: Icon(
+                  Icons.chat_bubble,
+                  size: 20.sp,
+                  color: Colors.black,
+                ),
                 bg: const Color(0xFFFEE500),
                 fg: Colors.black,
                 onTap: controller.signInWithKakao,
@@ -92,7 +101,7 @@ class LoginView extends GetView<LoginController> {
 
   Widget _buildSocialButton({
     required String label,
-    required IconData icon,
+    required Widget iconWidget,
     required Color bg,
     required Color fg,
     required VoidCallback onTap,
@@ -114,8 +123,8 @@ class LoginView extends GetView<LoginController> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, size: 22.sp, color: fg),
-              SizedBox(width: 8.w),
+              iconWidget,
+              SizedBox(width: 10.w),
               Text(
                 label,
                 style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w700),

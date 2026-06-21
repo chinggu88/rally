@@ -102,6 +102,7 @@ flutter:
 
   assets:
     - .env
+    - assets/images/google_logo.png
 
   fonts:
     - family: Chivo

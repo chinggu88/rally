@@ -69,6 +69,10 @@ class MyApp extends StatelessWidget {
             themeMode: ThemeMode.dark,
             initialRoute: Routes.APP,
             getPages: AppPages.routes,
+            unknownRoute: GetPage(
+              name: '/notfound',
+              page: () => const SizedBox.shrink(),
+            ),
             debugShowCheckedModeBanner: false,
           ),
     );
