@@ -771,8 +771,27 @@ class _LiveMatchPageViewState extends State<_LiveMatchPageView> {
   static const Color _accent = AppColors.accent;
   static const Color _inactive = Color(0xFF3A3A3A);
 
+  /// 측정 전 첫 프레임에서 사용할 기본 높이.
+  static const double _fallbackHeight = 350;
+
   late PageController _pageController;
   int _currentPage = 0;
+
+  /// 페이지(인덱스)별로 측정된 카드 자연 높이.
+  final Map<int, double> _heights = {};
+
+  /// 현재 보고 있는 페이지의 측정 높이(없으면 폴백).
+  double get _currentHeight => _heights[_currentPage] ?? _fallbackHeight;
+
+  /// 자식 카드가 측정한 자연 높이를 보고받아 저장한다.
+  /// 동일 값이면 무시하고, 변경 시에만 다음 프레임에 setState 한다.
+  void _reportHeight(int index, double height) {
+    if ((_heights[index] ?? -1) == height) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      setState(() => _heights[index] = height);
+    });
+  }
 
   @override
   void initState() {
@@ -803,8 +822,18 @@ class _LiveMatchPageViewState extends State<_LiveMatchPageView> {
     final matches = widget.matches;
     return Column(
       children: [
+<<<<<<< HEAD
+        // 현재 페이지 카드의 측정 높이에 맞춰 PageView 높이를 부드럽게 조절.
+        TweenAnimationBuilder<double>(
+          tween: Tween<double>(end: _currentHeight),
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOutCubic,
+          builder: (context, height, child) =>
+              SizedBox(height: height, child: child),
+=======
         SizedBox(
           height: 350.h,
+>>>>>>> f3a5073a90b53a64ac57092e5c1817acd7d4c092
           child: PageView.builder(
             controller: _pageController,
             physics: const BouncingScrollPhysics(),
@@ -813,6 +842,29 @@ class _LiveMatchPageViewState extends State<_LiveMatchPageView> {
             itemBuilder: (context, index) {
               final m = matches[index];
               final id = m.id;
+<<<<<<< HEAD
+              // OverflowBox로 카드에 느슨한 높이 제약을 줘서 자연 높이를 측정.
+              // (PageView는 자식에게 뷰포트 높이를 강제하므로 이 래퍼가 없으면
+              //  콘텐츠가 아닌 컨테이너 높이가 측정된다.)
+              return _MeasuredPage(
+                onHeight: (h) => _reportHeight(index, h),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  child: Obx(() {
+                    final bumpAt =
+                        id == null ? null : widget.controller.scoreBumpAt[id];
+                    return LiveMatchCard(
+                      // 정렬 변경 시에도 동일 매치의 State가 재사용되도록 매치 id 키 사용.
+                      key: ValueKey<Object>(id ?? 'match-$index'),
+                      match: m,
+                      width: widget.cardWidth,
+                      scoreBumpAt: bumpAt,
+                      // 추후 detail_url 외부 오픈 자리 — 현재는 no-op.
+                      onTap: () {},
+                    );
+                  }),
+                ),
+=======
               return Padding(
                 padding: EdgeInsets.symmetric(horizontal: 6.w),
                 child: Obx(() {
@@ -828,6 +880,7 @@ class _LiveMatchPageViewState extends State<_LiveMatchPageView> {
                     onTap: () {},
                   );
                 }),
+>>>>>>> f3a5073a90b53a64ac57092e5c1817acd7d4c092
               );
             },
           ),
@@ -853,6 +906,54 @@ class _LiveMatchPageViewState extends State<_LiveMatchPageView> {
         ],
       ],
     );
+  }
+}
+
+/// PageView 한 페이지를 감싸 자식의 "자연 높이"를 측정/보고한다.
+///
+/// PageView는 자식에게 뷰포트 높이를 tight constraint로 강제하므로, 그대로 두면
+/// 콘텐츠 높이가 아닌 컨테이너 높이가 측정된다. [OverflowBox]로 높이 제약을
+/// 0..무한으로 풀어 카드가 콘텐츠 높이대로 레이아웃되게 한 뒤, 그 높이를
+/// 매 프레임 측정해 [onHeight]로 올려보낸다. (상위에서 동일 값은 무시한다.)
+class _MeasuredPage extends StatelessWidget {
+  const _MeasuredPage({required this.onHeight, required this.child});
+
+  final ValueChanged<double> onHeight;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return OverflowBox(
+      minHeight: 0,
+      maxHeight: double.infinity,
+      alignment: Alignment.topCenter,
+      child: _SizeReporter(onHeight: onHeight, child: child),
+    );
+  }
+}
+
+/// 자식의 렌더 높이를 다음 프레임에 읽어 [onHeight]로 보고하는 측정 래퍼.
+class _SizeReporter extends StatefulWidget {
+  const _SizeReporter({required this.onHeight, required this.child});
+
+  final ValueChanged<double> onHeight;
+  final Widget child;
+
+  @override
+  State<_SizeReporter> createState() => _SizeReporterState();
+}
+
+class _SizeReporterState extends State<_SizeReporter> {
+  @override
+  Widget build(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final box = context.findRenderObject() as RenderBox?;
+      if (box != null && box.hasSize) {
+        widget.onHeight(box.size.height);
+      }
+    });
+    return widget.child;
   }
 }
 
