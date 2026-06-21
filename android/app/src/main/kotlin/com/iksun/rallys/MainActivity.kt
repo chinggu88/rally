@@ -1,4 +1,4 @@
-package com.iksun.rally
+package com.iksun.rallys
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -1,0 +1,297 @@
+import 'dart:async';
+import 'dart:developer';
+import 'dart:io' show Platform;
+
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:get/get.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../app/data/repositories/device_token_repository.dart';
+
+/// FCM 푸시 알림 수신/표시/토큰 관리 전반을 담당하는 GetxService.
+///
+/// 책임:
+///   1. 알림 권한 요청 (iOS는 OS 다이얼로그, Android 13+는 런타임 권한)
+///   2. FCM 토큰 발급 + Supabase device_tokens 테이블에 저장
+///   3. 토큰 갱신 이벤트 구독 → 자동 재저장
+///   4. 인증 상태 구독 → 로그인 시 토큰 저장, 로그아웃 시 토큰 삭제
+///   5. Foreground 메시지를 OS 알림 배너로 표시 (FCM 기본 미동작)
+///   6. 알림 탭 핸들링 (notification opened app)
+///
+/// 호출 순서 (main.dart):
+///   1. Firebase.initializeApp() 완료 후
+///   2. SupabaseService.initialize() 완료 후
+///   3. Get.put(NotificationService(), permanent: true)
+///   4. await NotificationService.to.initialize()
+class NotificationService extends GetxService {
+  static NotificationService get to => Get.find();
+
+  final DeviceTokenRepository _tokenRepo = DeviceTokenRepository();
+  final FlutterLocalNotificationsPlugin _localNotifications =
+      FlutterLocalNotificationsPlugin();
+
+  StreamSubscription<String>? _tokenRefreshSub;
+  StreamSubscription<RemoteMessage>? _foregroundSub;
+  StreamSubscription<RemoteMessage>? _openedAppSub;
+  StreamSubscription<AuthState>? _authSub;
+
+  /// 마지막으로 발급받은 FCM 토큰. 로그아웃 시 이 값으로 삭제 호출.
+  String? _currentToken;
+
+  /// AndroidManifest의 default_notification_channel_id와 같은 ID 사용.
+  static const String _androidChannelId = 'rally_default';
+  static const String _androidChannelName = 'Rally 알림';
+  static const String _androidChannelDescription = 'Rally 앱의 기본 알림 채널';
+
+  /// 한 번만 호출되도록 가드.
+  bool _initialized = false;
+
+  Future<void> initialize() async {
+    if (_initialized) return;
+    _initialized = true;
+
+    try {
+      await _requestPermission();
+      await _setupLocalNotifications();
+      await _bindFcmToken();
+      _bindMessageHandlers();
+      _bindAuthChanges();
+      await _checkInitialMessage();
+      log('NotificationService.initialize: ok');
+    } catch (e, st) {
+      log('NotificationService.initialize: failed — $e\n$st');
+    }
+  }
+
+  // ───────────────────────────────────────────────────────────
+  // 1. 권한 요청
+  // ───────────────────────────────────────────────────────────
+
+  Future<void> _requestPermission() async {
+    final settings = await FirebaseMessaging.instance.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+    log(
+      'NotificationService._requestPermission: '
+      '${settings.authorizationStatus}',
+    );
+
+    // iOS 포그라운드에서도 OS 배너/사운드/배지가 뜨도록 설정.
+    // 이 옵션이 없으면 앱이 떠 있을 때 푸시가 사용자에게 표시되지 않는다.
+    await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+  }
+
+  // ───────────────────────────────────────────────────────────
+  // 2. flutter_local_notifications 초기화 (foreground 배너 표시용)
+  // ───────────────────────────────────────────────────────────
+
+  Future<void> _setupLocalNotifications() async {
+    const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const iosInit = DarwinInitializationSettings(
+      requestAlertPermission: false,
+      requestBadgePermission: false,
+      requestSoundPermission: false,
+    );
+    const initSettings = InitializationSettings(
+      android: androidInit,
+      iOS: iosInit,
+    );
+
+    await _localNotifications.initialize(
+      initSettings,
+      onDidReceiveNotificationResponse: (response) {
+        log('local notification tapped: ${response.payload}');
+        // TODO: payload로 라우팅 처리 (notification_id 등)
+      },
+    );
+
+    if (Platform.isAndroid) {
+      const channel = AndroidNotificationChannel(
+        _androidChannelId,
+        _androidChannelName,
+        description: _androidChannelDescription,
+        importance: Importance.high,
+      );
+      await _localNotifications
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >()
+          ?.createNotificationChannel(channel);
+    }
+  }
+
+  // ───────────────────────────────────────────────────────────
+  // 3. FCM 토큰 발급 + Supabase 저장 + 갱신 구독
+  // ───────────────────────────────────────────────────────────
+
+  Future<void> _bindFcmToken() async {
+    // iOS는 APNs 토큰이 먼저 발급된 후에 FCM 토큰이 발급됨.
+    if (Platform.isIOS) {
+      final apns = await FirebaseMessaging.instance.getAPNSToken();
+      log('APNs token: ${apns == null ? "null" : "ok"}');
+    }
+
+    final token = await FirebaseMessaging.instance.getToken();
+    if (token != null) {
+      _currentToken = token;
+      print('asdf ${token}');
+      await _saveTokenIfLoggedIn(token);
+    }
+
+    _tokenRefreshSub = FirebaseMessaging.instance.onTokenRefresh.listen((
+      newToken,
+    ) async {
+      log('NotificationService: token refreshed');
+      _currentToken = newToken;
+      await _saveTokenIfLoggedIn(newToken);
+    });
+  }
+
+  Future<void> _saveTokenIfLoggedIn(String token) async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) {
+      log('NotificationService._saveTokenIfLoggedIn: skipped (anonymous)');
+      return;
+    }
+
+    String? deviceName;
+    String? appVersion;
+    try {
+      final deviceInfo = DeviceInfoPlugin();
+      if (Platform.isIOS) {
+        final info = await deviceInfo.iosInfo;
+        deviceName = info.utsname.machine;
+      } else if (Platform.isAndroid) {
+        final info = await deviceInfo.androidInfo;
+        deviceName = '${info.manufacturer} ${info.model}';
+      }
+      final pkg = await PackageInfo.fromPlatform();
+      appVersion = '${pkg.version}+${pkg.buildNumber}';
+    } catch (e) {
+      log('NotificationService: device/app info failed — $e');
+    }
+
+    await _tokenRepo.upsertToken(
+      fcmToken: token,
+      platform: Platform.isIOS ? 'ios' : 'android',
+      deviceName: deviceName,
+      appVersion: appVersion,
+    );
+  }
+
+  // ───────────────────────────────────────────────────────────
+  // 4. 메시지 핸들러 (foreground / 탭 / 콜드스타트)
+  // ───────────────────────────────────────────────────────────
+
+  void _bindMessageHandlers() {
+    _foregroundSub = FirebaseMessaging.onMessage.listen((message) {
+      log(
+        'foreground message: ${message.messageId} '
+        '${message.notification?.title}',
+      );
+      _showLocalNotification(message);
+    });
+
+    _openedAppSub = FirebaseMessaging.onMessageOpenedApp.listen((message) {
+      log('opened from background: ${message.data}');
+      _handleNotificationTap(message);
+    });
+  }
+
+  Future<void> _checkInitialMessage() async {
+    final initial = await FirebaseMessaging.instance.getInitialMessage();
+    if (initial != null) {
+      log('opened from terminated: ${initial.data}');
+      _handleNotificationTap(initial);
+    }
+  }
+
+  void _handleNotificationTap(RemoteMessage message) {
+    // TODO: message.data['type'] 등으로 화면 라우팅
+  }
+
+  Future<void> _showLocalNotification(RemoteMessage message) async {
+    final notification = message.notification;
+    if (notification == null) return;
+
+    // iOS는 setForegroundNotificationPresentationOptions로 OS가 직접 표시하므로
+    // 여기서 또 표시하면 알림이 중복으로 뜬다. Android만 수동 표시.
+    if (Platform.isIOS) return;
+
+    const androidDetails = AndroidNotificationDetails(
+      _androidChannelId,
+      _androidChannelName,
+      channelDescription: _androidChannelDescription,
+      importance: Importance.high,
+      priority: Priority.high,
+    );
+    const iosDetails = DarwinNotificationDetails();
+    const details = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+
+    await _localNotifications.show(
+      notification.hashCode,
+      notification.title,
+      notification.body,
+      details,
+      payload: message.data['notification_id'] as String?,
+    );
+  }
+
+  // ───────────────────────────────────────────────────────────
+  // 5. 인증 상태에 따라 토큰 저장/삭제
+  // ───────────────────────────────────────────────────────────
+
+  void _bindAuthChanges() {
+    _authSub = Supabase.instance.client.auth.onAuthStateChange.listen((
+      state,
+    ) async {
+      if (state.event == AuthChangeEvent.signedIn) {
+        if (_currentToken != null) {
+          await _saveTokenIfLoggedIn(_currentToken!);
+        }
+      } else if (state.event == AuthChangeEvent.signedOut) {
+        if (_currentToken != null) {
+          await _tokenRepo.deleteToken(_currentToken!);
+        }
+      }
+    });
+  }
+
+  // ───────────────────────────────────────────────────────────
+  // 정리
+  // ───────────────────────────────────────────────────────────
+
+  @override
+  void onClose() {
+    _tokenRefreshSub?.cancel();
+    _foregroundSub?.cancel();
+    _openedAppSub?.cancel();
+    _authSub?.cancel();
+    super.onClose();
+  }
+}
+
+/// 백그라운드/종료 상태에서 도착한 FCM 메시지를 받는 핸들러.
+///
+/// 반드시 top-level 함수여야 하며 @pragma 어노테이션 필수.
+/// 현재는 로깅만 — OS가 notification 페이로드를 자동으로 알림으로 표시한다.
+@pragma('vm:entry-point')
+Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  if (kDebugMode) {
+    // ignore: avoid_print
+    print('background message: ${message.messageId}');
+  }
+}
