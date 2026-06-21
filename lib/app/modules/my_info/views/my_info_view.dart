@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
@@ -5,7 +6,7 @@ import 'package:get/get.dart';
 import '../../../../theme/app_colors.dart';
 import '../controllers/my_info_controller.dart';
 
-/// 내 정보 (비로그인 상태) — Stitch: 내 정보 (매거진)
+/// 내 정보 (마이페이지) — Stitch: 내 정보 (매거진)
 ///
 /// Stitch projectId: 307006344264476289
 /// Stitch screenId : 8329646c315c48fdb5bfa15f9a643418
@@ -66,7 +67,7 @@ class MyInfoView extends GetView<MyInfoController> {
       SizedBox(height: 12.h),
       _buildSignUpCta(),
       SizedBox(height: 28.h),
-      _buildSettingsSection(),
+      _buildLockedSettingsSection(),
     ];
   }
 
@@ -74,13 +75,19 @@ class MyInfoView extends GetView<MyInfoController> {
     return [
       _buildProfileCard(),
       SizedBox(height: 24.h),
+      _buildLoggedInSettingsSection(),
+      SizedBox(height: 24.h),
       _buildLogoutCta(),
-      SizedBox(height: 28.h),
-      _buildSettingsSection(),
     ];
   }
 
   Widget _buildProfileCard() {
+    final avatarUrl = controller.avatarUrl;
+    final hasAvatar = avatarUrl != null && avatarUrl.isNotEmpty;
+    final title = (controller.nickname?.isNotEmpty ?? false)
+        ? controller.nickname!
+        : (controller.email ?? '-');
+
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
       decoration: BoxDecoration(
@@ -97,7 +104,11 @@ class MyInfoView extends GetView<MyInfoController> {
           CircleAvatar(
             radius: 28.r,
             backgroundColor: _accent,
-            child: Icon(Icons.person, color: Colors.black, size: 28.sp),
+            backgroundImage:
+                hasAvatar ? CachedNetworkImageProvider(avatarUrl) : null,
+            child: hasAvatar
+                ? null
+                : Icon(Icons.person, color: Colors.black, size: 28.sp),
           ),
           SizedBox(width: 16.w),
           Expanded(
@@ -110,7 +121,7 @@ class MyInfoView extends GetView<MyInfoController> {
                 ),
                 SizedBox(height: 4.h),
                 Text(
-                  controller.email ?? '-',
+                  title,
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 15.sp,
@@ -120,6 +131,10 @@ class MyInfoView extends GetView<MyInfoController> {
                 ),
               ],
             ),
+          ),
+          IconButton(
+            onPressed: controller.goToProfileEdit,
+            icon: Icon(Icons.edit_outlined, color: _accent, size: 20.sp),
           ),
         ],
       ),
@@ -231,26 +246,119 @@ class MyInfoView extends GetView<MyInfoController> {
     );
   }
 
-  Widget _buildSettingsSection() {
+  // ── 로그인 상태: 실제 동작하는 설정 메뉴 ──────────────────────────────
+
+  Widget _buildLoggedInSettingsSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: EdgeInsets.only(left: 4.w, bottom: 8.h),
-          child: Text(
-            'Settings',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 16.sp,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
+        _buildSectionTitle('Settings'),
+        _buildMenuRow('프로필 편집', onTap: controller.goToProfileEdit),
+        _buildSwitchRow(
+          '알림 설정',
+          value: controller.notificationsEnabled,
+          onChanged: controller.toggleNotifications,
         ),
+        _buildMenuRow('좋아하는 선수', onTap: controller.goToFavoritePlayers),
+        _buildMenuRow(
+          '회원탈퇴',
+          onTap: controller.confirmDeleteAccount,
+          danger: true,
+        ),
+      ],
+    );
+  }
+
+  // ── 비로그인 상태: 잠긴 설정 메뉴 ──────────────────────────────────
+  Widget _buildLockedSettingsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionTitle('Settings'),
         _buildLockedRow('Profile Settings'),
         _buildLockedRow('Notification Settings'),
         _buildLockedRow('Club Management'),
         _buildLockedRow('Customer Support'),
       ],
+    );
+  }
+
+  Widget _buildSectionTitle(String text) {
+    return Padding(
+      padding: EdgeInsets.only(left: 4.w, bottom: 8.h),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 16.sp,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMenuRow(
+    String label, {
+    required VoidCallback onTap,
+    bool danger = false,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 4.w),
+        decoration: const Border(
+          bottom: BorderSide(color: _divider, width: 0.6),
+        ).toBoxDecoration(),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: danger ? AppColors.liveRed : Colors.white,
+                  fontSize: 14.sp,
+                ),
+              ),
+            ),
+            Icon(
+              Icons.chevron_right,
+              color: danger ? AppColors.liveRed : _subtle,
+              size: 20.sp,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSwitchRow(
+    String label, {
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 4.w),
+      decoration: const Border(
+        bottom: BorderSide(color: _divider, width: 0.6),
+      ).toBoxDecoration(),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(color: Colors.white, fontSize: 14.sp),
+            ),
+          ),
+          Switch(
+            value: value,
+            onChanged: onChanged,
+            activeThumbColor: Colors.black,
+            activeTrackColor: _accent,
+            inactiveThumbColor: _subtle,
+            inactiveTrackColor: AppColors.cardBg,
+          ),
+        ],
+      ),
     );
   }
 

@@ -10,8 +10,12 @@ import '../modules/match/bindings/tournament_participants_binding.dart';
 import '../modules/match/views/match_view.dart';
 import '../modules/match/views/tournament_detail_view.dart';
 import '../modules/match/views/tournament_participants_view.dart';
+import '../modules/favorite_players/bindings/favorite_players_binding.dart';
+import '../modules/favorite_players/views/favorite_players_view.dart';
 import '../modules/my_info/bindings/my_info_binding.dart';
 import '../modules/my_info/views/my_info_view.dart';
+import '../modules/profile_edit/bindings/profile_edit_binding.dart';
+import '../modules/profile_edit/views/profile_edit_view.dart';
 import '../modules/news/bindings/news_binding.dart';
 import '../modules/news/views/news_view.dart';
 import '../modules/player/bindings/player_binding.dart';
@@ -65,6 +69,16 @@ abstract class AppPages {
       name: Routes.MY_INFO,
       page: () => const MyInfoView(),
       binding: MyInfoBinding(),
+    ),
+    GetPage(
+      name: Routes.PROFILE_EDIT,
+      page: () => const ProfileEditView(),
+      binding: ProfileEditBinding(),
+    ),
+    GetPage(
+      name: Routes.FAVORITE_PLAYERS,
+      page: () => const FavoritePlayersView(),
+      binding: FavoritePlayersBinding(),
     ),
     GetPage(
       name: Routes.LOGIN,

@@ -1,8 +1,10 @@
 import 'dart:developer';
 
 import 'package:get/get.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../data/models/player_detail_response.dart';
+import '../../../data/repositories/favorite_player_repository.dart';
 import '../../../data/repositories/player_repository.dart';
 
 /// 선수 상세 프로필(매거진) 화면 컨트롤러.
@@ -30,6 +32,16 @@ class PlayerDetailController extends GetxController {
   static const String argCountryCode = 'countryCode';
 
   final PlayerRepository _playerRepository = Get.find<PlayerRepository>();
+  final FavoritePlayerRepository _favoriteRepository =
+      Get.find<FavoritePlayerRepository>();
+
+  /// 좋아하는 선수 등록 여부 (하트 토글).
+  final _isFavorite = false.obs;
+  bool get isFavorite => _isFavorite.value;
+
+  /// 하트 토글 처리 중 여부 (중복 탭 방지).
+  final _isTogglingFavorite = false.obs;
+  bool get isTogglingFavorite => _isTogglingFavorite.value;
 
   /// 상세 조회 대상 id (null이면 조회 불가 → notFound 처리)
   int? _playerId;
@@ -76,6 +88,64 @@ class PlayerDetailController extends GetxController {
     super.onInit();
     _readArguments();
     fetchDetail();
+    _loadFavorite();
+  }
+
+  /// 현재 선수의 즐겨찾기 상태를 조회한다 (비로그인/식별자 없음이면 false).
+  Future<void> _loadFavorite() async {
+    final id = _playerId;
+    if (id == null || id <= 0) return;
+    try {
+      _isFavorite.value = await _favoriteRepository.isFavorite(id);
+    } catch (e) {
+      log('PlayerDetailController._loadFavorite error: $e');
+    }
+  }
+
+  /// 좋아하는 선수 추가/삭제 토글.
+  ///
+  /// 비로그인 시 안내 스낵바만 표시한다. 추가 시 이름/국가/사진을
+  /// 스냅샷으로 함께 저장한다.
+  Future<void> toggleFavorite() async {
+    final id = _playerId;
+    if (id == null || id <= 0) return;
+
+    if (Supabase.instance.client.auth.currentUser == null) {
+      Get.snackbar(
+        '로그인이 필요해요',
+        '좋아하는 선수는 로그인 후 이용할 수 있습니다.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
+    }
+
+    if (_isTogglingFavorite.value) return;
+    _isTogglingFavorite.value = true;
+    final wasFavorite = _isFavorite.value;
+    _isFavorite.value = !wasFavorite; // 낙관적 반영
+
+    try {
+      if (wasFavorite) {
+        await _favoriteRepository.removeFavorite(id);
+      } else {
+        await _favoriteRepository.addFavorite(
+          playerId: id,
+          playerName: detail?.nameDisplay ?? _fallbackName,
+          countryCode: detail?.countryCode ?? _fallbackCountryCode,
+          photoUrl: detail?.photoUrl,
+        );
+      }
+    } catch (e) {
+      _isFavorite.value = wasFavorite; // 롤백
+      log('PlayerDetailController.toggleFavorite error: $e');
+      Get.snackbar(
+        '처리 실패',
+        '잠시 후 다시 시도해주세요.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } finally {
+      _isTogglingFavorite.value = false;
+    }
   }
 
   /// 네비게이션 arguments 파싱 — Map 형태를 기대하되, 누락에 안전하게 처리.

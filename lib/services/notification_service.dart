@@ -82,12 +82,14 @@ class NotificationService extends GetxService {
       '${settings.authorizationStatus}',
     );
 
-    // iOS 포그라운드에서도 OS 배너/사운드/배지가 뜨도록 설정.
-    // 이 옵션이 없으면 앱이 떠 있을 때 푸시가 사용자에게 표시되지 않는다.
+    // 포그라운드 표시는 flutter_local_notifications로 직접 처리한다.
+    // iOS에서 FCM 자체 포그라운드 표시는 flutter_local_notifications와의
+    // UNUserNotificationCenter delegate 충돌로 동작하지 않으므로, FCM/OS
+    // 자체 표시는 꺼서 중복/누락을 모두 방지한다.
     await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
-      alert: true,
-      badge: true,
-      sound: true,
+      alert: false,
+      badge: false,
+      sound: false,
     );
   }
 
@@ -135,19 +137,8 @@ class NotificationService extends GetxService {
   // ───────────────────────────────────────────────────────────
 
   Future<void> _bindFcmToken() async {
-    // iOS는 APNs 토큰이 먼저 발급된 후에 FCM 토큰이 발급됨.
-    if (Platform.isIOS) {
-      final apns = await FirebaseMessaging.instance.getAPNSToken();
-      log('APNs token: ${apns == null ? "null" : "ok"}');
-    }
-
-    final token = await FirebaseMessaging.instance.getToken();
-    if (token != null) {
-      _currentToken = token;
-      print('asdf ${token}');
-      await _saveTokenIfLoggedIn(token);
-    }
-
+    // 토큰 갱신 구독은 토큰 발급 성공 여부와 무관하게 먼저 걸어둔다.
+    // (APNs 토큰이 늦게 등록되면 onTokenRefresh로 FCM 토큰이 들어온다.)
     _tokenRefreshSub = FirebaseMessaging.instance.onTokenRefresh.listen((
       newToken,
     ) async {
@@ -155,6 +146,47 @@ class NotificationService extends GetxService {
       _currentToken = newToken;
       await _saveTokenIfLoggedIn(newToken);
     });
+
+    // iOS는 APNs 토큰이 먼저 발급된 후에야 FCM 토큰이 발급된다.
+    // requestPermission() 직후엔 아직 등록 전이라 null인 경우가 많으므로
+    // 발급될 때까지 짧게 폴링한다. (시뮬레이터/프로비저닝 미설정 시 끝까지 null)
+    if (Platform.isIOS) {
+      final apns = await _waitForApnsToken();
+      if (apns == null) {
+        log(
+          'NotificationService._bindFcmToken: APNs token unavailable — '
+          'skip getToken (will retry via onTokenRefresh)',
+        );
+        return;
+      }
+    }
+
+    // FCM 토큰 발급은 실패하더라도 나머지 초기화를 막지 않도록 격리한다.
+    try {
+      final token = await FirebaseMessaging.instance.getToken();
+      if (token != null) {
+        _currentToken = token;
+        await _saveTokenIfLoggedIn(token);
+      }
+    } catch (e) {
+      log('NotificationService._bindFcmToken: getToken failed — $e');
+    }
+  }
+
+  /// iOS APNs 토큰이 등록될 때까지 최대 ~10초 폴링한다.
+  Future<String?> _waitForApnsToken() async {
+    const maxAttempts = 20;
+    const interval = Duration(milliseconds: 500);
+    for (var i = 0; i < maxAttempts; i++) {
+      final apns = await FirebaseMessaging.instance.getAPNSToken();
+      if (apns != null) {
+        log('APNs token: ok (attempt ${i + 1})');
+        return apns;
+      }
+      await Future.delayed(interval);
+    }
+    log('APNs token: still null after $maxAttempts attempts');
+    return null;
   }
 
   Future<void> _saveTokenIfLoggedIn(String token) async {
@@ -224,10 +256,6 @@ class NotificationService extends GetxService {
     final notification = message.notification;
     if (notification == null) return;
 
-    // iOS는 setForegroundNotificationPresentationOptions로 OS가 직접 표시하므로
-    // 여기서 또 표시하면 알림이 중복으로 뜬다. Android만 수동 표시.
-    if (Platform.isIOS) return;
-
     const androidDetails = AndroidNotificationDetails(
       _androidChannelId,
       _androidChannelName,
@@ -235,7 +263,11 @@ class NotificationService extends GetxService {
       importance: Importance.high,
       priority: Priority.high,
     );
-    const iosDetails = DarwinNotificationDetails();
+    const iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
     const details = NotificationDetails(
       android: androidDetails,
       iOS: iosDetails,
@@ -248,6 +280,24 @@ class NotificationService extends GetxService {
       details,
       payload: message.data['notification_id'] as String?,
     );
+  }
+
+  // ───────────────────────────────────────────────────────────
+  // 알림 on/off — 디바이스 토큰 등록/삭제로 구현.
+  // send-push가 device_tokens를 조회하므로 토큰이 없으면 발송되지 않는다.
+  // ───────────────────────────────────────────────────────────
+
+  Future<void> setPushEnabled(bool enabled) async {
+    final token = _currentToken;
+    if (token == null) {
+      log('NotificationService.setPushEnabled: skipped (no token)');
+      return;
+    }
+    if (enabled) {
+      await _saveTokenIfLoggedIn(token);
+    } else {
+      await _tokenRepo.deleteToken(token);
+    }
   }
 
   // ───────────────────────────────────────────────────────────

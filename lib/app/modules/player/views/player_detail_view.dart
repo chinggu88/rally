@@ -56,6 +56,17 @@ class PlayerDetailView extends GetView<PlayerDetailController> {
         ),
       ),
       centerTitle: true,
+      actions: [
+        Obx(
+          () => IconButton(
+            onPressed: controller.toggleFavorite,
+            icon: Icon(
+              controller.isFavorite ? Icons.favorite : Icons.favorite_border,
+              color: controller.isFavorite ? AppColors.liveRed : Colors.white,
+            ),
+          ),
+        ),
+      ],
     );
   }
 

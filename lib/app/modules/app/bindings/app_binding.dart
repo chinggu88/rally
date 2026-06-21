@@ -1,7 +1,9 @@
 import 'package:get/get.dart';
 
+import '../../../data/repositories/favorite_player_repository.dart';
 import '../../../data/repositories/live_match_repository.dart';
 import '../../../data/repositories/news_card_repository.dart';
+import '../../../data/repositories/profile_repository.dart';
 import '../../../data/repositories/today_match_repository.dart';
 import '../../../data/repositories/tournament_repository.dart';
 import '../../match/controllers/match_controller.dart';
@@ -24,6 +26,12 @@ class AppBinding implements Bindings {
     );
     Get.lazyPut<NewsCardRepository>(() => NewsCardRepository(), fenix: true);
     Get.lazyPut<TournamentRepository>(() => TournamentRepository(), fenix: true);
+    // 마이페이지(프로필/좋아하는 선수)에서 사용하는 유저 스코프 레포지토리.
+    Get.lazyPut<ProfileRepository>(() => ProfileRepository(), fenix: true);
+    Get.lazyPut<FavoritePlayerRepository>(
+      () => FavoritePlayerRepository(),
+      fenix: true,
+    );
     Get.lazyPut(() => NewsController());
     Get.lazyPut(() => MatchController());
     Get.lazyPut(() => PlayerController());

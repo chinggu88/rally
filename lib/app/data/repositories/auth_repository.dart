@@ -4,11 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// 인증 관련 Supabase 호출 레포지토리.
 ///
-<<<<<<< HEAD
-/// 이메일/비밀번호 로그인·회원가입과 Apple/Google/Kakao OAuth 로그인을 담당한다.
-=======
 /// 이메일/비밀번호 로그인·회원가입과 Apple/Google OAuth 로그인을 담당한다.
->>>>>>> f9cd20d7904e4fdc5c101de04c95d6a3807bae5c
 /// 모든 OAuth는 `signInWithOAuth` + 딥링크 콜백(`io.supabase.rally://login-callback/`)
 /// 으로 처리되며, 딥링크 수신과 세션 교환은 `supabase_flutter`가 자동 처리한다.
 class AuthRepository {
@@ -56,10 +52,6 @@ class AuthRepository {
 
   Future<bool> signInWithGoogle() => _oauth(OAuthProvider.google);
   Future<bool> signInWithApple() => _oauth(OAuthProvider.apple);
-<<<<<<< HEAD
-  Future<bool> signInWithKakao() => _oauth(OAuthProvider.kakao);
-=======
->>>>>>> f9cd20d7904e4fdc5c101de04c95d6a3807bae5c
 
   Future<bool> _oauth(OAuthProvider provider) async {
     try {

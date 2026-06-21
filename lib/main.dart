@@ -50,14 +50,11 @@ Future<void> main() async {
     // 전역 GetxService 등록 (Get.find()로 접근 가능)
     Get.put(SupabaseService(), permanent: true);
     Get.put(AuthRepository(), permanent: true);
-<<<<<<< HEAD
-=======
     Get.put(NotificationService(), permanent: true);
 
     // 푸시 알림 초기화 (권한 요청 + 토큰 발급 + 핸들러 바인딩).
     // 실패해도 앱 부팅을 막지 않도록 await 후 예외를 흡수.
     unawaited(NotificationService.to.initialize());
->>>>>>> f9cd20d7904e4fdc5c101de04c95d6a3807bae5c
 
     runApp(const MyApp());
   }, (error, stack) {

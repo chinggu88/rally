@@ -115,10 +115,6 @@ class LoginController extends GetxController {
   Future<void> signInWithGoogle() =>
       _runSocial(_authRepository.signInWithGoogle);
   Future<void> signInWithApple() => _runSocial(_authRepository.signInWithApple);
-<<<<<<< HEAD
-  Future<void> signInWithKakao() => _runSocial(_authRepository.signInWithKakao);
-=======
->>>>>>> f9cd20d7904e4fdc5c101de04c95d6a3807bae5c
 
   Future<void> _runSocial(Future<dynamic> Function() fn) async {
     if (isLoading) return;

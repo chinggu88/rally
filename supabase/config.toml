@@ -394,6 +394,14 @@ entrypoint = "./functions/hello-test/index.ts"
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/hello-test/*.html" ]
 
+# 회원탈퇴 — 로그인 사용자(본인 access token)로만 호출되고 함수 내부에서도
+# requireUser로 JWT를 재검증하므로 게이트웨이 verify_jwt를 켠다.
+[functions.delete-account]
+enabled = true
+verify_jwt = true
+import_map = "./functions/delete-account/deno.json"
+entrypoint = "./functions/delete-account/index.ts"
+
 # 공개 조회용 함수들 — JWT 검증 비활성화.
 # 이 프로젝트 anon 키의 iat가 실서버 시계 기준 미래라, verify_jwt=true이면
 # "JWT issued at future"(500)로 거부된다. 내부에서 service_role로 RLS를 우회하므로

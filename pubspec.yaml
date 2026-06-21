@@ -66,6 +66,9 @@ dependencies:
   # 앱 버전 (app_version 컬럼에 저장)
   package_info_plus: ^8.0.2
 
+  # 프로필 사진 선택 (갤러리)
+  image_picker: ^1.1.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
