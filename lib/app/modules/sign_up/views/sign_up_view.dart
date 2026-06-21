@@ -83,18 +83,6 @@ class SignUpView extends GetView<SignUpController> {
             fg: Colors.black,
             onTap: controller.signUpWithGoogle,
           ),
-          SizedBox(height: 12.h),
-          _buildSocialButton(
-            label: '카카오로 가입하기',
-            iconWidget: Icon(
-              Icons.chat_bubble,
-              size: 20.sp,
-              color: Colors.black,
-            ),
-            bg: const Color(0xFFFEE500),
-            fg: Colors.black,
-            onTap: controller.signUpWithKakao,
-          ),
           SizedBox(height: 20.h),
           _buildLoginRow(),
         ],

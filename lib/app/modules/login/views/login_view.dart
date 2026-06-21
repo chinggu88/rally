@@ -60,18 +60,6 @@ class LoginView extends GetView<LoginController> {
                 fg: Colors.black,
                 onTap: controller.signInWithGoogle,
               ),
-              SizedBox(height: 12.h),
-              _buildSocialButton(
-                label: '카카오로 계속하기',
-                iconWidget: Icon(
-                  Icons.chat_bubble,
-                  size: 20.sp,
-                  color: Colors.black,
-                ),
-                bg: const Color(0xFFFEE500),
-                fg: Colors.black,
-                onTap: controller.signInWithKakao,
-              ),
               SizedBox(height: 24.h),
               _buildSignUpRow(),
               SizedBox(height: 12.h),

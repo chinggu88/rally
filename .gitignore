@@ -46,9 +46,15 @@ app.*.map.json
 !.env.example
 *.pem
 *.key
+*.p8
 secrets.dart
 lib/config/secrets.dart
 lib/secrets.dart
+logininfo.md
+
+# Apple Sign In / JWT generation
+Authtoken/
+AuthKey_*.p8
 
 # Android
 /android/app/debug
@@ -144,3 +150,8 @@ batch/tests/fixtures/api_*.json
 firebase_options.dart
 .firebase/
 .firebaserc.local
+firepit-log.txt
+
+# Node (used for Apple JWT scripts, etc.)
+node_modules/
+**/node_modules/

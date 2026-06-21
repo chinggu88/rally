@@ -95,8 +95,6 @@ class SignUpController extends GetxController {
       _runSocial(_authRepository.signInWithGoogle, 'Google');
   Future<void> signUpWithApple() =>
       _runSocial(_authRepository.signInWithApple, 'Apple');
-  Future<void> signUpWithKakao() =>
-      _runSocial(_authRepository.signInWithKakao, 'Kakao');
 
   Future<void> _runSocial(
     Future<dynamic> Function() fn,
