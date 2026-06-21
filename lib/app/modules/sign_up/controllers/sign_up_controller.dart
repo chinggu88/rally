@@ -91,6 +91,37 @@ class SignUpController extends GetxController {
     }
   }
 
+  Future<void> signUpWithGoogle() =>
+      _runSocial(_authRepository.signInWithGoogle, 'Google');
+  Future<void> signUpWithApple() =>
+      _runSocial(_authRepository.signInWithApple, 'Apple');
+
+  Future<void> _runSocial(
+    Future<dynamic> Function() fn,
+    String providerLabel,
+  ) async {
+    if (isLoading) return;
+    try {
+      isLoading = true;
+      await fn();
+      // OAuth: 외부 브라우저로 이동 → 콜백 시 LoginController의 authStateChanges가 라우팅 처리
+    } on AuthException catch (e) {
+      Get.snackbar(
+        '$providerLabel 회원가입 실패',
+        e.message,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } catch (e) {
+      Get.snackbar(
+        '$providerLabel 회원가입 실패',
+        e.toString(),
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } finally {
+      isLoading = false;
+    }
+  }
+
   /// 로그인 화면으로 복귀
   void goToLogin() {
     Get.back();

@@ -61,6 +61,29 @@ class SignUpView extends GetView<SignUpController> {
           SizedBox(height: 24.h),
           _buildSubmitButton(),
           SizedBox(height: 20.h),
+          _buildDivider(),
+          SizedBox(height: 16.h),
+          _buildSocialButton(
+            label: 'Apple로 가입하기',
+            iconWidget:
+                Icon(Icons.apple, size: 22.sp, color: Colors.black),
+            bg: Colors.white,
+            fg: Colors.black,
+            onTap: controller.signUpWithApple,
+          ),
+          SizedBox(height: 12.h),
+          _buildSocialButton(
+            label: 'Google로 가입하기',
+            iconWidget: Image.asset(
+              'assets/images/google_logo.png',
+              width: 20.sp,
+              height: 20.sp,
+            ),
+            bg: Colors.white,
+            fg: Colors.black,
+            onTap: controller.signUpWithGoogle,
+          ),
+          SizedBox(height: 20.h),
           _buildLoginRow(),
         ],
       ),
@@ -231,6 +254,62 @@ class SignUpView extends GetView<SignUpController> {
                     fontWeight: FontWeight.w800,
                   ),
                 ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDivider() {
+    return Row(
+      children: [
+        const Expanded(child: Divider(color: _divider, height: 1)),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 12.w),
+          child: Text(
+            '또는',
+            style: TextStyle(color: _subtle, fontSize: 12.sp),
+          ),
+        ),
+        const Expanded(child: Divider(color: _divider, height: 1)),
+      ],
+    );
+  }
+
+  Widget _buildSocialButton({
+    required String label,
+    required Widget iconWidget,
+    required Color bg,
+    required Color fg,
+    required VoidCallback onTap,
+  }) {
+    return Obx(
+      () => SizedBox(
+        height: 52.h,
+        child: ElevatedButton(
+          onPressed: controller.isLoading ? null : onTap,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: bg,
+            disabledBackgroundColor: bg.withValues(alpha: 0.5),
+            foregroundColor: fg,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(28.r),
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              iconWidget,
+              SizedBox(width: 10.w),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 15.sp,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
