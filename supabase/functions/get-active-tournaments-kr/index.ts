@@ -89,8 +89,10 @@ Deno.serve(async (req) => {
   if (req.method !== "GET") return error("method not allowed", 405);
 
   try {
-    // YYYY-MM-DD (UTC 기준). date 컬럼과 문자열 비교.
-    const today = new Date().toISOString().slice(0, 10);
+    // YYYY-MM-DD (KST, UTC+9 기준). date 컬럼과 문자열 비교.
+    const today = new Date(Date.now() + 9 * 60 * 60 * 1000)
+      .toISOString()
+      .slice(0, 10);
 
     const supabase = serviceClient();
 
