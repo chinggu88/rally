@@ -18,6 +18,7 @@ class MyInfoView extends GetView<MyInfoController> {
   static const Color _accent = AppColors.accentLime;
   static const Color _subtle = AppColors.subtleText;
   static const Color _divider = AppColors.divider;
+  static const Color _menuCardBg = AppColors.cardBg;
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +40,7 @@ class MyInfoView extends GetView<MyInfoController> {
         actions: [
           Padding(
             padding: EdgeInsets.only(right: 12.w),
-            child: const Icon(Icons.search, color: Colors.white),
+            child: const Icon(Icons.notifications_none, color: Colors.white),
           ),
         ],
       ),
@@ -67,76 +68,256 @@ class MyInfoView extends GetView<MyInfoController> {
       SizedBox(height: 12.h),
       _buildSignUpCta(),
       SizedBox(height: 28.h),
-      _buildLockedSettingsSection(),
+      _buildLockedMenuCard(),
     ];
   }
 
   List<Widget> _buildLoggedInChildren() {
     return [
-      _buildProfileCard(),
+      _buildProfileHeader(),
       SizedBox(height: 24.h),
-      _buildLoggedInSettingsSection(),
+      _buildEditProfileButton(),
+      SizedBox(height: 28.h),
+      _buildMenuCard(),
       SizedBox(height: 24.h),
       _buildLogoutCta(),
     ];
   }
 
-  Widget _buildProfileCard() {
+  // ── 로그인 상태: 상단 프로필 헤더 ────────────────────────────────────
+  Widget _buildProfileHeader() {
     final avatarUrl = controller.avatarUrl;
     final hasAvatar = avatarUrl != null && avatarUrl.isNotEmpty;
     final title = (controller.nickname?.isNotEmpty ?? false)
         ? controller.nickname!
-        : (controller.email ?? '-');
+        : (controller.email?.split('@').first ?? 'RALLY');
+    final subtitle = controller.email ?? '-';
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title.toUpperCase(),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 28.sp,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0.5,
+                  height: 1.1,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              SizedBox(height: 6.h),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  color: _subtle,
+                  fontSize: 13.sp,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+        SizedBox(width: 16.w),
+        _buildAvatarFrame(hasAvatar: hasAvatar, avatarUrl: avatarUrl),
+      ],
+    );
+  }
+
+  Widget _buildAvatarFrame({required bool hasAvatar, String? avatarUrl}) {
+    return Container(
+      width: 88.w,
+      height: 88.w,
+      padding: EdgeInsets.all(4.w),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: _accent, width: 2.2),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(11.r),
+        child: hasAvatar
+            ? CachedNetworkImage(
+                imageUrl: avatarUrl!,
+                fit: BoxFit.cover,
+                placeholder: (_, __) => Container(color: AppColors.cardBg),
+                errorWidget: (_, __, ___) =>
+                    Container(color: AppColors.cardBg),
+              )
+            : Container(
+                color: AppColors.cardBg,
+                alignment: Alignment.center,
+                child: Icon(Icons.person, color: _accent, size: 36.sp),
+              ),
+      ),
+    );
+  }
+
+  Widget _buildEditProfileButton() {
+    return SizedBox(
+      height: 52.h,
+      child: OutlinedButton(
+        onPressed: controller.goToProfileEdit,
+        style: OutlinedButton.styleFrom(
+          foregroundColor: _accent,
+          side: BorderSide(color: _accent, width: 1.6),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.r),
+          ),
+        ),
+        child: Text(
+          '프로필 편집',
+          style: TextStyle(
+            fontSize: 15.sp,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.2,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── 메뉴 카드 (이미지의 5개 항목) ─────────────────────────────────
+  Widget _buildMenuCard() {
+    final items = <_MenuItemData>[
+      _MenuItemData(
+        icon: Icons.calendar_today_rounded,
+        title: '알림 설정',
+        subtitle: '앱 알림을 관리하세요',
+        onTap: () =>
+            controller.toggleNotifications(!controller.notificationsEnabled),
+        trailing: Obx(
+          () => Switch(
+            value: controller.notificationsEnabled,
+            onChanged: controller.toggleNotifications,
+            activeThumbColor: Colors.black,
+            activeTrackColor: _accent,
+            inactiveThumbColor: _subtle,
+            inactiveTrackColor: AppColors.surfaceAlt,
+          ),
+        ),
+      ),
+      _MenuItemData(
+        icon: Icons.share_outlined,
+        title: '친구 초대',
+        onTap: controller.goToInviteFriends,
+      ),
+      _MenuItemData(
+        icon: Icons.workspace_premium_outlined,
+        title: '좋아하는 선수',
+        subtitle: '관심 선수를 등록하고 소식을 받아보세요',
+        onTap: controller.goToFavoritePlayers,
+      ),
+      _MenuItemData(
+        icon: Icons.help_outline,
+        title: '도움말',
+        onTap: controller.goToHelp,
+      ),
+      _MenuItemData(
+        icon: Icons.chat_bubble_outline,
+        title: '피드백 보내기',
+        onTap: controller.goToFeedback,
+      ),
+      _MenuItemData(
+        icon: Icons.person_remove_outlined,
+        title: '회원탈퇴',
+        onTap: controller.confirmDeleteAccount,
+        danger: true,
+      ),
+    ];
 
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12.r),
-        gradient: const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [AppColors.gradientStart, AppColors.bg],
-        ),
-        border: Border.all(color: _divider),
+        color: _menuCardBg,
+        borderRadius: BorderRadius.circular(16.r),
       ),
-      child: Row(
+      child: Column(
         children: [
-          CircleAvatar(
-            radius: 28.r,
-            backgroundColor: _accent,
-            backgroundImage:
-                hasAvatar ? CachedNetworkImageProvider(avatarUrl) : null,
-            child: hasAvatar
-                ? null
-                : Icon(Icons.person, color: Colors.black, size: 28.sp),
-          ),
-          SizedBox(width: 16.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '환영합니다',
-                  style: TextStyle(color: _subtle, fontSize: 12.sp),
+          for (var i = 0; i < items.length; i++) ...[
+            _buildMenuItem(items[i]),
+            if (i != items.length - 1)
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.w),
+                child: const Divider(
+                  color: _divider,
+                  height: 1,
+                  thickness: 0.6,
                 ),
-                SizedBox(height: 4.h),
-                Text(
-                  title,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 15.sp,
-                    fontWeight: FontWeight.w700,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-          IconButton(
-            onPressed: controller.goToProfileEdit,
-            icon: Icon(Icons.edit_outlined, color: _accent, size: 20.sp),
-          ),
+              ),
+          ],
         ],
+      ),
+    );
+  }
+
+  Widget _buildMenuItem(_MenuItemData item) {
+    final color = item.danger ? AppColors.liveRed : Colors.white;
+
+    return InkWell(
+      onTap: item.onTap,
+      borderRadius: BorderRadius.circular(16.r),
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+        child: Row(
+          children: [
+            _buildIconBox(item.icon, danger: item.danger),
+            SizedBox(width: 14.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.title,
+                    style: TextStyle(
+                      color: color,
+                      fontSize: 15.sp,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  if (item.subtitle != null) ...[
+                    SizedBox(height: 2.h),
+                    Text(
+                      item.subtitle!,
+                      style: TextStyle(
+                        color: _subtle,
+                        fontSize: 12.sp,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            item.trailing ??
+                Icon(
+                  Icons.chevron_right,
+                  color: item.danger ? AppColors.liveRed : _subtle,
+                  size: 22.sp,
+                ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildIconBox(IconData icon, {bool danger = false}) {
+    return Container(
+      width: 42.w,
+      height: 42.w,
+      decoration: BoxDecoration(
+        color: AppColors.surfaceAlt,
+        borderRadius: BorderRadius.circular(12.r),
+      ),
+      alignment: Alignment.center,
+      child: Icon(
+        icon,
+        color: danger ? AppColors.liveRed : _accent,
+        size: 20.sp,
       ),
     );
   }
@@ -161,6 +342,7 @@ class MyInfoView extends GetView<MyInfoController> {
     );
   }
 
+  // ── 비로그인 상태 ────────────────────────────────────────────────
   Widget _buildHeroBanner() {
     return Container(
       height: 220.h,
@@ -246,146 +428,93 @@ class MyInfoView extends GetView<MyInfoController> {
     );
   }
 
-  // ── 로그인 상태: 실제 동작하는 설정 메뉴 ──────────────────────────────
-
-  Widget _buildLoggedInSettingsSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildSectionTitle('Settings'),
-        _buildMenuRow('프로필 편집', onTap: controller.goToProfileEdit),
-        _buildSwitchRow(
-          '알림 설정',
-          value: controller.notificationsEnabled,
-          onChanged: controller.toggleNotifications,
-        ),
-        _buildMenuRow('좋아하는 선수', onTap: controller.goToFavoritePlayers),
-        _buildMenuRow(
-          '회원탈퇴',
-          onTap: controller.confirmDeleteAccount,
-          danger: true,
-        ),
-      ],
-    );
-  }
-
-  // ── 비로그인 상태: 잠긴 설정 메뉴 ──────────────────────────────────
-  Widget _buildLockedSettingsSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildSectionTitle('Settings'),
-        _buildLockedRow('Profile Settings'),
-        _buildLockedRow('Notification Settings'),
-        _buildLockedRow('Club Management'),
-        _buildLockedRow('Customer Support'),
-      ],
-    );
-  }
-
-  Widget _buildSectionTitle(String text) {
-    return Padding(
-      padding: EdgeInsets.only(left: 4.w, bottom: 8.h),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 16.sp,
-          fontWeight: FontWeight.w700,
-        ),
+  Widget _buildLockedMenuCard() {
+    final items = <_MenuItemData>[
+      _MenuItemData(
+        icon: Icons.calendar_today_rounded,
+        title: '알림 설정',
+        onTap: controller.goToLogin,
+        locked: true,
       ),
-    );
-  }
+      _MenuItemData(
+        icon: Icons.share_outlined,
+        title: '친구 초대',
+        onTap: controller.goToLogin,
+        locked: true,
+      ),
+      _MenuItemData(
+        icon: Icons.workspace_premium_outlined,
+        title: '좋아하는 선수',
+        onTap: controller.goToLogin,
+        locked: true,
+      ),
+      _MenuItemData(
+        icon: Icons.help_outline,
+        title: '도움말',
+        onTap: controller.goToLogin,
+        locked: true,
+      ),
+      _MenuItemData(
+        icon: Icons.chat_bubble_outline,
+        title: '피드백 보내기',
+        onTap: controller.goToLogin,
+        locked: true,
+      ),
+    ];
 
-  Widget _buildMenuRow(
-    String label, {
-    required VoidCallback onTap,
-    bool danger = false,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 4.w),
-        decoration: const Border(
-          bottom: BorderSide(color: _divider, width: 0.6),
-        ).toBoxDecoration(),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                label,
-                style: TextStyle(
-                  color: danger ? AppColors.liveRed : Colors.white,
-                  fontSize: 14.sp,
+    return Container(
+      decoration: BoxDecoration(
+        color: _menuCardBg,
+        borderRadius: BorderRadius.circular(16.r),
+      ),
+      child: Column(
+        children: [
+          for (var i = 0; i < items.length; i++) ...[
+            _buildMenuItem(items[i].copyWithLockedTrailing(_subtle)),
+            if (i != items.length - 1)
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.w),
+                child: const Divider(
+                  color: _divider,
+                  height: 1,
+                  thickness: 0.6,
                 ),
               ),
-            ),
-            Icon(
-              Icons.chevron_right,
-              color: danger ? AppColors.liveRed : _subtle,
-              size: 20.sp,
-            ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSwitchRow(
-    String label, {
-    required bool value,
-    required ValueChanged<bool> onChanged,
-  }) {
-    return Container(
-      padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 4.w),
-      decoration: const Border(
-        bottom: BorderSide(color: _divider, width: 0.6),
-      ).toBoxDecoration(),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              label,
-              style: TextStyle(color: Colors.white, fontSize: 14.sp),
-            ),
-          ),
-          Switch(
-            value: value,
-            onChanged: onChanged,
-            activeThumbColor: Colors.black,
-            activeTrackColor: _accent,
-            inactiveThumbColor: _subtle,
-            inactiveTrackColor: AppColors.cardBg,
-          ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildLockedRow(String label) {
-    return InkWell(
-      onTap: controller.goToLogin,
-      child: Container(
-        padding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 4.w),
-        decoration: const Border(
-          bottom: BorderSide(color: _divider, width: 0.6),
-        ).toBoxDecoration(),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                label,
-                style: TextStyle(color: Colors.white, fontSize: 14.sp),
-              ),
-            ),
-            Icon(Icons.lock_outline, color: _subtle, size: 18.sp),
-          ],
-        ),
       ),
     );
   }
 }
 
-extension on Border {
-  BoxDecoration toBoxDecoration() => BoxDecoration(border: this);
+class _MenuItemData {
+  _MenuItemData({
+    required this.icon,
+    required this.title,
+    required this.onTap,
+    this.subtitle,
+    this.trailing,
+    this.danger = false,
+    this.locked = false,
+  });
+
+  final IconData icon;
+  final String title;
+  final String? subtitle;
+  final VoidCallback onTap;
+  final Widget? trailing;
+  final bool danger;
+  final bool locked;
+
+  _MenuItemData copyWithLockedTrailing(Color color) {
+    return _MenuItemData(
+      icon: icon,
+      title: title,
+      subtitle: subtitle,
+      onTap: onTap,
+      danger: danger,
+      locked: locked,
+      trailing: Icon(Icons.lock_outline, color: color, size: 18),
+    );
+  }
 }

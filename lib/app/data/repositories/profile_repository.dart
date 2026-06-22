@@ -26,22 +26,16 @@ class ProfileRepository {
     if (user == null) return null;
 
     try {
-      final row = await _client
-          .from(_table)
-          .select()
-          .eq('id', user.id)
-          .maybeSingle();
+      final row =
+          await _client.from(_table).select().eq('id', user.id).maybeSingle();
 
       if (row != null) {
         return ProfileResponse.fromJson(row);
       }
 
       // 행이 없으면 생성 후 반환 (폴백)
-      final created = await _client
-          .from(_table)
-          .upsert({'id': user.id})
-          .select()
-          .single();
+      final created =
+          await _client.from(_table).upsert({'id': user.id}).select().single();
       return ProfileResponse.fromJson(created);
     } on PostgrestException catch (e) {
       log('ProfileRepository.fetchMyProfile Postgrest: ${e.message}');
@@ -54,7 +48,8 @@ class ProfileRepository {
     final user = _requireUser();
     await _client
         .from(_table)
-        .update({'nickname': nickname.trim()}).eq('id', user.id);
+        .update({'nickname': nickname.trim()})
+        .eq('id', user.id);
   }
 
   /// 알림 on/off 플래그 갱신.
@@ -62,7 +57,8 @@ class ProfileRepository {
     final user = _requireUser();
     await _client
         .from(_table)
-        .update({'notifications_enabled': enabled}).eq('id', user.id);
+        .update({'notifications_enabled': enabled})
+        .eq('id', user.id);
   }
 
   /// 아바타 이미지를 스토리지에 업로드하고 `avatar_url`을 갱신한다.
@@ -75,12 +71,22 @@ class ProfileRepository {
     final ext = _extOf(file.path);
     final path = '${user.id}/avatar_$ts.$ext';
 
+    final session = _client.auth.currentSession;
+    log(
+      'avatar upload uid=${user.id} '
+      'role=${session?.user.role} '
+      'expiresAt=${session?.expiresAt} '
+      'isExpired=${session?.isExpired}',
+    );
+
     try {
-      await _client.storage.from(_bucket).upload(
+      await _client.storage
+          .from(_bucket)
+          .upload(
             path,
             file,
             fileOptions: FileOptions(
-              upsert: true,
+              upsert: false,
               contentType: _contentTypeOf(ext),
             ),
           );

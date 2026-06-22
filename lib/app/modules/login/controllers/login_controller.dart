@@ -42,6 +42,8 @@ class LoginController extends GetxController {
     _authSub = _authRepository.authStateChanges.listen((state) {
       if (state.event == AuthChangeEvent.signedIn) {
         Get.offAllNamed(Routes.APP);
+      } else {
+        // Get.offAllNamed(Routes.APP);
       }
     });
   }
@@ -96,11 +98,7 @@ class LoginController extends GetxController {
       );
       // 성공 시 _authSub 콜백이 Get.offAllNamed(Routes.APP) 호출
     } on AuthException catch (e) {
-      Get.snackbar(
-        '로그인 실패',
-        e.message,
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      Get.snackbar('로그인 실패', e.message, snackPosition: SnackPosition.BOTTOM);
     } catch (e) {
       Get.snackbar(
         '오류',
@@ -123,17 +121,9 @@ class LoginController extends GetxController {
       await fn();
       // OAuth: 외부 브라우저로 이동 → 콜백 시 authStateChanges → SIGNED_IN
     } on AuthException catch (e) {
-      Get.snackbar(
-        '로그인 실패',
-        e.message,
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      Get.snackbar('로그인 실패', e.message, snackPosition: SnackPosition.BOTTOM);
     } catch (e) {
-      Get.snackbar(
-        '로그인 실패',
-        e.toString(),
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      Get.snackbar('로그인 실패', e.toString(), snackPosition: SnackPosition.BOTTOM);
     } finally {
       isLoading = false;
     }

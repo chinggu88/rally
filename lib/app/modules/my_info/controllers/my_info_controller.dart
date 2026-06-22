@@ -98,6 +98,20 @@ class MyInfoController extends GetxController {
     Get.toNamed(Routes.FAVORITE_PLAYERS);
   }
 
+  /// 아직 구현되지 않은 메뉴 항목에 대한 안내.
+  void _showComingSoon(String label) {
+    Get.snackbar(
+      label,
+      '곧 제공될 예정입니다.',
+      snackPosition: SnackPosition.BOTTOM,
+    );
+  }
+
+  void goToInviteFriends() => _showComingSoon('친구 초대');
+  void goToBecomeSpecialist() => _showComingSoon('전문가 되기');
+  void goToHelp() => _showComingSoon('도움말');
+  void goToFeedback() => _showComingSoon('피드백 보내기');
+
   /// 알림 on/off 토글 — profiles 플래그 + 디바이스 토큰 등록/삭제.
   Future<void> toggleNotifications(bool enabled) async {
     final previous = _notificationsEnabled.value;

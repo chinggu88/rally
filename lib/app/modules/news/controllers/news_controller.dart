@@ -257,9 +257,6 @@ class NewsController extends GetxController {
       // race condition 가드: 더 새로운 요청이 발생했으면 결과 무시
       if (token != _activeTournamentsToken) return;
       _activeTournaments.assignAll(response.tournaments);
-      _activeTournaments.forEach((e) {
-        log('asdf ${e.toJson()}');
-      });
     } catch (e) {
       if (token != _activeTournamentsToken) return;
       log('NewsController.fetchActiveTournaments error: $e');
