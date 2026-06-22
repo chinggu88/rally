@@ -86,11 +86,12 @@ class NotificationService extends GetxService {
     // iOS에서 FCM 자체 포그라운드 표시는 flutter_local_notifications와의
     // UNUserNotificationCenter delegate 충돌로 동작하지 않으므로, FCM/OS
     // 자체 표시는 꺼서 중복/누락을 모두 방지한다.
-    await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
-      alert: false,
-      badge: false,
-      sound: false,
-    );
+    await FirebaseMessaging.instance
+        .setForegroundNotificationPresentationOptions(
+          alert: false,
+          badge: false,
+          sound: false,
+        );
   }
 
   // ───────────────────────────────────────────────────────────
@@ -190,6 +191,7 @@ class NotificationService extends GetxService {
   }
 
   Future<void> _saveTokenIfLoggedIn(String token) async {
+    log('asdf _saveTokenIfLoggedIn');
     final user = Supabase.instance.client.auth.currentUser;
     if (user == null) {
       log('NotificationService._saveTokenIfLoggedIn: skipped (anonymous)');

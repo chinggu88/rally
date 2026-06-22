@@ -69,11 +69,20 @@ class _PlayerViewState extends State<PlayerView> {
       backgroundColor: scheme.surface,
       appBar: _buildAppBar(),
       body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: controller.refreshPlayers,
-          color: _accent,
-          backgroundColor: scheme.surfaceContainer,
-          child: _buildContent(scheme),
+        child: Column(
+          children: [
+            SizedBox(height: 12.h),
+            _buildCategoryChips(),
+            SizedBox(height: 12.h),
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: controller.refreshPlayers,
+                color: _accent,
+                backgroundColor: scheme.surfaceContainer,
+                child: _buildContent(scheme),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -112,9 +121,6 @@ class _PlayerViewState extends State<PlayerView> {
       controller: _scroll,
       physics: const AlwaysScrollableScrollPhysics(),
       slivers: [
-        SliverToBoxAdapter(child: SizedBox(height: 12.h)),
-        SliverToBoxAdapter(child: _buildCategoryChips()),
-        SliverToBoxAdapter(child: SizedBox(height: 12.h)),
         // 상태 분기: 로딩/에러/빈 상태일 땐 단일 sliver, 정상이면 SliverList
         Obx(() {
           if (controller.isLoading) {
@@ -260,12 +266,30 @@ class _PlayerViewState extends State<PlayerView> {
       padding: EdgeInsets.fromLTRB(20.w, 4.h, 20.w, 0),
       sliver: SliverList.separated(
         itemCount: list.length,
-        itemBuilder:
-            (_, i) => _PlayerCard(
-              player: list[i],
-              isDoubles: isDoubles,
-              onTap: () => controller.openPlayerDetail(list[i]),
-            ),
+        itemBuilder: (_, i) {
+          final p = list[i];
+          return _PlayerCard(
+            player: p,
+            isDoubles: isDoubles,
+            onTap: () => controller.openPlayerDetail(p),
+            onTapDoublesPlayer1: () {
+              final (n1, _) = _PlayerCard.splitDoublesNames(p.playerName);
+              controller.openDoublesPlayerDetail(
+                p: p,
+                playerId: p.player1Id,
+                playerName: n1.isEmpty ? p.playerName : n1,
+              );
+            },
+            onTapDoublesPlayer2: () {
+              final (_, n2) = _PlayerCard.splitDoublesNames(p.playerName);
+              controller.openDoublesPlayerDetail(
+                p: p,
+                playerId: p.player2Id,
+                playerName: n2.isEmpty ? p.playerName : n2,
+              );
+            },
+          );
+        },
         separatorBuilder: (_, __) => SizedBox(height: 12.h),
       ),
     );
@@ -354,6 +378,8 @@ class _PlayerCard extends StatelessWidget {
     required this.player,
     required this.isDoubles,
     required this.onTap,
+    this.onTapDoublesPlayer1,
+    this.onTapDoublesPlayer2,
   });
 
   final PlayerResponse player;
@@ -361,7 +387,14 @@ class _PlayerCard extends StatelessWidget {
   /// 복식(MD/WD/XD) 카테고리 여부. true면 좌측에 두 선수 아바타를 겹쳐 표시.
   final bool isDoubles;
 
+  /// 단식 카드 전체 탭, 또는 복식 카드의 비-선수 영역(랭킹/포인트 영역) 탭 콜백.
   final VoidCallback onTap;
+
+  /// 복식 카드에서 첫 번째 선수 행을 탭했을 때 호출 — null이면 분리 탭 비활성.
+  final VoidCallback? onTapDoublesPlayer1;
+
+  /// 복식 카드에서 두 번째 선수 행을 탭했을 때 호출 — null이면 분리 탭 비활성.
+  final VoidCallback? onTapDoublesPlayer2;
 
   static const Color _accent = AppColors.accent;
   static const Color _cardBg = AppColors.cardBg;
@@ -575,65 +608,90 @@ class _PlayerCard extends StatelessWidget {
     final pointsText = _formatPoints(player.points);
     final rankLabel = rank != null ? '#$rank' : '#—';
 
-    final names = _splitDoublesNames(player.playerName);
+    final names = splitDoublesNames(player.playerName);
     final p1Display = _formatDoublesName(names.$1);
     final p2Display = _formatDoublesName(names.$2);
 
+    // 복식 카드는 두 선수의 영역을 분리해 각자 상세 페이지로 이동할 수 있도록
+     // 외곽 InkWell 대신 컨테이너 + 행마다 InkWell을 사용한다.
+    return Container(
+      decoration: BoxDecoration(
+        color: _cardBg,
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: _cardBorder),
+      ),
+      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // 좌측: 단식과 동일한 #N 라벨
+          Text(
+            rankLabel,
+            style: TextStyle(
+              fontFamily: AppTypography.chivo,
+              fontWeight: FontWeight.w800,
+              fontSize: 18.sp,
+              height: 1.15,
+              letterSpacing: -0.5,
+              color: _accent,
+            ),
+          ),
+          SizedBox(width: 12.w),
+          // 중앙: 두 선수의 행 (각 행이 독립 탭 가능)
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildTappableDoublesRow(
+                  photoUrl: player.photoUrl,
+                  firstName: p1Display.first,
+                  lastName: p1Display.last,
+                  flag: flag,
+                  country: displayCountry,
+                  onTap: onTapDoublesPlayer1 ?? onTap,
+                ),
+                SizedBox(height: 10.h),
+                _buildTappableDoublesRow(
+                  photoUrl: player.photoUrl2,
+                  firstName: p2Display.first,
+                  lastName: p2Display.last,
+                  flag: flag,
+                  country: displayCountry,
+                  onTap: onTapDoublesPlayer2 ?? onTap,
+                ),
+              ],
+            ),
+          ),
+          SizedBox(width: 10.w),
+          // 우측: 포인트 + 순위 변동 (세로 중앙)
+          _buildDoublesTrailing(pointsText),
+        ],
+      ),
+    );
+  }
+
+  /// 복식 카드 한 선수의 행을 탭 가능하게 감싸는 래퍼.
+  Widget _buildTappableDoublesRow({
+    required String? photoUrl,
+    required String firstName,
+    required String lastName,
+    required String flag,
+    required String country,
+    required VoidCallback onTap,
+  }) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16.r),
-        child: Container(
-          decoration: BoxDecoration(
-            color: _cardBg,
-            borderRadius: BorderRadius.circular(16.r),
-            border: Border.all(color: _cardBorder),
-          ),
-          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 14.h),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // 좌측: 단식과 동일한 #N 라벨
-              Text(
-                rankLabel,
-                style: TextStyle(
-                  fontFamily: AppTypography.chivo,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 18.sp,
-                  height: 1.15,
-                  letterSpacing: -0.5,
-                  color: _accent,
-                ),
-              ),
-              SizedBox(width: 12.w),
-              // 중앙: 두 선수의 행
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _buildDoublesPlayerRow(
-                      photoUrl: player.photoUrl,
-                      firstName: p1Display.first,
-                      lastName: p1Display.last,
-                      flag: flag,
-                      country: displayCountry,
-                    ),
-                    SizedBox(height: 10.h),
-                    _buildDoublesPlayerRow(
-                      photoUrl: player.photoUrl2,
-                      firstName: p2Display.first,
-                      lastName: p2Display.last,
-                      flag: flag,
-                      country: displayCountry,
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(width: 10.w),
-              // 우측: 포인트 + 순위 변동 (세로 중앙)
-              _buildDoublesTrailing(pointsText),
-            ],
+        borderRadius: BorderRadius.circular(10.r),
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 2.h),
+          child: _buildDoublesPlayerRow(
+            photoUrl: photoUrl,
+            firstName: firstName,
+            lastName: lastName,
+            flag: flag,
+            country: country,
           ),
         ),
       ),
@@ -766,7 +824,7 @@ class _PlayerCard extends StatelessWidget {
   }
 
   /// `"FIRST LASTNAME / FIRST LASTNAME"` → 두 부분으로 분리. 슬래시가 없으면 두 번째는 빈 문자열.
-  (String, String) _splitDoublesNames(String? raw) {
+  static (String, String) splitDoublesNames(String? raw) {
     final s = (raw ?? '').trim();
     if (s.isEmpty) return ('', '');
     final parts = s.split(RegExp(r'\s*/\s*'));

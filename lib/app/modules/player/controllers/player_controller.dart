@@ -277,4 +277,31 @@ class PlayerController extends GetxController {
       },
     );
   }
+
+  /// 복식 카드에서 두 선수 중 한 명을 탭했을 때 호출 — 해당 선수의 상세로 전이한다.
+  ///
+  /// [playerId] 는 `player1Id` 또는 `player2Id` 중 탭된 선수의 id.
+  /// [playerName] 은 분리된 단일 선수 이름(예: `"Dechapol PUAVARANUKROH"`).
+  /// 상세 진입 키만 다르고, 랭킹/종목/국가 컨텍스트는 동일하게 전달한다.
+  void openDoublesPlayerDetail({
+    required PlayerResponse p,
+    required int? playerId,
+    required String? playerName,
+  }) {
+    log(
+      'PlayerController.openDoublesPlayerDetail: rank=${p.rank}, '
+      'name=$playerName, country=${p.countryCode}, id=$playerId',
+    );
+
+    Get.toNamed(
+      Routes.PLAYER_DETAIL,
+      arguments: <String, dynamic>{
+        PlayerDetailController.argId: playerId,
+        PlayerDetailController.argRank: p.rank,
+        PlayerDetailController.argCategory: selectedCategory,
+        PlayerDetailController.argPlayerName: playerName,
+        PlayerDetailController.argCountryCode: p.countryCode,
+      },
+    );
+  }
 }

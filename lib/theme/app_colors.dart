@@ -19,6 +19,14 @@ class AppColors {
   static const Color gradientStart = Color(0xFF1B1F1C);
   static const Color gradientStartAlt = Color(0xFF202521);
   static const Color liveRed = Color(0xFFFF3B30);
+  static const Color liveRedAlt = Color(0xFFFF4D4F);
+  static const Color inactive = Color(0xFF3A3A3A);
+  static const Color muted = Color(0xFF6B6B6B);
+  static const Color upGreen = Color(0xFF4ADE80);
+  static const Color downRed = Color(0xFFFF6B6B);
+  static const Color hint = Color(0xFF5C5F5D);
+  static const Color surfaceDeep = Color(0xFF14181A);
+  static const Color surfaceDeepest = Color(0xFF0E0E0E);
 
   static const ColorScheme dark = ColorScheme(
     brightness: Brightness.dark,
