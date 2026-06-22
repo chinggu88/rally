@@ -59,6 +59,7 @@ Deno.serve(async (req) => {
       .from("badminton_planet_news")
       .select("id, card_storage_paths", { count: "exact" })
       .eq("card_created", true)
+      .not("card_storage_paths", "is", null)
       .order("published_at", { ascending: false, nullsFirst: false })
       .order("id", { ascending: false })
       .range(from, to);
