@@ -22,12 +22,6 @@ class TournamentParticipantsView
     extends GetView<TournamentParticipantsController> {
   const TournamentParticipantsView({super.key});
 
-  // 매거진 디자인 토큰 (AppColors와 정합되지 않는 시안 디테일만 별도 상수).
-  // 카드/칩 토큰은 내부 위젯(`_EventChip`, `_ParticipantCard`)에서 자체 보존한다.
-  static const Color _accent = AppColors.accent;
-  static const Color _accentDark = AppColors.accentDark;
-  static const Color _subtleText = AppColors.subtleText;
-
   @override
   Widget build(BuildContext context) {
     final scheme = AppColors.dark;
@@ -39,7 +33,7 @@ class TournamentParticipantsView
         top: false,
         child: RefreshIndicator(
           onRefresh: controller.refreshParticipants,
-          color: _accent,
+          color: AppColors.accent,
           backgroundColor: scheme.surfaceContainer,
           child: CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
@@ -120,7 +114,7 @@ class TournamentParticipantsView
         return Padding(
           padding: EdgeInsets.symmetric(vertical: 80.h),
           child: const Center(
-            child: CircularProgressIndicator(color: _accent),
+            child: CircularProgressIndicator(color: AppColors.accent),
           ),
         );
       }
@@ -143,7 +137,7 @@ class TournamentParticipantsView
       padding: EdgeInsets.fromLTRB(20.w, 60.h, 20.w, 60.h),
       child: Column(
         children: [
-          Icon(Icons.cloud_off_outlined, size: 48.sp, color: _subtleText),
+          Icon(Icons.cloud_off_outlined, size: 48.sp, color: AppColors.subtleText),
           SizedBox(height: 12.h),
           Text(
             message,
@@ -156,8 +150,8 @@ class TournamentParticipantsView
             child: ElevatedButton(
               onPressed: controller.refreshParticipants,
               style: ElevatedButton.styleFrom(
-                backgroundColor: _accent,
-                foregroundColor: _accentDark,
+                backgroundColor: AppColors.accent,
+                foregroundColor: AppColors.accentDark,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24.r),
@@ -188,7 +182,7 @@ class TournamentParticipantsView
           Icon(
             Icons.groups_outlined,
             size: 48.sp,
-            color: _subtleText,
+            color: AppColors.subtleText,
           ),
           SizedBox(height: 12.h),
           Text(
@@ -202,7 +196,7 @@ class TournamentParticipantsView
                 ' 본선 발표 전이거나 데이터가 아직 동기화되지 않았어요.',
                 textAlign: TextAlign.center,
                 style: AppTypography.bodyMd.copyWith(
-                  color: _subtleText,
+                  color: AppColors.subtleText,
                   fontSize: 13.sp,
                 ),
               )),
@@ -241,11 +235,6 @@ class _EventChip extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
 
-  static const Color _accent = AppColors.accent;
-  static const Color _accentDark = AppColors.accentDark;
-  static const Color _chipBg = AppColors.chipBg;
-  static const Color _chipBorder = AppColors.cardBorder;
-
   @override
   Widget build(BuildContext context) {
     return Material(
@@ -257,10 +246,10 @@ class _EventChip extends StatelessWidget {
           duration: const Duration(milliseconds: 150),
           padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
           decoration: BoxDecoration(
-            color: selected ? _accent : _chipBg,
+            color: selected ? AppColors.accent : AppColors.chipBg,
             borderRadius: BorderRadius.circular(999.r),
             border: Border.all(
-              color: selected ? _accent : _chipBorder,
+              color: selected ? AppColors.accent : AppColors.cardBorder,
             ),
           ),
           alignment: Alignment.center,
@@ -274,7 +263,7 @@ class _EventChip extends StatelessWidget {
                   fontWeight: FontWeight.w800,
                   fontSize: 12.sp,
                   letterSpacing: 0.6,
-                  color: selected ? _accentDark : _accent,
+                  color: selected ? AppColors.accentDark : AppColors.accent,
                 ),
               ),
               SizedBox(width: 6.w),
@@ -285,7 +274,7 @@ class _EventChip extends StatelessWidget {
                   fontWeight: FontWeight.w700,
                   fontSize: 12.sp,
                   letterSpacing: 0.2,
-                  color: selected ? _accentDark : Colors.white,
+                  color: selected ? AppColors.accentDark : Colors.white,
                 ),
               ),
             ],
@@ -306,19 +295,13 @@ class _ParticipantCard extends StatelessWidget {
 
   final TournamentParticipantResponse participant;
 
-  static const Color _accent = AppColors.accent;
-  static const Color _accentDark = AppColors.accentDark;
-  static const Color _cardBg = AppColors.cardBg;
-  static const Color _cardBorder = AppColors.cardBorder;
-  static const Color _subtleText = AppColors.subtleText;
-
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: _cardBg,
+        color: AppColors.cardBg,
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: _cardBorder),
+        border: Border.all(color: AppColors.cardBorder),
       ),
       padding: EdgeInsets.fromLTRB(14.w, 14.h, 14.w, 14.h),
       child: participant.isDoubles ? _buildDoublesBody() : _buildSinglesBody(),
@@ -420,20 +403,20 @@ class _ParticipantCard extends StatelessWidget {
     return Column(
       children: [
         SizedBox(height: 12.h),
-        Divider(height: 1, color: _cardBorder.withValues(alpha: 0.8)),
+        Divider(height: 1, color: AppColors.cardBorder.withValues(alpha: 0.8)),
         SizedBox(height: 10.h),
         Row(
           children: [
             Icon(
               Icons.flag_outlined,
-              color: _subtleText,
+              color: AppColors.subtleText,
               size: 14.sp,
             ),
             SizedBox(width: 6.w),
             Text(
               '시작 라운드',
               style: AppTypography.labelLg.copyWith(
-                color: _subtleText,
+                color: AppColors.subtleText,
                 fontSize: 11.sp,
                 letterSpacing: 0.6,
               ),
@@ -470,7 +453,7 @@ class _ParticipantCard extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.labelLg.copyWith(
-                    color: _subtleText,
+                    color: AppColors.subtleText,
                     fontSize: 11.sp,
                     letterSpacing: 0.4,
                     height: 1.0,
@@ -485,7 +468,7 @@ class _ParticipantCard extends StatelessWidget {
                   fontFamily: AppTypography.chivo,
                   fontWeight: FontWeight.w800,
                   fontSize: 14.sp,
-                  color: _accent,
+                  color: AppColors.accent,
                   letterSpacing: 0.2,
                   height: 1.1,
                 ),
@@ -503,7 +486,7 @@ class _ParticipantCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppTypography.labelLg.copyWith(
-                        color: _subtleText,
+                        color: AppColors.subtleText,
                         fontSize: 11.sp,
                         letterSpacing: 0.3,
                         height: 1.0,
@@ -581,10 +564,10 @@ class _ParticipantCard extends StatelessWidget {
       height: 36.h,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: hasSeed ? _accent : Colors.transparent,
+        color: hasSeed ? AppColors.accent : Colors.transparent,
         borderRadius: BorderRadius.circular(10.r),
         border: Border.all(
-          color: hasSeed ? _accent : _cardBorder,
+          color: hasSeed ? AppColors.accent : AppColors.cardBorder,
         ),
       ),
       child: Text(
@@ -594,7 +577,7 @@ class _ParticipantCard extends StatelessWidget {
           fontWeight: FontWeight.w800,
           fontSize: hasSeed ? 14.sp : 13.sp,
           letterSpacing: -0.2,
-          color: hasSeed ? _accentDark : _subtleText,
+          color: hasSeed ? AppColors.accentDark : AppColors.subtleText,
         ),
       ),
     );
@@ -625,7 +608,7 @@ class _ParticipantCard extends StatelessWidget {
     return Container(
       color: AppColors.surfaceAlt2,
       alignment: Alignment.center,
-      child: Icon(Icons.person, color: _subtleText, size: 26.sp),
+      child: Icon(Icons.person, color: AppColors.subtleText, size: 26.sp),
     );
   }
 
@@ -635,7 +618,7 @@ class _ParticipantCard extends StatelessWidget {
       return Text(
         '국가 미정',
         style: AppTypography.labelLg.copyWith(
-          color: _subtleText,
+          color: AppColors.subtleText,
           fontSize: 12.sp,
         ),
       );
@@ -658,7 +641,7 @@ class _ParticipantCard extends StatelessWidget {
             ),
             child: Icon(
               Icons.flag_outlined,
-              color: _subtleText,
+              color: AppColors.subtleText,
               size: 10.sp,
             ),
           ),
@@ -669,7 +652,7 @@ class _ParticipantCard extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: AppTypography.labelLg.copyWith(
-              color: _subtleText,
+              color: AppColors.subtleText,
               fontSize: 12.sp,
               letterSpacing: 0.6,
             ),
@@ -684,9 +667,9 @@ class _ParticipantCard extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
       decoration: BoxDecoration(
-        color: _accent.withValues(alpha: 0.12),
+        color: AppColors.accent.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(999.r),
-        border: Border.all(color: _accent.withValues(alpha: 0.6)),
+        border: Border.all(color: AppColors.accent.withValues(alpha: 0.6)),
       ),
       child: Text(
         round.toUpperCase(),
@@ -695,7 +678,7 @@ class _ParticipantCard extends StatelessWidget {
           fontWeight: FontWeight.w800,
           fontSize: 11.sp,
           letterSpacing: 0.6,
-          color: _accent,
+          color: AppColors.accent,
         ),
       ),
     );

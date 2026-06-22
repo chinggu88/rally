@@ -11,17 +11,12 @@ import '../controllers/favorite_players_controller.dart';
 class FavoritePlayersView extends GetView<FavoritePlayersController> {
   const FavoritePlayersView({super.key});
 
-  static const Color _bg = AppColors.bg;
-  static const Color _accent = AppColors.accentLime;
-  static const Color _subtle = AppColors.subtleText;
-  static const Color _divider = AppColors.divider;
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: AppColors.bg,
       appBar: AppBar(
-        backgroundColor: _bg,
+        backgroundColor: AppColors.bg,
         elevation: 0,
         centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.white),
@@ -38,7 +33,7 @@ class FavoritePlayersView extends GetView<FavoritePlayersController> {
         child: Obx(() {
           if (controller.isLoading && controller.players.isEmpty) {
             return const Center(
-              child: CircularProgressIndicator(color: _accent),
+              child: CircularProgressIndicator(color: AppColors.accentLime),
             );
           }
           if (controller.errorMessage != null && controller.players.isEmpty) {
@@ -48,7 +43,7 @@ class FavoritePlayersView extends GetView<FavoritePlayersController> {
             return _buildMessage('아직 좋아하는 선수가 없어요.\n선수 화면에서 하트를 눌러 추가해보세요.');
           }
           return RefreshIndicator(
-            color: _accent,
+            color: AppColors.accentLime,
             backgroundColor: AppColors.cardBg,
             onRefresh: controller.load,
             child: ListView.separated(
@@ -56,7 +51,7 @@ class FavoritePlayersView extends GetView<FavoritePlayersController> {
               padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
               itemCount: controller.players.length,
               separatorBuilder: (_, __) =>
-                  Divider(color: _divider, height: 1.h),
+                  Divider(color: AppColors.divider, height: 1.h),
               itemBuilder: (_, i) => _buildItem(controller.players[i]),
             ),
           );
@@ -80,7 +75,7 @@ class FavoritePlayersView extends GetView<FavoritePlayersController> {
                   ? CachedNetworkImageProvider(photo)
                   : null,
               child: (photo == null || photo.isEmpty)
-                  ? Icon(Icons.person, color: _subtle, size: 24.sp)
+                  ? Icon(Icons.person, color: AppColors.subtleText, size: 24.sp)
                   : null,
             ),
             SizedBox(width: 14.w),
@@ -101,7 +96,7 @@ class FavoritePlayersView extends GetView<FavoritePlayersController> {
                     SizedBox(height: 2.h),
                     Text(
                       p.countryCode!,
-                      style: TextStyle(color: _subtle, fontSize: 12.sp),
+                      style: TextStyle(color: AppColors.subtleText, fontSize: 12.sp),
                     ),
                   ],
                 ],
@@ -109,7 +104,7 @@ class FavoritePlayersView extends GetView<FavoritePlayersController> {
             ),
             IconButton(
               onPressed: () => controller.remove(p.playerId),
-              icon: Icon(Icons.favorite, color: _accent, size: 22.sp),
+              icon: Icon(Icons.favorite, color: AppColors.accentLime, size: 22.sp),
             ),
           ],
         ),
@@ -125,15 +120,15 @@ class FavoritePlayersView extends GetView<FavoritePlayersController> {
           Text(
             text,
             textAlign: TextAlign.center,
-            style: TextStyle(color: _subtle, fontSize: 14.sp, height: 1.5),
+            style: TextStyle(color: AppColors.subtleText, fontSize: 14.sp, height: 1.5),
           ),
           if (retry) ...[
             SizedBox(height: 16.h),
             OutlinedButton(
               onPressed: controller.load,
               style: OutlinedButton.styleFrom(
-                foregroundColor: _accent,
-                side: const BorderSide(color: _accent),
+                foregroundColor: AppColors.accentLime,
+                side: const BorderSide(color: AppColors.accentLime),
               ),
               child: const Text('다시 시도'),
             ),
