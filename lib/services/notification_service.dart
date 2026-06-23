@@ -50,6 +50,14 @@ class NotificationService extends GetxService {
   /// 한 번만 호출되도록 가드.
   bool _initialized = false;
 
+  @override
+  void onInit() {
+    super.onInit();
+    // Get.put(permanent: true) 시점에 자동 초기화.
+    // 권한/토큰 발급은 백그라운드로 진행되며 다른 코드가 await할 필요가 없다.
+    initialize();
+  }
+
   Future<void> initialize() async {
     if (_initialized) return;
     _initialized = true;
