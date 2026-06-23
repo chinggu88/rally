@@ -1,8 +1,12 @@
+import 'dart:async';
 import 'dart:developer';
 
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
+import 'package:rally/app/data/repositories/auth_repository.dart';
 import 'package:rally/app/modules/news/controllers/news_controller.dart';
+import 'package:rally/app/routes/app_routes.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../match/controllers/match_controller.dart';
 import '../../player/controllers/player_controller.dart';
@@ -26,6 +30,9 @@ class AppController extends GetxController with WidgetsBindingObserver {
   int get currentIndex => _currentIndex.value;
   set currentIndex(int value) => _currentIndex.value = value;
 
+  final AuthRepository _authRepository = Get.find<AuthRepository>();
+  StreamSubscription<AuthState>? _authSub;
+
   void changeTab(int index) {
     currentIndex = index;
 
@@ -47,10 +54,19 @@ class AppController extends GetxController with WidgetsBindingObserver {
   void onInit() {
     super.onInit();
     WidgetsBinding.instance.addObserver(this);
+    // 이메일/소셜 모두 동일하게 SIGNED_IN 이벤트로 처리되도록 단일 진실 공급원 구독.
+    _authSub = _authRepository.authStateChanges.listen((state) {
+      if (state.event == AuthChangeEvent.signedIn) {
+        Get.offAllNamed(Routes.APP);
+      } else {
+        // Get.offAllNamed(Routes.APP);
+      }
+    });
   }
 
   @override
   void onClose() {
+    _authSub?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.onClose();
   }

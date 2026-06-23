@@ -11,7 +11,7 @@ class LoginController extends GetxController {
   static LoginController get to => Get.find();
 
   final AuthRepository _authRepository = Get.find<AuthRepository>();
-  StreamSubscription<AuthState>? _authSub;
+  // StreamSubscription<AuthState>? _authSub;
 
   // Form controllers
   final TextEditingController emailController = TextEditingController();
@@ -37,20 +37,10 @@ class LoginController extends GetxController {
     super.onInit();
     emailController.addListener(_validateEmail);
     passwordController.addListener(_validatePassword);
-
-    // 이메일/소셜 모두 동일하게 SIGNED_IN 이벤트로 처리되도록 단일 진실 공급원 구독.
-    _authSub = _authRepository.authStateChanges.listen((state) {
-      if (state.event == AuthChangeEvent.signedIn) {
-        Get.offAllNamed(Routes.APP);
-      } else {
-        // Get.offAllNamed(Routes.APP);
-      }
-    });
   }
 
   @override
   void onClose() {
-    _authSub?.cancel();
     emailController.removeListener(_validateEmail);
     passwordController.removeListener(_validatePassword);
     emailController.dispose();
