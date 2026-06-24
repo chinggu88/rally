@@ -108,6 +108,14 @@ def run() -> int:
             total += written
             log.info(f"{cat}: upserted {written} rows")
 
+        # 관심선수 랭킹 변화 푸시 알림 — 실패해도 랭킹 잡은 성공으로 처리
+        try:
+            from batch.jobs.ranking_notifier.main import run as run_notifier
+
+            run_notifier(year=year, week=week)
+        except Exception:
+            log.exception("ranking_notifier failed (non-fatal)")
+
         _finish_log(
             supabase,
             log_id,
