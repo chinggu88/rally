@@ -1,21 +1,21 @@
-# BWF Live Tournaments 워커
+# BWF Live Matches 워커
 
-현재 라이브 중인 BWF 대회 목록을 **10초 주기**로 폴링해 `bwf_live_tournaments`에 upsert한다. 개인 PC에서 상주 실행하는 워커.
+현재 라이브 중인 BWF 경기를 **10초 주기**로 폴링해 `bwf_live_matches`에 매치당 1행으로 upsert한다. 개인 PC에서 상주 실행하는 워커.
 
-> **메모**: 모듈 디렉터리 이름이 `bwf_live_matches`인 건 이전 설계의 흔적이다. 현재 구현은 라이브 **대회 목록**만 다루고 매치/스코어 단위는 다음 단계에서 다룬다.
+## 왜 이 구조인가 — 데이터 흐름 (2026-06 개편)
 
-## 왜 이 구조인가 — 진단 기록
+**진입점이 두 군데에서 한 군데로 단순화됐다.**
 
-2026-06 기준 BWF가 운영 API의 인증·전송 모델을 통째로 바꿨다:
-
-| 항목 | 기존 (bwf_matches) | 현재 |
+| 단계 | 이전 | 현재 |
 |---|---|---|
-| 인증 | 페이지 HTML의 `token: "..."` 정규식 → Bearer 헤더 | 토큰 자체가 없음. 쿠키만 (`cf_clearance`, `laravel_session`) |
-| 메서드 | POST + JSON body | **GET + query string** |
-| Cloudflare | 일반 `requests` 통과 | **JA3 fingerprint 검사** — `requests`/`page.request`/`page.evaluate fetch` 모두 403 |
-| 라이브 엔드포인트 | 없음 (캘린더 fetch + 필터링) | **`GET /api/match-center/vue-current-live`** 신규 |
+| 1. 활성 대회 선택 | `bwfworldtour.../calendar/{year}/` SPA → `vue-current-live` 캡처 | **Supabase `bwf_tournaments`에서 `start_date ≤ today ≤ end_date` 필터** |
+| 2. 라이브 매치 데이터 | 각 대회 `bwfworldtour.../tournament/{tid}/{slug}/results/{date}` 페이지 SPA 렌더 + DOM 스크래핑 | **`match-centre.bwfbadminton.com/{tid}` SPA → `vue-live-matches` JSON 캡처 한 방** |
 
-그 결과 **유일하게 200을 받는 경로는 "SPA가 자기 컨텍스트에서 호출한 응답을 `page.on('response')`로 가로채기"** 한 가지뿐이다. 그래서 워커가 Playwright 페이지를 상주시킨다.
+활성 대회는 캘린더 잡이 이미 채워두는 테이블을 신뢰하면 되므로 캘린더 SPA 캡처 단계 자체가 불필요해졌다. 라이브 매치는 SPA가 호출하는 단일 JSON 엔드포인트가 DOM 스크래핑보다 훨씬 풍부한 데이터를 한 번에 준다(코트/duration/service_player/match_state 등).
+
+### Cloudflare 우회는 여전히 필요
+
+`extranet-lv.bwfbadminton.com/api/match-center/vue-live-matches`는 JA3 fingerprint 검사로 `requests`/`page.request`/`page.evaluate fetch` 모두 403. SPA가 자기 컨텍스트에서 호출한 응답만 200. 그래서 Playwright 페이지를 띄우고 `page.on('response')`로 가로채는 방식 그대로.
 
 ## 데이터 흐름
 
@@ -24,71 +24,71 @@
                     │
                     ▼
    ┌──── 10초마다 ────────────────────────────┐
-   │  page.goto("https://bwfworldtour.../calendar/2026/")     │
+   │  ① bwf_tournaments에서 오늘 활성 대회 조회 (5분 캐시)    │
    │      │                                                   │
    │      ▼                                                   │
-   │  SPA가 vue-current-live를 자동 호출                       │
+   │  ② 각 tid마다:                                            │
+   │     page.goto("https://match-centre.bwfbadminton.com/{tid}") │
+   │     SPA가 vue-live-matches를 자동 호출                    │
+   │     page.on('response')가 JSON 가로챔                    │
    │      │                                                   │
    │      ▼                                                   │
-   │  page.on('response')가 JSON 가로챔                       │
+   │  ③ parse_live_matches → bwf_live_matches rows           │
    │      │                                                   │
    │      ▼                                                   │
-   │  parser.parse_live_payload → bwf_live_tournaments rows  │
+   │  ④ _hydrate_match_codes로 match_code(GUID) 채움          │
+   │     (tid, event, 양 팀 선수 ID set) 4-튜플 룩업           │
    │      │                                                   │
    │      ▼                                                   │
-   │  upsert(on_conflict=tournament_id) + mark_ended sweep    │
+   │  ⑤ upsert + mark_ended sweep                            │
    │      │                                                   │
    │      ▼                                                   │
-   │  bwf_live_tournaments (Realtime publication enabled)    │
+   │  bwf_live_matches (Realtime publication enabled)        │
    │      │                                                   │
    │      ▼                                                   │
-   │  Flutter .stream() → 라이브 대회 목록 UI 자동 갱신       │
+   │  Flutter .stream() → 라이브 매치 UI 자동 갱신            │
    └──────────────────────────────────────────────────────────┘
 ```
 
-`bwf_live_tournaments`에 `REPLICA IDENTITY FULL` + `supabase_realtime` publication이 걸려있어 행 추가/`ended_at` 마킹/필드 변경이 Flutter에 푸시된다 (마이그레이션: [`20260602130000_bwf_live_tournaments.sql`](../../../supabase/migrations/20260602130000_bwf_live_tournaments.sql)).
+## 응답 스키마 (vue-live-matches)
 
-## 응답 스키마 (vue-current-live)
-
-```json
+```jsonc
 {
   "results": [
     {
-      "id": 5528,
-      "code": "5A719D43-A131-43FC-9A7F-BAFBC0B551E8",
-      "name": "POLYTRON Indonesia Open 2026",
-      "slug": "polytron-indonesia-open-2026",
-      "start_date": "2026-06-02 00:00:00",
-      "end_date": "2026-06-07 00:00:00",
-      "tournament_category_id": 23,
-      "tournament_series_id": 64,
-      "prize_money": "1450000.00",
-      "venue_name": "Istora Senayan Jakarta",
-      "date": "2 - 7 June",
-      "tmtLink": "https://bwfworldtour.bwfbadminton.com/tournament/5528/polytron-indonesia-open-2026/results/",
-      "tmtLogo": "https://...",
-      "category_model": {"id": 23, "name": "HSBC BWF World Tour Super 1000"}
+      "live_detail": {
+        "id": 53278,
+        "match_id": "203",                // = match_detail.code (대회 내 매치 번호)
+        "match_state": "P",               // P=In Progress
+        "match_state_name": "In Progress",
+        "court_code": "1", "court_name": "Court 1",
+        "duration": 12,                   // 분
+        "event": "MD",                    // MS/WS/MD/WD/XD
+        "round": "R32",
+        "service_player": 3,              // 1..4 (어느 선수가 서브 중)
+        "team1_g1_score": 13, "team1_g2_score": null, "team1_g3_score": null,
+        "team2_g1_score": 21, "team2_g2_score": null, "team2_g3_score": null
+      },
+      "match_detail": {
+        "id": 1525931,                    // = bwf_matches.id (사용자 검증 완료)
+        "tournament_id": 5701, "code": "203",
+        "team1_player1_id": "89743", "team1_player2_id": "94777",
+        "team2_player1_id": "91710", "team2_player2_id": "82378",
+        "t1p1_country": "USA", /* ... */
+        "t1p1_player_model": { "name_display": "Ansen LIU", "slug": "...", "playerLink": "...", /* ... */ }
+      }
     }
   ]
 }
 ```
 
-대회별로 한 row가 `bwf_live_tournaments`에 upsert된다.
-
-## `ended_at` 처리
-
-라이브 응답에 더 이상 안 보이는 대회는 **삭제하지 않고 `ended_at`을 박는다**:
-- 히스토리/UX 보존 (방금 끝난 대회를 잠깐 더 보여줄 수 있음)
-- 캘린더 잡(현재 동일한 BWF API 변경으로 깨져있음, 추후 수정) 정상화 후 `bwf_matches`로 최종 결과 이관
-
-`payload=None`(캡처 실패)일 때는 sweep을 **스킵**한다 — 일시적 네트워크/Cloudflare 이슈로 전 대회를 종료 처리하는 사고 방지.
+`match_state != "P"` 인 항목은 라이브로 취급하지 않고 파서에서 걸러진다(mark_ended가 청소).
 
 ## `bwf_live_matches` ↔ `bwf_matches` 연동 (match_code)
 
-라이브 카드(results 페이지) 자체에는 BWF의 `match_code`(GUID)가 노출되지 않는다. **추가로 카드 href의 `/match/{id}`와 `bwf_matches.id`는 서로 다른 ID 체계라서 id 조인이 불가하다.** 대신 라이브 워커는 **`(tournament_id, event_name, team1_player_ids set, team2_player_ids set)`** 4-튜플로 `bwf_matches`를 룩업한다 — 같은 대회·종목 안에서 두 팀의 선수 ID 조합은 유일하다(아래 확인 SQL과 동일한 키).
+vue-live-matches는 BWF의 `match_code`(GUID)를 노출하지 않는다. `match_detail.id`는 `bwf_matches.id`와 동일 체계지만, 다운스트림(`bwf_matches`)의 PK는 GUID인 `match_code`이므로 4-튜플 룩업으로 채운다 — 같은 대회·종목 안에서 두 팀의 선수 ID 조합은 유일하다.
 
 ```sql
--- 라이브 카드 한 장에 대응하는 bwf_matches row 찾기
 SELECT match_code FROM bwf_matches
  WHERE tournament_id = :tid
    AND event_name    = :event
@@ -111,6 +111,12 @@ SELECT match_code FROM bwf_matches
 
 `get-live-matches` Edge Function은 항상 `tournament_status='live'`만 반환하므로, 종료된 매치는 클라이언트에서 즉시 사라지고 score는 `bwf_matches`에서 영구 보관된다.
 
+## sweep 안전망
+
+- **vue-live-matches 캡처 실패 (`payload=None`)**: 해당 대회는 `polled_tournament_ids`에서 제외 → mark_ended sweep에서 빠진다(전역 폭주 방지).
+- **응답은 받았지만 results 빈 배열**: 그 대회는 라이브 매치가 없다는 신호. polled에 포함돼 sweep이 그 대회 범위 내에서 정상 동작.
+- **bwf_tournaments 조회 실패**: 이전 캐시를 그대로 재사용. 캐시가 비어 있으면 그 틱은 그냥 skip.
+
 ## CLI
 
 ```bash
@@ -124,7 +130,7 @@ PYTHONPATH=. python -m batch.jobs.bwf_live_matches.main
 # 한 틱만 (개발/스모크)
 PYTHONPATH=. python -m batch.jobs.bwf_live_matches.main --once
 
-# DB 쓰기 없이 페이로드만 출력
+# DB 쓰기 없이 페이로드만 출력 (활성 대회 조회는 함)
 PYTHONPATH=. python -m batch.jobs.bwf_live_matches.main --once --dry-run
 
 # 브라우저 창 보면서 디버그
@@ -160,74 +166,42 @@ pkill -9 -f "batch.jobs.bwf_live_matches.main"
 
 ## 검증
 
-### 1. 마이그레이션 적용
-
-```bash
-supabase db push
-```
-
-```sql
-\d bwf_live_tournaments
-select pubname, tablename from pg_publication_tables where tablename='bwf_live_tournaments';
-select relname, relreplident from pg_class where relname='bwf_live_tournaments';
--- relreplident = 'f' (FULL)
-```
-
-### 2. Dry-run 한 틱
+### 1. Dry-run 한 틱
 
 ```bash
 PYTHONPATH=. python -m batch.jobs.bwf_live_matches.main --once --dry-run
 ```
 
-라이브 대회가 0건이면 빈 배열 출력, 1건 이상이면 샘플 JSON이 stdout으로 떨어진다.
+오늘 활성 대회가 0건이면 `no active tournaments for today` 로그만, 1건 이상이면 각 매치의 정규화된 JSON을 stdout으로 떨군다.
 
-### 3. 실 적재
+### 2. 실 적재
 
 ```bash
 PYTHONPATH=. python -m batch.jobs.bwf_live_matches.main --once
 ```
 
 ```sql
-select tournament_id, name, start_date, end_date,
-       first_seen_at, last_seen_at, ended_at
-  from bwf_live_tournaments
- order by last_seen_at desc;
+select id, tournament_id, name, event_name, round_name,
+       team1_country, team2_country, score, court_name,
+       tournament_status, promoted_at, last_polled_at
+  from bwf_live_matches
+ where tournament_status='live'
+ order by last_polled_at desc;
 ```
 
-### 4. ended_at sweep 동작
-
-라이브 응답에 없는 대회를 만들어 sweep 테스트:
-
-```sql
--- 가짜 라이브 대회 삽입 (응답에 없는 id)
-insert into bwf_live_tournaments (tournament_id, code, name)
-values (99999, 'TEST-GUID', 'TEST FAKE');
-```
-
-다음 틱 후:
-
-```sql
-select tournament_id, ended_at from bwf_live_tournaments where tournament_id=99999;
--- ended_at이 not null이어야 함
-```
-
-### 5. Realtime 푸시 확인
-
-Flutter:
+### 3. Realtime 푸시 확인
 
 ```dart
 supabase
-  .from('bwf_live_tournaments')
-  .stream(primaryKey: ['tournament_id'])
-  .listen((rows) => print('pushed ${rows.length} live tournament(s)'));
+  .from('bwf_live_matches')
+  .stream(primaryKey: ['id'])
+  .listen((rows) => print('pushed ${rows.length} live match(es)'));
 ```
 
 워커가 첫 틱을 돌리는 순간 stream 콜백이 트리거된다.
 
 ## 알려진 제약 / 후속 작업
 
-- **매치/스코어 단위 미구현**: vue-current-live는 라이브 **대회 목록**만 반환한다. 매치 데이터는 SPA가 사용자 클릭에 반응해서 호출하는 다른 엔드포인트를 추가 조사해야 한다 (`/api/tournaments/draws?tournament_code={GUID}`까지는 확인됨, 종목별 매치 엔드포인트는 미확인).
-- **기존 `bwf_matches`/`bwf_rankings`/`bwf_calendar` 잡 동시 장애**: 같은 BWF API 변경(토큰 제거, POST→GET)으로 모두 깨졌을 가능성이 높다. 현재 작업에서는 손대지 않음 — 별도 작업으로 마이그레이션 필요.
+- **bwf_tournaments 의존**: 캘린더 잡이 활성 대회를 누락하면 라이브도 잡히지 않는다. 캘린더 잡 헬스 모니터링 권장.
 - **개인 PC 의존**: 워커가 꺼지면 라이브가 끊긴다.
 - **Cloudflare 차단 가능성**: IP가 차단되면 `page.goto` 자체가 챌린지에 막힌다. 그 경우 `playwright-stealth` 도입을 검토(이미 `batch/.venv`에 설치돼 있음).
-- **카테고리 좁아짐**: SPA가 호출하는 카테고리 목록이 `[22..26]`으로 줄었다. Finals(20), 1000(21), Super 100/Team(27 등)이 포함되는지는 그 카테고리가 실제 라이브일 때 확인 필요.

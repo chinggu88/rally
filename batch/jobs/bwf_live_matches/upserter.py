@@ -1,17 +1,14 @@
-"""Upsert parent tournaments + live matches; sweep ended matches.
+"""Upsert live matches into bwf_live_matches; sweep ended matches.
 
-각 라이브 대회의 메타는 bwf_tournaments에 upsert (FK 부모 보장)하고, 그 대회
-results 페이지에서 긁어온 라이브 카드들은 bwf_live_matches에 매치당 1행으로
-upsert. 라이브에서 사라진 매치 행은 promoted_at에 시각을 박는다.
+부모 bwf_tournaments는 캘린더 잡이 채워두는 테이블을 신뢰하므로 여기서는
+upsert하지 않는다 (2026-06 흐름 개편). 이 모듈은 매치 단위만 다룬다.
 
 설계 노트 — match_code 흐름:
-  results 페이지 카드(parser)는 BWF match_code(GUID)를 노출하지 않는다.
-  또한 카드 href의 /match/{id}와 bwf_matches.id는 **서로 다른 ID 체계**라서
-  id로 join하면 매치를 찾지 못한다.
-
-  대신 (tournament_id, event_name, team1_player_ids, team2_player_ids) 4-튜플로
-  bwf_matches를 룩업한다 — 같은 대회·종목 안에서 두 팀 선수 ID 조합은 유일하다.
-  팀 순서가 뒤집혀 들어올 수 있으니 양방향 매칭을 본다.
+  vue-live-matches는 BWF match_code(GUID)를 노출하지 않는다. 매치 id는
+  match_detail.id로 받지만 GUID는 bwf_matches에서 (tournament_id, event_name,
+  team1_player_ids, team2_player_ids) 4-튜플로 룩업해 채운다 — 같은 대회·종목
+  안에서 두 팀 선수 ID 조합은 유일하다. 팀 순서가 뒤집혀 들어올 수 있으니
+  양방향(frozenset) 매칭을 본다.
 
   라이브에서 사라진 매치는 종료된 것으로 보고, 같은 4-튜플로 다시 룩업해
   bwf_matches.score를 라이브 시점 마지막 score로 동기화한 뒤 bwf_live_matches는
@@ -25,15 +22,6 @@ from typing import Any, Iterable
 from supabase import Client
 
 CHUNK_SIZE = 200
-
-
-def upsert_parents(supabase: Client, parents: list[dict[str, Any]]) -> int:
-    if not parents:
-        return 0
-    supabase.table("bwf_tournaments").upsert(
-        parents, on_conflict="tournament_id"
-    ).execute()
-    return len(parents)
 
 
 def _team_key(ids: Any) -> tuple[int, ...] | None:

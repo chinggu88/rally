@@ -1,280 +1,227 @@
-"""Map BWF data into bwf_tournaments + bwf_live_matches rows.
+"""Map vue-live-matches JSON → bwf_live_matches rows (match per row).
 
-두 단계 파싱:
-  1) vue-current-live JSON → 라이브 대회 메타 (parent bwf_tournaments row)
-  2) results 페이지 HTML 카드 → 라이브 경기 (bwf_live_matches row, 매치당 1행)
+새 흐름 (2026-06):
+  부모 토너먼트는 bwf_tournaments에서 start_date ≤ today ≤ end_date 필터로
+  직접 추출한다 (vue-current-live 캡처 단계 제거). 부모 row를 upsert하지 않으므로
+  이 파서는 매치 단위 변환만 담당한다.
 
-라이브 경기 row는 매치 컬럼(team1_*, score, court_name, ...)이 모두 채워진다.
-'대회 단위 1행' 더미는 더 이상 만들지 않는다 — 사용자 선택(경기 행으로 교체).
+응답 스키마 (vue-live-matches):
+  {
+    "results": [
+      {
+        "live_detail": {
+          "id", "match_id" (str = match_detail.code),
+          "match_state" ('P'=In Progress 등), "match_state_name",
+          "court_code", "court_name", "duration" (분),
+          "event" ('MS'|'WS'|'MD'|'WD'|'XD'), "round" ('R32'|'QF'|...),
+          "service_player" (1..4),
+          "team{1,2}_g{1,2,3}_score"
+        },
+        "match_detail": {
+          "id" (= bwf_matches.id 와 동일 체계 — 사용자 검증 완료),
+          "tournament_id", "code",
+          "team{1,2}_player{1,2}_id", "t{1,2}p{1,2}_country",
+          "t{1,2}p{1,2}_player_model": { name_display, slug, playerLink, ... }
+        }
+      }
+    ]
+  }
 """
 from __future__ import annotations
 
-import re
 from datetime import datetime, timezone
 from typing import Any
 
-# 기존 캘린더 파서와 동일한 카테고리 매핑 — 같은 의미를 유지하기 위해 복제.
-_NAME_TO_LEVEL = {
-    "HSBC BWF World Tour Finals": "FINALS",
-    "HSBC BWF World Tour Super 1000": "SUPER_1000",
-    "HSBC BWF World Tour Super 750": "SUPER_750",
-    "HSBC BWF World Tour Super 500": "SUPER_500",
-    "HSBC BWF World Tour Super 300": "SUPER_300",
-}
-_SUFFIX_TO_LEVEL = {
-    "finals": "FINALS",
-    "1000": "SUPER_1000",
-    "750": "SUPER_750",
-    "500": "SUPER_500",
-    "300": "SUPER_300",
-}
-_NAME_TO_CAT_ID = {
-    "FINALS": 8,
-    "SUPER_1000": 9,
-    "SUPER_750": 10,
-    "SUPER_500": 11,
-    "SUPER_300": 12,
-}
-_SUFFIX_RE = re.compile(r"suffix_(finals|1000|750|500|300)")
-
-# results 페이지 카드 텍스트 라인에서 이벤트/라운드/코트/시간 후처리용.
-_EVENT_RE = re.compile(r"^(MS|WS|MD|WD|XD)$")
-_ROUND_RE = re.compile(r"^(R\d+|QF|SF|F|FINAL|RR)$", re.IGNORECASE)
-_COURT_RE = re.compile(r"^Court\s+(.+)$", re.IGNORECASE)
-_DURATION_RE = re.compile(r"^\d{1,2}:\d{2}$")
+# match_state 코드 → 라이브 여부 판정용. SPA 응답에서 본 값은 'P'(In Progress).
+# 다른 값('U' upcoming, 'F' finished 등)이 섞여 들어오면 라이브로 보지 않는다.
+_LIVE_STATES = {"P"}
 
 
-# ---- vue-current-live → parent tournaments ---------------------------------
-
-
-def parse_live_tournaments(
+def parse_live_matches(
     payload: dict[str, Any],
-    year: int,
-) -> list[dict[str, Any]]:
-    """Return parent bwf_tournaments rows (one per live tournament)."""
-    out: list[dict[str, Any]] = []
-    if not isinstance(payload, dict):
-        return out
-    for t in payload.get("results") or []:
-        row = _parent_row(t, year)
-        if row is not None:
-            out.append(row)
-    return out
-
-
-def live_tournament_routing_info(payload: dict[str, Any]) -> list[dict[str, Any]]:
-    """Return [{tournament_id, slug, name}, ...] for the results-page navigator.
-
-    main.py는 이 목록을 받아 fetch_live_match_cards를 호출한다.
-    """
-    out: list[dict[str, Any]] = []
-    if not isinstance(payload, dict):
-        return out
-    for t in payload.get("results") or []:
-        tid = t.get("id")
-        slug = _str(t.get("slug"))
-        name = _str(t.get("name"))
-        code = _str(t.get("code"))
-        if isinstance(tid, int) and slug and name and code:
-            out.append({"tournament_id": tid, "slug": slug, "name": name, "code": code})
-    return out
-
-
-def _parent_row(t: dict[str, Any], year: int) -> dict[str, Any] | None:
-    tid = t.get("id")
-    code = t.get("code")
-    name = t.get("name")
-    if not isinstance(tid, int) or not code or not name:
-        return None
-
-    tour_level = _resolve_tour_level(t)
-    cat_id = _NAME_TO_CAT_ID.get(tour_level)
-
-    return {
-        "tournament_id": tid,
-        "code": str(code),
-        "name": str(name),
-        "tour_level": tour_level,
-        "category_id": cat_id,
-        "start_date": _date_only(t.get("start_date")),
-        "end_date": _date_only(t.get("end_date")),
-        "date_label": _str(t.get("date")),
-        "country": None,
-        "location": _str(t.get("venue_name")),
-        "prize_money_usd": _to_money(t.get("prize_money")),
-        "detail_url": _str(t.get("tmtLink")),
-        "flag_url": None,
-        "logo_url": _str(t.get("tmtLogo")),
-        "cat_logo_url": _str(t.get("catLogo")),
-        "status": "live",
-        "has_live_scores": True,
-        "year": year,
-        "raw": t,
-    }
-
-
-# ---- results-page cards → live matches -------------------------------------
-
-
-def parse_live_match_cards(
-    cards: list[dict[str, Any]],
     tournament: dict[str, Any],
 ) -> list[dict[str, Any]]:
-    """Map each rendered card to a bwf_live_matches row (match-level).
+    """vue-live-matches 응답 + 부모 토너먼트 메타 → bwf_live_matches row 리스트.
 
-    `tournament` is the dict from vue-current-live["results"][i] for routing.
+    `tournament`는 bwf_tournaments에서 가져온 한 행. 라이브 카드 UI가 JOIN 없이
+    바로 표시할 수 있도록 매치 row에도 대회 컨텍스트를 함께 박는다.
     """
     rows: list[dict[str, Any]] = []
-    tid = tournament.get("tournament_id") or tournament.get("id")
-    code = tournament.get("code")
-    name = tournament.get("name")
-    slug = tournament.get("slug")
+    if not isinstance(payload, dict):
+        return rows
+    results = payload.get("results")
+    if not isinstance(results, list):
+        return rows
+
+    tid = tournament.get("tournament_id")
     if not isinstance(tid, int):
         return rows
 
     now = datetime.now(timezone.utc).isoformat()
-    for c in cards:
-        match_id = c.get("matchId")
-        if not isinstance(match_id, int):
+    for entry in results:
+        if not isinstance(entry, dict):
             continue
-        event, round_name, court, duration_min = _extract_meta(c.get("lines") or [])
-        team1, team2 = _split_teams(c.get("participants") or [])
-        sets = c.get("sets") or []
-
-        row = {
-            "id": match_id,
-            "match_code": None,                 # results 카드에 없음 — 후속 API 호출이 필요
-            "tournament_id": tid,
-            "tournament_code": str(code) if code else None,
-            "tournament_status": "live",
-            "draw_id": None,
-            "draw_code": None,
-            "event_name": event,
-            "match_type": None,
-            "round_name": round_name,
-            "match_status": "L" if sets else None,    # 'L' = Live convention
-            "match_status_value": "Live",
-            "score_status": 0,
-            "score_status_value": "Normal",
-            "winner": None,                     # 아직 진행 중
-            "team1_country": team1["country"] if team1 else None,
-            "team2_country": team2["country"] if team2 else None,
-            "team1_player_ids": team1["player_ids"] if team1 else None,
-            "team2_player_ids": team2["player_ids"] if team2 else None,
-            "team1_names": team1["names"] if team1 else None,
-            "team2_names": team2["names"] if team2 else None,
-            "team1_seed": team1["seed"] if team1 else None,
-            "team2_seed": team2["seed"] if team2 else None,
-            "score": sets or None,
-            "match_time": None,
-            "match_time_utc": None,
-            "duration_min": duration_min,
-            "court_name": court,
-            "location_name": None,
-            # 라이브 UI 핫패스 — 매치 row도 대회 컨텍스트를 들고 있도록 같이 채움.
-            # 같은 대회의 카드 N개가 같은 값을 들고 있어 정규화는 깨지지만, 라이브
-            # 카드 UI에서 JOIN을 피해 stream → 즉시 표시할 수 있는 이득이 크다.
-            "slug": _str(slug),
-            "name": _str(name),
-            "start_date": None,
-            "end_date": None,
-            "date_label": None,
-            "prize_money_usd": None,
-            "detail_url": _str(c.get("href")),
-            "logo_url": None,
-            "header_image_url": None,
-            "header_image_mobile_url": None,
-            "cat_logo_url": None,
-            "category_name": None,
-            "tournament_category_id": None,
-            "tournament_series_id": None,
-            "is_etihad": None,
-            "raw": c,
-            "last_polled_at": now,
-            "promoted_at": None,
-        }
-        rows.append(row)
+        ld = entry.get("live_detail") or {}
+        md = entry.get("match_detail") or {}
+        if not isinstance(ld, dict) or not isinstance(md, dict):
+            continue
+        if str(ld.get("match_state") or "") not in _LIVE_STATES:
+            # 진행 중이 아닌 항목은 라이브로 취급하지 않음 (mark_ended가 청소).
+            continue
+        row = _match_row(ld, md, tournament, now)
+        if row is not None:
+            rows.append(row)
     return rows
 
 
-# ---- helpers ---------------------------------------------------------------
+# ---- internal --------------------------------------------------------------
 
 
-def _extract_meta(lines: list[str]) -> tuple[str | None, str | None, str | None, int | None]:
-    """Find event, round, court name, duration(min) from card text lines.
+def _match_row(
+    ld: dict[str, Any],
+    md: dict[str, Any],
+    tournament: dict[str, Any],
+    now_iso: str,
+) -> dict[str, Any] | None:
+    match_id = _to_int(md.get("id"))
+    if match_id is None:
+        return None
 
-    카드 텍스트 패턴 예: 'MATCH 1', 'FENG Y Z', 'HUANG D P', '(1)',
-                      'J WONG', 'CHENG S Y', '21', '19',
-                      'XD', 'R32', 'Court 1', '00:18'
+    tid = _to_int(md.get("tournament_id")) or tournament.get("tournament_id")
+    code = _str(md.get("code"))                       # 대회 내 매치 번호 ("203")
+
+    team1_ids = _player_ids(md, "team1")
+    team2_ids = _player_ids(md, "team2")
+    team1_names = _player_names(md, "team1")
+    team2_names = _player_names(md, "team2")
+    team1_country = _team_country(md, "team1")
+    team2_country = _team_country(md, "team2")
+
+    score = _score_sets(ld)
+
+    return {
+        "id": match_id,
+        # vue-live-matches는 BWF의 GUID(match_code)를 노출하지 않는다.
+        # upserter._hydrate_match_codes가 (tid, event, 양 팀 선수 ID set) 키로 채운다.
+        "match_code": None,
+        "tournament_id": tid,
+        "tournament_code": _str(tournament.get("code")),
+        "tournament_status": "live",
+        "draw_id": None,
+        "draw_code": code,                            # 대회 내 매치 번호
+        "event_name": _str(ld.get("event")),
+        "match_type": None,
+        "round_name": _str(ld.get("round")),
+        "match_status": ld.get("match_state") or None,
+        "match_status_value": _str(ld.get("match_state_name")),
+        "score_status": 0,
+        "score_status_value": "Normal",
+        "winner": None,
+        "team1_country": team1_country,
+        "team2_country": team2_country,
+        "team1_player_ids": team1_ids or None,
+        "team2_player_ids": team2_ids or None,
+        "team1_names": team1_names or None,
+        "team2_names": team2_names or None,
+        "team1_seed": None,                           # vue-live-matches에 시드 없음
+        "team2_seed": None,
+        "score": score or None,
+        "match_time": None,
+        "match_time_utc": None,
+        "duration_min": _to_int(ld.get("duration")),
+        "court_name": _str(ld.get("court_name")),
+        "location_name": _str(tournament.get("location")),
+        # 라이브 UI 핫패스 — JOIN 없이 stream으로 즉시 표시할 수 있도록 대회 메타 동봉.
+        "slug": _slug_from_url(tournament.get("detail_url")),
+        "name": _str(tournament.get("name")),
+        "start_date": _date_only(tournament.get("start_date")),
+        "end_date": _date_only(tournament.get("end_date")),
+        "date_label": _str(tournament.get("date_label")),
+        "prize_money_usd": tournament.get("prize_money_usd"),
+        "detail_url": _str(tournament.get("detail_url")),
+        "logo_url": _str(tournament.get("logo_url")),
+        "header_image_url": None,
+        "header_image_mobile_url": None,
+        "cat_logo_url": _str(tournament.get("cat_logo_url")),
+        "category_name": None,
+        "tournament_category_id": tournament.get("category_id"),
+        "tournament_series_id": None,
+        "is_etihad": None,
+        "raw": {"live_detail": ld, "match_detail": md},
+        "last_polled_at": now_iso,
+        "promoted_at": None,
+    }
+
+
+def _player_ids(md: dict[str, Any], team: str) -> list[int]:
+    ids: list[int] = []
+    for slot in ("player1", "player2"):
+        pid = _to_int(md.get(f"{team}_{slot}_id"))
+        if pid is not None:
+            ids.append(pid)
+    return ids
+
+
+def _player_names(md: dict[str, Any], team: str) -> list[str]:
+    """t{N}p{1,2}_player_model.name_display 우선, 없으면 fullName."""
+    prefix = "t1" if team == "team1" else "t2"
+    out: list[str] = []
+    for slot in ("p1", "p2"):
+        model = md.get(f"{prefix}{slot}_player_model")
+        if not isinstance(model, dict):
+            continue
+        name = (
+            _str(model.get("name_display"))
+            or _str(model.get("fullName"))
+            or _str(model.get("name_short1"))
+        )
+        if name:
+            out.append(name)
+    return out
+
+
+def _team_country(md: dict[str, Any], team: str) -> str | None:
+    """팀 국가 — 단식은 한 선수의 국가, 복식은 두 선수 국가가 같으면 그 국가.
+
+    응답에 t1p1_country/t1p2_country가 분리돼 있다. 다국적 복식이면 None.
     """
-    event = round_name = court = None
-    duration_min: int | None = None
-    for line in lines:
-        if event is None and _EVENT_RE.match(line):
-            event = line
-        elif round_name is None and _ROUND_RE.match(line):
-            round_name = line.upper()
-        elif court is None:
-            m = _COURT_RE.match(line)
-            if m:
-                court = f"Court {m.group(1).strip()}"
-        elif duration_min is None and _DURATION_RE.match(line):
-            mm, ss = line.split(":")
-            duration_min = int(mm) + (1 if int(ss) >= 30 else 0)
-    return event, round_name, court, duration_min
+    prefix = "t1" if team == "team1" else "t2"
+    c1 = _str(md.get(f"{prefix}p1_country"))
+    c2 = _str(md.get(f"{prefix}p2_country"))
+    if c1 and c2:
+        return c1 if c1 == c2 else None
+    return c1 or c2
 
 
-def _split_teams(participants: list[dict[str, Any]]) -> tuple[dict | None, dict | None]:
-    """participants[0] -> team1, participants[1] -> team2."""
-    def _shape(p: dict[str, Any]) -> dict[str, Any]:
-        players = p.get("players") or []
-        ids: list[int] = []
-        names: list[str] = []
-        for pl in players:
-            pid = _to_int(pl.get("id"))
-            if pid is not None:
-                ids.append(pid)
-            nm = _str(pl.get("name"))
-            if nm:
-                names.append(nm)
-        return {
-            "country": _str(p.get("country")),
-            "player_ids": ids or None,
-            "names": names or None,
-            "seed": _normalize_seed(p.get("seed")),
-        }
+def _score_sets(ld: dict[str, Any]) -> list[dict[str, Any]]:
+    """live_detail의 게임별 점수 컬럼을 sets 리스트로 정규화.
 
-    t1 = _shape(participants[0]) if len(participants) >= 1 else None
-    t2 = _shape(participants[1]) if len(participants) >= 2 else None
-    return t1, t2
+    [{"set": 1, "home": 13, "away": 21}, ...] — 기존 results-page 파서와 같은 모양.
+    home=team1, away=team2 (라이브 카드 UI 컨벤션 유지).
+    아직 시작하지 않은 게임(home/away 둘 다 null)은 포함하지 않는다.
+    """
+    sets: list[dict[str, Any]] = []
+    for n in (1, 2, 3):
+        home = _to_int(ld.get(f"team1_g{n}_score"))
+        away = _to_int(ld.get(f"team2_g{n}_score"))
+        if home is None and away is None:
+            continue
+        sets.append({"set": n, "home": home, "away": away})
+    return sets
 
 
-def _normalize_seed(seed: Any) -> str | None:
-    """'(1)' → '1', '' → None."""
-    if seed is None:
+def _slug_from_url(url: Any) -> str | None:
+    """bwfworldtour.../tournament/{tid}/{slug}/results/ 에서 slug 추출."""
+    if not isinstance(url, str) or not url:
         return None
-    s = str(seed).strip()
-    if not s:
+    parts = [p for p in url.split("/") if p]
+    try:
+        idx = parts.index("tournament")
+    except ValueError:
         return None
-    s = s.strip("()").strip()
-    return s or None
-
-
-def _resolve_tour_level(t: dict[str, Any]) -> str:
-    cat = t.get("category_model") or {}
-    name = cat.get("name") if isinstance(cat, dict) else None
-    if isinstance(name, str):
-        lvl = _NAME_TO_LEVEL.get(name.strip())
-        if lvl:
-            return lvl
-    cat_logo = t.get("catLogo") or ""
-    if isinstance(cat_logo, str):
-        m = _SUFFIX_RE.search(cat_logo.lower())
-        if m:
-            lvl = _SUFFIX_TO_LEVEL.get(m.group(1))
-            if lvl:
-                return lvl
-    return (name or "UNKNOWN").strip() or "UNKNOWN"
+    if idx + 2 < len(parts):
+        return parts[idx + 2] or None
+    return None
 
 
 def _str(v: Any) -> str | None:
@@ -293,17 +240,10 @@ def _to_int(v: Any) -> int | None:
         return None
 
 
-def _to_money(v: Any) -> float | None:
-    if v is None or v == "":
-        return None
-    try:
-        return float(str(v).replace(",", "").replace("$", "").strip())
-    except (TypeError, ValueError):
-        return None
-
-
 def _date_only(v: Any) -> str | None:
-    if not v or not isinstance(v, str):
+    if v is None:
         return None
-    head = v.split(" ", 1)[0]
-    return head or None
+    s = str(v).strip()
+    if not s:
+        return None
+    return s.split(" ", 1)[0] or None
