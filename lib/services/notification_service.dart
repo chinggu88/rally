@@ -68,7 +68,8 @@ class NotificationService extends GetxService {
       await _bindFcmToken();
       _bindMessageHandlers();
       _bindAuthChanges();
-      await _checkInitialMessage();
+      // getInitialMessage가 환경에 따라 hang할 수 있어 await하지 않는다.
+      unawaited(_checkInitialMessage());
       log('NotificationService.initialize: ok');
     } catch (e, st) {
       log('NotificationService.initialize: failed — $e\n$st');
@@ -90,15 +91,13 @@ class NotificationService extends GetxService {
       '${settings.authorizationStatus}',
     );
 
-    // 포그라운드 표시는 flutter_local_notifications로 직접 처리한다.
-    // iOS에서 FCM 자체 포그라운드 표시는 flutter_local_notifications와의
-    // UNUserNotificationCenter delegate 충돌로 동작하지 않으므로, FCM/OS
-    // 자체 표시는 꺼서 중복/누락을 모두 방지한다.
+    // iOS 포그라운드 표시는 네이티브 AppDelegate의 willPresent에서 OS로 직접 위임한다.
+    // (swizzling 비활성 환경에서 Dart onMessage가 트리거되지 않아 Dart 경로를 우회)
     await FirebaseMessaging.instance
         .setForegroundNotificationPresentationOptions(
-          alert: false,
-          badge: false,
-          sound: false,
+          alert: true,
+          badge: true,
+          sound: true,
         );
   }
 
@@ -109,9 +108,9 @@ class NotificationService extends GetxService {
   Future<void> _setupLocalNotifications() async {
     const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
     const iosInit = DarwinInitializationSettings(
-      requestAlertPermission: false,
-      requestBadgePermission: false,
-      requestSoundPermission: false,
+      requestAlertPermission: true,
+      requestBadgePermission: true,
+      requestSoundPermission: true,
     );
     const initSettings = InitializationSettings(
       android: androidInit,
@@ -121,7 +120,6 @@ class NotificationService extends GetxService {
     await _localNotifications.initialize(
       initSettings,
       onDidReceiveNotificationResponse: (response) {
-        log('local notification tapped: ${response.payload}');
         // TODO: payload로 라우팅 처리 (notification_id 등)
       },
     );
@@ -151,7 +149,6 @@ class NotificationService extends GetxService {
     _tokenRefreshSub = FirebaseMessaging.instance.onTokenRefresh.listen((
       newToken,
     ) async {
-      log('NotificationService: token refreshed');
       _currentToken = newToken;
       await _saveTokenIfLoggedIn(newToken);
     });
@@ -188,23 +185,15 @@ class NotificationService extends GetxService {
     const interval = Duration(milliseconds: 500);
     for (var i = 0; i < maxAttempts; i++) {
       final apns = await FirebaseMessaging.instance.getAPNSToken();
-      if (apns != null) {
-        log('APNs token: ok (attempt ${i + 1})');
-        return apns;
-      }
+      if (apns != null) return apns;
       await Future.delayed(interval);
     }
-    log('APNs token: still null after $maxAttempts attempts');
     return null;
   }
 
   Future<void> _saveTokenIfLoggedIn(String token) async {
-    log('asdf _saveTokenIfLoggedIn');
     final user = Supabase.instance.client.auth.currentUser;
-    if (user == null) {
-      log('NotificationService._saveTokenIfLoggedIn: skipped (anonymous)');
-      return;
-    }
+    if (user == null) return;
 
     String? deviceName;
     String? appVersion;
@@ -236,24 +225,16 @@ class NotificationService extends GetxService {
   // ───────────────────────────────────────────────────────────
 
   void _bindMessageHandlers() {
-    _foregroundSub = FirebaseMessaging.onMessage.listen((message) {
-      log(
-        'foreground message: ${message.messageId} '
-        '${message.notification?.title}',
-      );
-      _showLocalNotification(message);
-    });
-
-    _openedAppSub = FirebaseMessaging.onMessageOpenedApp.listen((message) {
-      log('opened from background: ${message.data}');
-      _handleNotificationTap(message);
-    });
+    // iOS는 swizzling 비활성 + 네이티브 willPresent에서 OS 직접 표시 경로를 쓰므로
+    // onMessage가 트리거되지 않을 수 있다. Android는 정상 트리거되어 _showLocalNotification으로 표시.
+    _foregroundSub = FirebaseMessaging.onMessage.listen(_showLocalNotification);
+    _openedAppSub =
+        FirebaseMessaging.onMessageOpenedApp.listen(_handleNotificationTap);
   }
 
   Future<void> _checkInitialMessage() async {
     final initial = await FirebaseMessaging.instance.getInitialMessage();
     if (initial != null) {
-      log('opened from terminated: ${initial.data}');
       _handleNotificationTap(initial);
     }
   }
@@ -263,6 +244,10 @@ class NotificationService extends GetxService {
   }
 
   Future<void> _showLocalNotification(RemoteMessage message) async {
+    // iOS 포그라운드는 네이티브 willPresent에서 OS가 직접 표시한다.
+    // (여기서 또 show하면 이중 알림이 뜬다.)
+    if (Platform.isIOS) return;
+
     final notification = message.notification;
     if (notification == null) return;
 
@@ -273,15 +258,7 @@ class NotificationService extends GetxService {
       importance: Importance.high,
       priority: Priority.high,
     );
-    const iosDetails = DarwinNotificationDetails(
-      presentAlert: true,
-      presentBadge: true,
-      presentSound: true,
-    );
-    const details = NotificationDetails(
-      android: androidDetails,
-      iOS: iosDetails,
-    );
+    const details = NotificationDetails(android: androidDetails);
 
     await _localNotifications.show(
       notification.hashCode,
@@ -299,10 +276,7 @@ class NotificationService extends GetxService {
 
   Future<void> setPushEnabled(bool enabled) async {
     final token = _currentToken;
-    if (token == null) {
-      log('NotificationService.setPushEnabled: skipped (no token)');
-      return;
-    }
+    if (token == null) return;
     if (enabled) {
       await _saveTokenIfLoggedIn(token);
     } else {
