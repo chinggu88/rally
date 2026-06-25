@@ -18,6 +18,8 @@ import '../modules/profile_edit/bindings/profile_edit_binding.dart';
 import '../modules/profile_edit/views/profile_edit_view.dart';
 import '../modules/news/bindings/news_binding.dart';
 import '../modules/news/views/news_view.dart';
+import '../modules/notifications/bindings/notifications_binding.dart';
+import '../modules/notifications/views/notifications_view.dart';
 import '../modules/player/bindings/player_binding.dart';
 import '../modules/player/bindings/player_detail_binding.dart';
 import '../modules/player/views/player_detail_view.dart';
@@ -79,6 +81,11 @@ abstract class AppPages {
       name: Routes.FAVORITE_PLAYERS,
       page: () => const FavoritePlayersView(),
       binding: FavoritePlayersBinding(),
+    ),
+    GetPage(
+      name: Routes.NOTIFICATIONS,
+      page: () => const NotificationsView(),
+      binding: NotificationsBinding(),
     ),
     GetPage(
       name: Routes.LOGIN,

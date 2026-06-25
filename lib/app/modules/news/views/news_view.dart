@@ -9,6 +9,7 @@ import '../../../data/models/active_tournament_response.dart';
 import '../../../data/models/live_match_response.dart';
 import '../../../data/models/news_card_response.dart';
 import '../../../data/models/today_match_response.dart';
+import '../../../routes/app_routes.dart';
 import '../controllers/news_controller.dart';
 import 'news_card_detail_view.dart';
 import 'widgets/active_tournament_card.dart';
@@ -87,6 +88,20 @@ class NewsView extends GetView<NewsController> {
           letterSpacing: 0.6,
         ),
       ),
+      actions: [
+        Padding(
+          padding: EdgeInsets.only(right: 8.w),
+          child: IconButton(
+            onPressed: () => Get.toNamed(Routes.NOTIFICATIONS),
+            icon: Icon(
+              Icons.notifications_none,
+              color: Colors.white,
+              size: 24.sp,
+            ),
+            tooltip: '알림',
+          ),
+        ),
+      ],
     );
   }
 
