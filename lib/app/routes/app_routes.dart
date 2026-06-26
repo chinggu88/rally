@@ -12,6 +12,7 @@ abstract class Routes {
   static const PROFILE_EDIT = '/profile-edit';
   static const FAVORITE_PLAYERS = '/favorite-players';
   static const NOTIFICATIONS = '/notifications';
+  static const LIVE_MATCH_CHAT = '/live-match-chat';
   static const LOGIN = '/login';
   static const SIGN_UP = '/sign-up';
 }

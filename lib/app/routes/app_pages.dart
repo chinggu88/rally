@@ -20,6 +20,8 @@ import '../modules/news/bindings/news_binding.dart';
 import '../modules/news/views/news_view.dart';
 import '../modules/notifications/bindings/notifications_binding.dart';
 import '../modules/notifications/views/notifications_view.dart';
+import '../modules/live_match_chat/bindings/live_match_chat_binding.dart';
+import '../modules/live_match_chat/views/live_match_chat_view.dart';
 import '../modules/player/bindings/player_binding.dart';
 import '../modules/player/bindings/player_detail_binding.dart';
 import '../modules/player/views/player_detail_view.dart';
@@ -86,6 +88,11 @@ abstract class AppPages {
       name: Routes.NOTIFICATIONS,
       page: () => const NotificationsView(),
       binding: NotificationsBinding(),
+    ),
+    GetPage(
+      name: Routes.LIVE_MATCH_CHAT,
+      page: () => const LiveMatchChatView(),
+      binding: LiveMatchChatBinding(),
     ),
     GetPage(
       name: Routes.LOGIN,
