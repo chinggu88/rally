@@ -868,8 +868,24 @@ class _LiveMatchPageViewState extends State<_LiveMatchPageView> {
                       match: m,
                       width: widget.cardWidth,
                       scoreBumpAt: bumpAt,
-                      // 추후 detail_url 외부 오픈 자리 — 현재는 no-op.
-                      onTap: () {},
+                      onTap: () {
+                        if (id == null) return;
+                        Get.toNamed(
+                          Routes.LIVE_MATCH_CHAT,
+                          arguments: <String, dynamic>{
+                            'live_match_id': id,
+                            'team1_names': m.team1Names,
+                            'team2_names': m.team2Names,
+                            'team1_country': m.team1Country,
+                            'team2_country': m.team2Country,
+                            'event_name': m.eventName,
+                            'round_name': m.roundName,
+                            'tournament_name': m.name,
+                            'score': m.scoreDisplay,
+                            'court_name': m.courtName,
+                          },
+                        );
+                      },
                     );
                   }),
                 ),
