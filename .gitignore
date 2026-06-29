@@ -155,3 +155,6 @@ firepit-log.txt
 # Node (used for Apple JWT scripts, etc.)
 node_modules/
 **/node_modules/
+
+# Firebase Admin SDK service account key (절대 커밋 금지)
+*-firebase-adminsdk-*.json
