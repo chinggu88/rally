@@ -43,15 +43,14 @@ def fetch_interested_users(supabase: Any, player_ids: list[int]) -> list[str]:
     return list({r["user_id"] for r in rows})
 
 
-def fetch_already_notified_user_ids(
-    supabase: Any, member_id: str, year: int, week: int
+def fetch_summary_notified_user_ids(
+    supabase: Any, year: int, week: int
 ) -> set[str]:
-    """같은 주(year/week) + 같은 member_id 로 이미 알림 row가 있는 user_id 집합."""
+    """같은 주(year/week)에 이미 랭킹변동 요약 알림을 받은 user_id 집합."""
     res = (
         supabase.table("notifications")
         .select("user_id")
         .eq("data->>type", "ranking_change")
-        .eq("data->>member_id", member_id)
         .eq("data->>ranking_year", str(year))
         .eq("data->>ranking_week", str(week))
         .execute()

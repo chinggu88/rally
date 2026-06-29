@@ -1,6 +1,7 @@
 # Ranking Notifier — 관심선수 랭킹 변화 푸시 알림
 
 매주 갱신되는 `bwf_rankings` 결과에서 순위 변동이 있는 선수를 감지하여, 해당 선수를 관심등록한 사용자에게 FCM 푸시를 보낸다.
+**유저당 그 주 1건의 요약 알림**만 발송하고(관심선수가 여러 명 변동해도 푸시는 1번), 선수별 상세 변동 내역은 `data.changes` 배열에 담아 앱 알림 화면에서 펼쳐 확인한다.
 
 ## 파이프라인
 
@@ -14,39 +15,35 @@ ranking_notifier.main.run(year, week)
      · 단식: "12345"        → [12345]
      · 복식: "12345-67890"  → [12345, 67890]   (둘 중 한 명만 등록되어 있어도 발송)
 3. favorite_players JOIN profiles(notifications_enabled=true)
-4. 같은 주(year/week) + 같은 member_id 로 이미 알림 받은 user 제외
-5. notifications 테이블에 status='pending' 으로 insert
+   → 유저별로 관심선수 변동 내역(changes)을 누적
+4. 같은 주(year/week)에 이미 요약 알림 받은 user 제외 (유저 단위 중복방지)
+5. 유저당 요약 알림 1건을 notifications 테이블에 status='pending' 으로 insert
   ↓ (DB Webhook)
 supabase/functions/send-push
   ↓
 device_tokens 조회 → FCM v1 send → notifications.status 업데이트
 ```
 
-## 안내 멘트 예시
+## 안내 멘트 (요약 푸시 — 모든 유저 공통)
 
 ```
-📈 관심선수 랭킹 상승
-LEE Hyun Il (남자 단식)
-세계랭킹 3계단 상승 → 현재 5위
+📊 관심선수 랭킹 변동
+관심선수의 세계랭킹이 변동했어요. 눌러서 확인하세요.
 ```
 
-```
-📉 관심선수 랭킹 하락
-KIM Won Ho / SEO Seung Jae (남자 복식)
-세계랭킹 4계단 하락 → 현재 12위
-```
+선수별 상세(상승/하락·계단 수·현재 순위)는 앱 알림 목록 항목을 탭하면 인라인으로 펼쳐 표시된다.
 
 ## 알림 페이로드 (notifications.data JSONB)
 
 | key | 예시 | 용도 |
 |---|---|---|
 | `type` | `"ranking_change"` | 클라이언트 라우팅 / 중복 체크 |
-| `category` | `"MS"` | MS/WS/MD/WD/XD |
-| `member_id` | `"12345"` 또는 `"12345-67890"` | 중복 체크 키 |
-| `rank` | `"5"` | 현재 순위 (FCM data는 string only) |
-| `rank_change` | `"3"` / `"-4"` | 변동 폭/방향 |
-| `ranking_year` | `"2026"` | 중복 체크 키 |
-| `ranking_week` | `"20"` | 중복 체크 키 |
+| `ranking_year` | `"2026"` | 중복 체크 키 (user+year+week) |
+| `ranking_week` | `"20"` | 중복 체크 키 (user+year+week) |
+| `count` | `4` | 변동된 관심선수 수 |
+| `changes` | `[{member_id, player_name, category, rank, rank_change}, ...]` | 선수별 상세 (앱에서 펼쳐 표시) |
+
+`changes[]` 원소: `member_id`(단식/복식 식별자), `player_name`, `category`(MS/WS/MD/WD/XD), `rank`(현재 순위, int), `rank_change`(변동 폭/방향, int).
 
 ## 실행
 
@@ -66,7 +63,7 @@ run(year=2026, week=20)
 
 ## 중복 방지
 
-같은 주(`ranking_year`+`ranking_week`) + 같은 `member_id` 조합으로 이미 `notifications` 행이 있으면 해당 user는 skip.
+같은 주(`ranking_year`+`ranking_week`)에 이미 요약 알림 행이 있는 user는 skip (유저 단위).
 → 배치가 재실행되거나 한 주에 두 번 돌아도 같은 사용자에게 중복 푸시되지 않음.
 
 ## 의존 테이블

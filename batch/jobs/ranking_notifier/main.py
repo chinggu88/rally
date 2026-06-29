@@ -7,12 +7,12 @@ from dotenv import load_dotenv
 
 from batch.jobs.ranking_notifier.detector import (
     expand_member_id,
-    fetch_already_notified_user_ids,
     fetch_changed_rankings,
     fetch_interested_users,
+    fetch_summary_notified_user_ids,
 )
 from batch.jobs.ranking_notifier.notifier import (
-    build_notification_rows,
+    build_summary_rows,
     insert_notifications,
 )
 from batch.shared.logger import get_logger
@@ -79,7 +79,6 @@ def run(year: int | None = None, week: int | None = None) -> int:
 
     notifications_inserted = 0
     changed_rankings = 0
-    unique_users: set[str] = set()
     skipped_duplicate = 0
 
     try:
@@ -91,35 +90,35 @@ def run(year: int | None = None, week: int | None = None) -> int:
         changed_rankings = len(changes)
         log.info(f"Changed rankings: {changed_rankings}")
 
+        # 유저별로 관심선수 변동 내역을 모은다 (유저당 요약 알림 1건).
+        user_changes: dict[str, list[dict]] = {}
         for row in changes:
-            member_id = row["member_id"]
-            player_ids = expand_member_id(member_id)
+            player_ids = expand_member_id(row["member_id"])
             if not player_ids:
                 continue
-
             user_ids = fetch_interested_users(supabase, player_ids)
             if not user_ids:
                 continue
+            change = {
+                "member_id": row["member_id"],
+                "player_name": row["player_name"],
+                "category": row["category"],
+                "rank": int(row["rank"]),
+                "rank_change": int(row["rank_change"]),
+            }
+            for uid in user_ids:
+                user_changes.setdefault(uid, []).append(change)
 
-            already = fetch_already_notified_user_ids(
-                supabase, member_id, year, week
-            )
-            target_users = [u for u in user_ids if u not in already]
-            skipped_duplicate += len(user_ids) - len(target_users)
-            if not target_users:
-                continue
+        already = fetch_summary_notified_user_ids(supabase, year, week)
+        target = {
+            uid: chs for uid, chs in user_changes.items() if uid not in already
+        }
+        skipped_duplicate = len(user_changes) - len(target)
 
-            notif_rows = build_notification_rows(
-                target_users, row, year=year, week=week
-            )
-            written = insert_notifications(supabase, notif_rows)
-            notifications_inserted += written
-            unique_users.update(target_users)
-            log.info(
-                f"{row['category']} #{row['rank']} {row['player_name']} "
-                f"(rank_change={row['rank_change']}): "
-                f"notified {written} users"
-            )
+        rows = build_summary_rows(target, year=year, week=week)
+        notifications_inserted = insert_notifications(supabase, rows)
+        for uid, chs in target.items():
+            log.info(f"user {uid}: summary of {len(chs)} ranking changes")
 
         _finish_log(
             supabase,
@@ -131,13 +130,13 @@ def run(year: int | None = None, week: int | None = None) -> int:
                 "week": week,
                 "changed_rankings": changed_rankings,
                 "notifications_inserted": notifications_inserted,
-                "unique_users": len(unique_users),
+                "unique_users": len(target),
                 "skipped_duplicate": skipped_duplicate,
             },
         )
         log.info(
             f"Done. inserted={notifications_inserted} "
-            f"unique_users={len(unique_users)} skipped_dup={skipped_duplicate}"
+            f"unique_users={len(target)} skipped_dup={skipped_duplicate}"
         )
         return notifications_inserted
     except Exception as e:
@@ -153,7 +152,6 @@ def run(year: int | None = None, week: int | None = None) -> int:
                 "week": week,
                 "changed_rankings": changed_rankings,
                 "notifications_inserted": notifications_inserted,
-                "unique_users": len(unique_users),
             },
         )
         raise

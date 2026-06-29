@@ -1,26 +1,5 @@
-CATEGORY_LABEL = {
-    "MS": "남자 단식",
-    "WS": "여자 단식",
-    "MD": "남자 복식",
-    "WD": "여자 복식",
-    "XD": "혼합 복식",
-}
-
-
-def _direction(rank_change: int) -> tuple[str, str]:
-    if rank_change > 0:
-        return ("📈", "상승")
-    return ("📉", "하락")
-
-
-def build_message(row: dict) -> tuple[str, str]:
-    rank_change = int(row["rank_change"])
-    emoji, verb = _direction(rank_change)
-    cat = CATEGORY_LABEL.get(row["category"], row["category"])
-    change_abs = abs(rank_change)
-    title = f"{emoji} 관심선수 랭킹 {verb}"
-    body = (
-        f"{row['player_name']} ({cat})\n"
-        f"세계랭킹 {change_abs}계단 {verb} → 현재 {row['rank']}위"
-    )
+def build_summary_message() -> tuple[str, str]:
+    """유저당 1건 요약 알림 본문. 상세는 앱 알림 화면에서 확인."""
+    title = "📊 관심선수 랭킹 변동"
+    body = "관심선수의 세계랭킹이 변동했어요. 눌러서 확인하세요."
     return title, body

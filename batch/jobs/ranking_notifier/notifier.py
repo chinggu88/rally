@@ -1,35 +1,35 @@
 from typing import Any
 
-from batch.jobs.ranking_notifier.messages import build_message
+from batch.jobs.ranking_notifier.messages import build_summary_message
 
 CHUNK_SIZE = 500
 
 
-def build_notification_rows(
-    user_ids: list[str], ranking_row: dict, year: int, week: int
+def build_summary_rows(
+    user_changes: dict[str, list[dict]], year: int, week: int
 ) -> list[dict]:
-    if not user_ids:
-        return []
-    title, body = build_message(ranking_row)
-    data = {
-        "type": "ranking_change",
-        "category": ranking_row["category"],
-        "member_id": ranking_row["member_id"],
-        "rank": str(ranking_row["rank"]),
-        "rank_change": str(ranking_row["rank_change"]),
-        "ranking_year": str(year),
-        "ranking_week": str(week),
-    }
-    return [
-        {
-            "user_id": uid,
-            "title": title,
-            "body": body,
-            "data": data,
-            "status": "pending",
-        }
-        for uid in user_ids
-    ]
+    """유저별 랭킹변동 목록 → 유저당 요약 알림 row 1건."""
+    title, body = build_summary_message()
+    rows: list[dict] = []
+    for uid, changes in user_changes.items():
+        if not changes:
+            continue
+        rows.append(
+            {
+                "user_id": uid,
+                "title": title,
+                "body": body,
+                "data": {
+                    "type": "ranking_change",
+                    "ranking_year": str(year),
+                    "ranking_week": str(week),
+                    "count": len(changes),
+                    "changes": changes,
+                },
+                "status": "pending",
+            }
+        )
+    return rows
 
 
 def insert_notifications(supabase: Any, rows: list[dict]) -> int:
