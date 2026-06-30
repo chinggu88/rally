@@ -20,90 +20,180 @@ class ChatMessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bubbleColor = isMine ? AppColors.accent : AppColors.cardBg;
-    final textColor = isMine ? AppColors.accentDark : Colors.white;
-    final radius = Radius.circular(14.r);
-
     return GestureDetector(
       onLongPress: isMine ? onLongPress : null,
       child: Padding(
-        padding: EdgeInsets.symmetric(vertical: 4.h, horizontal: 12.w),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          mainAxisAlignment:
-              isMine ? MainAxisAlignment.end : MainAxisAlignment.start,
-          children: [
-            if (!isMine) ...[
-              _buildAvatar(),
-              SizedBox(width: 8.w),
+        padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 10.h),
+        child: isMine ? _buildMine() : _buildOther(),
+      ),
+    );
+  }
+
+  Widget _buildOther() {
+    final displayName = _displayName();
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildAvatar(displayName),
+        SizedBox(width: 10.w),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                displayName,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 13.sp,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              SizedBox(height: 6.h),
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: 14.w,
+                  vertical: 12.h,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1E2220),
+                  borderRadius: BorderRadius.circular(14.r),
+                ),
+                child: Text(
+                  message.content,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 14.sp,
+                    height: 1.4,
+                  ),
+                ),
+              ),
+              SizedBox(height: 6.h),
+              Text(
+                _formatHm(message.createdAt),
+                style: TextStyle(
+                  color: AppColors.hint,
+                  fontSize: 11.sp,
+                ),
+              ),
             ],
-            Flexible(
-              child: Column(
-                crossAxisAlignment:
-                    isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                children: [
-                  if (!isMine) ...[
-                    Text(
-                      message.authorNickname ?? '익명',
-                      style: TextStyle(
-                        color: AppColors.subtleText,
-                        fontSize: 11.sp,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    SizedBox(height: 3.h),
-                  ],
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 12.w,
-                      vertical: 8.h,
-                    ),
-                    decoration: BoxDecoration(
-                      color: bubbleColor,
-                      borderRadius: BorderRadius.only(
-                        topLeft: radius,
-                        topRight: radius,
-                        bottomLeft: isMine ? radius : Radius.zero,
-                        bottomRight: isMine ? Radius.zero : radius,
-                      ),
-                    ),
-                    child: Text(
-                      message.content,
-                      style: TextStyle(
-                        color: textColor,
-                        fontSize: 14.sp,
-                        height: 1.35,
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 3.h),
-                  Text(
-                    _formatHm(message.createdAt),
-                    style: TextStyle(
-                      color: AppColors.hint,
-                      fontSize: 10.sp,
-                    ),
-                  ),
-                ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMine() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Container(
+          constraints: BoxConstraints(maxWidth: 0.78.sw),
+          padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+          decoration: BoxDecoration(
+            color: AppColors.accentLime,
+            borderRadius: BorderRadius.circular(14.r),
+          ),
+          child: Text(
+            message.content,
+            style: TextStyle(
+              color: const Color(0xFF1A1F00),
+              fontSize: 14.sp,
+              height: 1.4,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        SizedBox(height: 6.h),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              _formatHm(message.createdAt),
+              style: TextStyle(
+                color: AppColors.hint,
+                fontSize: 11.sp,
               ),
             ),
+            SizedBox(width: 4.w),
+            Icon(
+              Icons.done_all_rounded,
+              size: 12.sp,
+              color: AppColors.accentLime,
+            ),
           ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAvatar(String displayName) {
+    final url = message.authorAvatarUrl;
+    final hasUrl = url != null && url.isNotEmpty;
+    return Container(
+      width: 36.w,
+      height: 36.w,
+      decoration: BoxDecoration(
+        color: hasUrl ? AppColors.cardBg : _colorFor(message.userId),
+        borderRadius: BorderRadius.circular(8.r),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: hasUrl
+          ? CachedNetworkImage(
+              imageUrl: url,
+              fit: BoxFit.cover,
+              errorWidget: (_, __, ___) => _buildInitial(displayName),
+            )
+          : _buildInitial(displayName),
+    );
+  }
+
+  Widget _buildInitial(String name) {
+    final initial = _initialOf(name);
+    return Center(
+      child: Text(
+        initial,
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 14.sp,
+          fontWeight: FontWeight.w800,
         ),
       ),
     );
   }
 
-  Widget _buildAvatar() {
-    final url = message.authorAvatarUrl;
-    return CircleAvatar(
-      radius: 14.r,
-      backgroundColor: AppColors.cardBg,
-      backgroundImage:
-          (url != null && url.isNotEmpty) ? CachedNetworkImageProvider(url) : null,
-      child: (url == null || url.isEmpty)
-          ? Icon(Icons.person, color: AppColors.subtleText, size: 14.sp)
-          : null,
-    );
+  String _displayName() {
+    final nick = message.authorNickname?.trim();
+    if (nick != null && nick.isNotEmpty) return nick;
+    // user_id 앞 4자리로 일관된 fallback ID 생성 (UUID에서 하이픈 제외 후 앞 4자리)
+    final id = message.userId.replaceAll('-', '');
+    final suffix = id.length >= 4 ? id.substring(0, 4) : id;
+    return 'User_$suffix';
+  }
+
+  static String _initialOf(String name) {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) return '?';
+    final ch = trimmed.characters.first;
+    return ch.toUpperCase();
+  }
+
+  /// user_id 해시 기반 일관 컬러. 같은 유저는 항상 같은 색.
+  static Color _colorFor(String userId) {
+    const palette = <Color>[
+      Color(0xFF7C5CFF),
+      Color(0xFF35B36E),
+      Color(0xFFFF6B6B),
+      Color(0xFFFFA94D),
+      Color(0xFF22B8CF),
+      Color(0xFFE64980),
+      Color(0xFF5C7CFA),
+      Color(0xFFFFD43B),
+    ];
+    var hash = 0;
+    for (final code in userId.codeUnits) {
+      hash = (hash * 31 + code) & 0x7FFFFFFF;
+    }
+    return palette[hash % palette.length];
   }
 
   static String _formatHm(DateTime t) {

@@ -5,16 +5,16 @@ import 'package:get/get.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../data/models/chat_message_response.dart';
 import '../controllers/live_match_chat_controller.dart';
-import 'widgets/chat_match_header.dart';
+import 'widgets/chat_day_divider.dart';
+import 'widgets/chat_live_status_pill.dart';
 import 'widgets/chat_message_bubble.dart';
 
 /// 라이브 매치 채팅방 화면.
 ///
-/// 구조:
-///   - AppBar
-///   - 상단 고정 매치 정보 (ChatMatchHeader)
-///   - 메시지 리스트 (reverse 스크롤, 위로 당기면 이전 페이지)
-///   - 하단 입력바
+/// Stitch "커뮤니티 대화방 (매거진)" 디자인 적용.
+///   - AppBar: 큰 타이틀 + "n ONLINE • LIVE MATCH" 서브라인
+///   - 메시지 리스트 (reverse 스크롤): 데이 디바이더, 메시지 버블, 라이브 상태 pill
+///   - 입력바: pill 입력창 + 라임 send 버튼
 class LiveMatchChatView extends GetView<LiveMatchChatController> {
   const LiveMatchChatView({super.key});
 
@@ -23,40 +23,94 @@ class LiveMatchChatView extends GetView<LiveMatchChatController> {
     return Scaffold(
       backgroundColor: AppColors.bg,
       resizeToAvoidBottomInset: true,
-      appBar: AppBar(
-        backgroundColor: AppColors.bg,
-        elevation: 0,
-        centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.white),
-        title: Text(
-          '라이브 채팅',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w700,
-            fontSize: 16.sp,
-          ),
-        ),
-      ),
+      appBar: _buildAppBar(),
       body: SafeArea(
+        top: false,
         child: Column(
           children: [
-            ChatMatchHeader(
-              team1Names: controller.team1Names,
-              team2Names: controller.team2Names,
-              team1Country: controller.team1Country,
-              team2Country: controller.team2Country,
-              eventName: controller.eventName,
-              roundName: controller.roundName,
-              tournamentName: controller.tournamentName,
-              courtName: controller.courtName,
-              score: controller.scoreSnapshot,
-            ),
             Expanded(child: _buildMessageList()),
             _buildComposer(),
           ],
         ),
       ),
     );
+  }
+
+  PreferredSizeWidget _buildAppBar() {
+    final title = _resolveTitle();
+    return AppBar(
+      backgroundColor: AppColors.bg,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      iconTheme: const IconThemeData(color: Colors.white),
+      titleSpacing: 0,
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w900,
+              fontSize: 18.sp,
+              letterSpacing: 0.3,
+            ),
+          ),
+          SizedBox(height: 2.h),
+          Obx(() {
+            final count = controller.onlineCount;
+            return Text(
+              '${_formatCount(count)} ONLINE  •  LIVE MATCH',
+              style: TextStyle(
+                color: AppColors.subtleText,
+                fontSize: 10.sp,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 1.0,
+              ),
+            );
+          }),
+        ],
+      ),
+      actions: [
+        IconButton(
+          onPressed: () {},
+          icon: Icon(Icons.search_rounded, color: Colors.white, size: 22.sp),
+        ),
+        IconButton(
+          onPressed: () {},
+          icon: Icon(Icons.more_vert_rounded, color: Colors.white, size: 22.sp),
+        ),
+        SizedBox(width: 4.w),
+      ],
+    );
+  }
+
+  String _resolveTitle() {
+    final tournament = controller.tournamentName;
+    if (tournament != null && tournament.trim().isNotEmpty) {
+      return tournament.trim().toUpperCase();
+    }
+    final p1 = controller.team1Names.isNotEmpty
+        ? controller.team1Names.first
+        : null;
+    final p2 = controller.team2Names.isNotEmpty
+        ? controller.team2Names.first
+        : null;
+    if (p1 != null && p2 != null) {
+      return '$p1 VS $p2'.toUpperCase();
+    }
+    return 'LIVE CHAT';
+  }
+
+  String _formatCount(int n) {
+    if (n >= 1000) {
+      final k = n / 1000;
+      return '${k.toStringAsFixed(k >= 10 ? 0 : 1)}K';
+    }
+    return n.toString();
   }
 
   Widget _buildMessageList() {
@@ -73,10 +127,9 @@ class LiveMatchChatView extends GetView<LiveMatchChatController> {
         return _buildCenter('첫 번째 응원 메시지를 남겨보세요!');
       }
       final myId = controller.currentUserId;
-      // reverse=true이므로 ASC 리스트를 그대로 사용하되 builder가 뒤에서부터 그린다.
+      final items = _buildListItems(myId);
       return NotificationListener<ScrollNotification>(
         onNotification: (n) {
-          // reverse=true에서 위로 스크롤 시 maxScrollExtent에 근접
           if (n.metrics.pixels >= n.metrics.maxScrollExtent - 200.h) {
             controller.loadMore();
           }
@@ -84,14 +137,10 @@ class LiveMatchChatView extends GetView<LiveMatchChatController> {
         },
         child: ListView.builder(
           reverse: true,
-          padding: EdgeInsets.symmetric(vertical: 8.h),
-          itemCount: controller.messages.length +
-              (controller.isLoadingMore ? 1 : 0),
+          padding: EdgeInsets.only(top: 8.h, bottom: 8.h),
+          itemCount: items.length + (controller.isLoadingMore ? 1 : 0),
           itemBuilder: (context, index) {
-            // reverse=true이므로 index 0이 가장 최신.
-            // 가장 위쪽(=index가 가장 큰 항목 다음)에 로딩 인디케이터.
-            if (controller.isLoadingMore &&
-                index == controller.messages.length) {
+            if (controller.isLoadingMore && index == items.length) {
               return Padding(
                 padding: EdgeInsets.symmetric(vertical: 12.h),
                 child: const Center(
@@ -106,18 +155,63 @@ class LiveMatchChatView extends GetView<LiveMatchChatController> {
                 ),
               );
             }
-            final reverseIndex = controller.messages.length - 1 - index;
-            final m = controller.messages[reverseIndex];
-            return ChatMessageBubble(
-              key: ValueKey(m.id),
-              message: m,
-              isMine: m.userId == myId,
-              onLongPress: () => _confirmDelete(m),
-            );
+            return items[index];
           },
         ),
       );
     });
+  }
+
+  /// reverse=true 기준으로 그릴 위젯 리스트.
+  /// index 0이 가장 최신(아래)이 되도록 시간순 정렬된 메시지를 뒤집어 만든다.
+  /// 날짜가 바뀌는 지점마다 데이 디바이더를 삽입하고, 최신 메시지 위에 라이브 상태 pill을 노출한다.
+  List<Widget> _buildListItems(String? myId) {
+    final asc = controller.messages; // 오래된 → 최신
+    final widgets = <Widget>[];
+
+    // 시간 오름차순으로 한 번 훑으며 디바이더와 버블을 만든다.
+    DateTime? prevDay;
+    for (final m in asc) {
+      final day = DateTime(m.createdAt.year, m.createdAt.month, m.createdAt.day);
+      if (prevDay == null || prevDay != day) {
+        widgets.add(ChatDayDivider(label: _dayLabel(day)));
+        prevDay = day;
+      }
+      widgets.add(
+        ChatMessageBubble(
+          key: ValueKey(m.id),
+          message: m,
+          isMine: m.userId == myId,
+          onLongPress: () => _confirmDelete(m),
+        ),
+      );
+    }
+
+    // 라이브 상태 pill: 가장 최신 메시지 바로 위에 1회 노출.
+    if (widgets.isNotEmpty) {
+      widgets.add(
+        const ChatLiveStatusPill(label: 'MATCH LIVE: FINAL SET UNDERWAY'),
+      );
+    }
+
+    // reverse=true이므로 마지막 항목이 화면 최상단. index 0이 최신이 되도록 뒤집는다.
+    return widgets.reversed.toList();
+  }
+
+  String _dayLabel(DateTime day) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final diff = today.difference(day).inDays;
+    final base = diff == 0
+        ? 'TODAY'
+        : diff == 1
+            ? 'YESTERDAY'
+            : '${day.year}.${day.month.toString().padLeft(2, '0')}.${day.day.toString().padLeft(2, '0')}';
+    final suffix = controller.tournamentName;
+    if (suffix != null && suffix.trim().isNotEmpty) {
+      return '$base — ${suffix.trim().toUpperCase()}';
+    }
+    return base;
   }
 
   Future<void> _confirmDelete(ChatMessageResponse message) async {
@@ -147,25 +241,25 @@ class LiveMatchChatView extends GetView<LiveMatchChatController> {
   }
 
   Widget _buildComposer() {
-    return Container(
-      padding: EdgeInsets.fromLTRB(12.w, 8.h, 8.w, 8.h),
-      decoration: BoxDecoration(
-        color: AppColors.bg,
-        border: Border(top: BorderSide(color: AppColors.divider, width: 1.h)),
-      ),
+    return Padding(
+      padding: EdgeInsets.fromLTRB(12.w, 6.h, 12.w, 10.h),
       child: SafeArea(
         top: false,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Expanded(
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 4.h),
-                decoration: BoxDecoration(
-                  color: AppColors.cardBg,
-                  borderRadius: BorderRadius.circular(22.r),
-                  border: Border.all(color: AppColors.cardBorder),
-                ),
+        child: Container(
+          padding: EdgeInsets.fromLTRB(6.w, 6.h, 6.w, 6.h),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1C1F1D),
+            borderRadius: BorderRadius.circular(28.r),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              _circleIconButton(
+                icon: Icons.add_rounded,
+                onTap: () {},
+              ),
+              SizedBox(width: 6.w),
+              Expanded(
                 child: TextField(
                   controller: controller.composer,
                   minLines: 1,
@@ -177,41 +271,87 @@ class LiveMatchChatView extends GetView<LiveMatchChatController> {
                   cursorColor: AppColors.accentLime,
                   decoration: InputDecoration(
                     counterText: '',
-                    hintText: '메시지 보내기',
+                    hintText: 'Join the discussion...',
                     hintStyle: TextStyle(
                       color: AppColors.hint,
                       fontSize: 14.sp,
                     ),
                     border: InputBorder.none,
                     isDense: true,
+                    contentPadding: EdgeInsets.symmetric(vertical: 10.h),
                   ),
                 ),
               ),
-            ),
-            SizedBox(width: 6.w),
-            Obx(
-              () => IconButton(
-                onPressed: controller.isSending
-                    ? null
-                    : controller.sendComposerMessage,
-                icon: controller.isSending
-                    ? SizedBox(
-                        width: 18.w,
-                        height: 18.w,
-                        child: const CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: AppColors.accentLime,
-                        ),
-                      )
-                    : Icon(
-                        Icons.send_rounded,
-                        color: AppColors.accentLime,
-                        size: 24.sp,
-                      ),
+              SizedBox(width: 6.w),
+              IconButton(
+                onPressed: () {},
+                icon: Icon(
+                  Icons.image_outlined,
+                  color: AppColors.subtleText,
+                  size: 22.sp,
+                ),
               ),
-            ),
-          ],
+              SizedBox(width: 2.w),
+              Obx(
+                () => GestureDetector(
+                  onTap: controller.isSending
+                      ? null
+                      : controller.sendComposerMessage,
+                  child: Container(
+                    width: 44.w,
+                    height: 44.w,
+                    decoration: BoxDecoration(
+                      color: AppColors.accentLime,
+                      borderRadius: BorderRadius.circular(22.r),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.accentLime.withValues(alpha: 0.4),
+                          blurRadius: 16,
+                          spreadRadius: 0,
+                        ),
+                      ],
+                    ),
+                    alignment: Alignment.center,
+                    child: controller.isSending
+                        ? SizedBox(
+                            width: 18.w,
+                            height: 18.w,
+                            child: const CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Color(0xFF1A1F00),
+                            ),
+                          )
+                        : Icon(
+                            Icons.send_rounded,
+                            color: const Color(0xFF1A1F00),
+                            size: 20.sp,
+                          ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
+      ),
+    );
+  }
+
+  Widget _circleIconButton({
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 36.w,
+        height: 36.w,
+        decoration: BoxDecoration(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(18.r),
+          border: Border.all(color: const Color(0xFF3A3F3C), width: 1),
+        ),
+        alignment: Alignment.center,
+        child: Icon(icon, color: AppColors.subtleText, size: 20.sp),
       ),
     );
   }

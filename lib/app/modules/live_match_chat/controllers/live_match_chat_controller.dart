@@ -50,6 +50,10 @@ class LiveMatchChatController extends GetxController {
   final _errorMessage = RxnString();
   String? get errorMessage => _errorMessage.value;
 
+  /// 채팅방에 현재 접속 중인 사용자 수 (Realtime Presence 기반).
+  final _onlineCount = 0.obs;
+  int get onlineCount => _onlineCount.value;
+
   final composer = TextEditingController();
   String? get currentUserId =>
       Supabase.instance.client.auth.currentUser?.id;
@@ -201,8 +205,12 @@ class LiveMatchChatController extends GetxController {
   void _subscribeRealtime() {
     try {
       final client = Supabase.instance.client;
+      final uid = currentUserId;
       _channel = client
-          .channel('live_match_chat:$liveMatchId')
+          .channel(
+            'live_match_chat:$liveMatchId',
+            opts: RealtimeChannelConfig(key: uid ?? 'anon'),
+          )
           .onPostgresChanges(
             event: PostgresChangeEvent.insert,
             schema: 'public',
@@ -225,9 +233,59 @@ class LiveMatchChatController extends GetxController {
             ),
             callback: _onDelete,
           )
-          .subscribe();
+          .onPresenceSync((_) => _refreshOnlineCount())
+          .onPresenceJoin((_) => _refreshOnlineCount())
+          .onPresenceLeave((_) => _refreshOnlineCount())
+          .subscribe((status, error) async {
+            log('LiveMatchChatController.subscribe status=$status error=$error');
+            if (status == RealtimeSubscribeStatus.subscribed && uid != null) {
+              try {
+                final result = await _channel?.track({
+                  'user_id': uid,
+                  'online_at': DateTime.now().toIso8601String(),
+                });
+                log('LiveMatchChatController.track result=$result');
+                // sync 이벤트가 누락되는 SDK 동작 대비, track 직후에도 1회 갱신.
+                _refreshOnlineCount();
+              } catch (e) {
+                log('LiveMatchChatController.track error: $e');
+              }
+            }
+          });
     } catch (e) {
       log('LiveMatchChatController._subscribeRealtime error: $e');
+    }
+  }
+
+  /// presence state는 `List<SinglePresenceState>`이고,
+  /// 각 항목의 presences는 같은 key를 가진 연결들이다.
+  /// 같은 user_id가 여러 디바이스로 접속했을 때 1명으로 카운트되도록
+  /// presence payload의 user_id로 dedupe한다.
+  void _refreshOnlineCount() {
+    final ch = _channel;
+    if (ch == null) return;
+    try {
+      final state = ch.presenceState();
+      final userIds = <String>{};
+      var unknownConnections = 0;
+      for (final entry in state) {
+        for (final p in entry.presences) {
+          final payload = p.payload;
+          final uid = payload['user_id'];
+          if (uid is String && uid.isNotEmpty) {
+            userIds.add(uid);
+          } else {
+            unknownConnections += 1;
+          }
+        }
+      }
+      final count = userIds.length + unknownConnections;
+      log('LiveMatchChatController.presence state.length=${state.length} '
+          'dedupedUsers=${userIds.length} unknown=$unknownConnections '
+          'final=$count');
+      _onlineCount.value = count;
+    } catch (e) {
+      log('LiveMatchChatController._refreshOnlineCount error: $e');
     }
   }
 

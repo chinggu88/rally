@@ -12,7 +12,9 @@ class ChatMessageRepository {
   SupabaseClient get _client => Supabase.instance.client;
 
   static const String _table = 'live_match_chat_messages';
-  static const String _profilesTable = 'profiles';
+  // 공개용 view (id/nickname/avatar_url만 노출). profiles 본체 RLS는 본인 행만
+  // SELECT 허용이라 타인 닉네임/아바타 조회가 불가능하므로 view를 사용한다.
+  static const String _profilesTable = 'public_profiles';
 
   /// 특정 매치의 메시지 목록 (created_at DESC).
   ///
