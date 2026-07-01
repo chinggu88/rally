@@ -1,5 +1,9 @@
+import 'dart:convert';
 import 'dart:developer';
+import 'dart:math' show Random;
 
+import 'package:crypto/crypto.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// 인증 관련 Supabase 호출 레포지토리.
@@ -52,6 +56,49 @@ class AuthRepository {
 
   Future<bool> signInWithGoogle() => _oauth(OAuthProvider.google);
   Future<bool> signInWithApple() => _oauth(OAuthProvider.apple);
+
+  /// Apple 네이티브 로그인 (iOS 시스템 시트 사용, 외부 브라우저 없음).
+  ///
+  /// `sign_in_with_apple`로 identityToken을 받은 뒤 Supabase `signInWithIdToken`
+  /// 으로 세션을 교환한다. nonce는 raw/hashed 쌍으로 만들어 replay 공격을 방지한다.
+  Future<AuthResponse> signInWithAppleNative() async {
+    try {
+      final rawNonce = _generateRawNonce();
+      final hashedNonce = sha256.convert(utf8.encode(rawNonce)).toString();
+
+      final credential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+        nonce: hashedNonce,
+      );
+
+      final idToken = credential.identityToken;
+      if (idToken == null) {
+        throw const AuthException('Apple identityToken이 null입니다.');
+      }
+
+      return await _client.auth.signInWithIdToken(
+        provider: OAuthProvider.apple,
+        idToken: idToken,
+        nonce: rawNonce,
+      );
+    } on AuthException catch (e) {
+      log('AuthRepository.signInWithAppleNative AuthException: ${e.message}');
+      rethrow;
+    }
+  }
+
+  String _generateRawNonce([int length = 32]) {
+    const charset =
+        '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-._';
+    final random = Random.secure();
+    return List.generate(
+      length,
+      (_) => charset[random.nextInt(charset.length)],
+    ).join();
+  }
 
   Future<bool> _oauth(OAuthProvider provider) async {
     try {

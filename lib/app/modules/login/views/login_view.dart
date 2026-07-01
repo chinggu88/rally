@@ -46,7 +46,7 @@ class LoginView extends GetView<LoginController> {
                     Icon(Icons.apple, size: 22.sp, color: Colors.black),
                 bg: Colors.white,
                 fg: Colors.black,
-                onTap: controller.signInWithApple,
+                onTap: controller.signInWithAppleNative,
               ),
               SizedBox(height: 12.h),
               _buildSocialButton(

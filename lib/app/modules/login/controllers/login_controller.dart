@@ -104,6 +104,10 @@ class LoginController extends GetxController {
       _runSocial(_authRepository.signInWithGoogle);
   Future<void> signInWithApple() => _runSocial(_authRepository.signInWithApple);
 
+  /// Apple 네이티브 로그인 (iOS 시스템 시트, 외부 브라우저 없음).
+  Future<void> signInWithAppleNative() =>
+      _runSocial(_authRepository.signInWithAppleNative);
+
   Future<void> _runSocial(Future<dynamic> Function() fn) async {
     if (isLoading) return;
     try {

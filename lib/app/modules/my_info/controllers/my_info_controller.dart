@@ -67,7 +67,8 @@ class MyInfoController extends GetxController {
   /// 프로필 편집 후에도 호출해 화면을 갱신한다.
   Future<void> loadProfile() async {
     try {
-      final ProfileResponse? profile = await _profileRepository.fetchMyProfile();
+      final ProfileResponse? profile =
+          await _profileRepository.fetchMyProfile();
       if (profile != null) {
         _nickname.value = profile.nickname;
         _avatarUrl.value = profile.avatarUrl;
@@ -100,11 +101,7 @@ class MyInfoController extends GetxController {
 
   /// 아직 구현되지 않은 메뉴 항목에 대한 안내.
   void _showComingSoon(String label) {
-    Get.snackbar(
-      label,
-      '곧 제공될 예정입니다.',
-      snackPosition: SnackPosition.BOTTOM,
-    );
+    Get.snackbar(label, '곧 제공될 예정입니다.', snackPosition: SnackPosition.BOTTOM);
   }
 
   void goToInviteFriends() => _showComingSoon('친구 초대');
@@ -135,17 +132,10 @@ class MyInfoController extends GetxController {
   Future<void> signOut() async {
     try {
       await _authRepository.signOut();
-      Get.snackbar(
-        '로그아웃',
-        '안녕히 가세요.',
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      Get.snackbar('로그아웃', '안녕히 가세요.', snackPosition: SnackPosition.BOTTOM);
+      _isLoggedIn.value = false;
     } on AuthException catch (e) {
-      Get.snackbar(
-        '로그아웃 실패',
-        e.message,
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      Get.snackbar('로그아웃 실패', e.message, snackPosition: SnackPosition.BOTTOM);
     }
   }
 

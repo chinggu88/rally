@@ -69,6 +69,10 @@ dependencies:
   # 프로필 사진 선택 (갤러리)
   image_picker: ^1.1.2
 
+  # Apple 네이티브 로그인 (외부 브라우저 없이 iOS 시스템 시트로 처리)
+  sign_in_with_apple: ^6.1.2
+  crypto: ^3.0.3
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

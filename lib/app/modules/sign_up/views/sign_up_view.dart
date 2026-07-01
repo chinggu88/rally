@@ -69,7 +69,7 @@ class SignUpView extends GetView<SignUpController> {
                 Icon(Icons.apple, size: 22.sp, color: Colors.black),
             bg: Colors.white,
             fg: Colors.black,
-            onTap: controller.signUpWithApple,
+            onTap: controller.signUpWithAppleNative,
           ),
           SizedBox(height: 12.h),
           _buildSocialButton(

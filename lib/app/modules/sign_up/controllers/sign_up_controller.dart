@@ -96,6 +96,11 @@ class SignUpController extends GetxController {
   Future<void> signUpWithApple() =>
       _runSocial(_authRepository.signInWithApple, 'Apple');
 
+  /// Apple 네이티브 회원가입/로그인 (iOS 시스템 시트, 외부 브라우저 없음).
+  /// Apple은 첫 로그인과 이후 로그인이 동일한 흐름이므로 signIn/signUp 구분이 없다.
+  Future<void> signUpWithAppleNative() =>
+      _runSocial(_authRepository.signInWithAppleNative, 'Apple');
+
   Future<void> _runSocial(
     Future<dynamic> Function() fn,
     String providerLabel,
