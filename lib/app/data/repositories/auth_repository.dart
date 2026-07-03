@@ -105,7 +105,9 @@ class AuthRepository {
       return await _client.auth.signInWithOAuth(
         provider,
         redirectTo: _redirectUrl,
-        authScreenLaunchMode: LaunchMode.externalApplication,
+        // App Store Guideline 4: 외부 브라우저 이동 금지.
+        // iOS는 SFSafariViewController, Android는 Chrome Custom Tabs로 앱 내에서 표시.
+        authScreenLaunchMode: LaunchMode.inAppBrowserView,
       );
     } on AuthException catch (e) {
       log('AuthRepository._oauth($provider) AuthException: ${e.message}');

@@ -113,7 +113,7 @@ class LoginController extends GetxController {
     try {
       isLoading = true;
       await fn();
-      // OAuth: 외부 브라우저로 이동 → 콜백 시 authStateChanges → SIGNED_IN
+      // OAuth: 인앱 브라우저(SFSafariViewController) → 콜백 시 authStateChanges → SIGNED_IN
     } on AuthException catch (e) {
       Get.snackbar('로그인 실패', e.message, snackPosition: SnackPosition.BOTTOM);
     } catch (e) {
