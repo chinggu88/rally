@@ -16,8 +16,8 @@ import '../modules/my_info/bindings/my_info_binding.dart';
 import '../modules/my_info/views/my_info_view.dart';
 import '../modules/profile_edit/bindings/profile_edit_binding.dart';
 import '../modules/profile_edit/views/profile_edit_view.dart';
-import '../modules/news/bindings/news_binding.dart';
-import '../modules/news/views/news_view.dart';
+import '../modules/home/bindings/home_binding.dart';
+import '../modules/home/views/home_view.dart';
 import '../modules/notifications/bindings/notifications_binding.dart';
 import '../modules/notifications/views/notifications_view.dart';
 import '../modules/live_match_chat/bindings/live_match_chat_binding.dart';
@@ -40,9 +40,9 @@ abstract class AppPages {
       binding: AppBinding(),
     ),
     GetPage(
-      name: Routes.NEWS,
-      page: () => const NewsView(),
-      binding: NewsBinding(),
+      name: Routes.HOME,
+      page: () => const HomeView(),
+      binding: HomeBinding(),
     ),
     GetPage(
       name: Routes.MATCH,

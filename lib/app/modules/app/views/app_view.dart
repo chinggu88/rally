@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 
 import '../../match/views/match_view.dart';
 import '../../my_info/views/my_info_view.dart';
-import '../../news/views/news_view.dart';
+import '../../home/views/home_view.dart';
 import '../../player/views/player_view.dart';
 import '../controllers/app_controller.dart';
 
@@ -11,7 +11,7 @@ class AppView extends GetView<AppController> {
   const AppView({super.key});
 
   static const List<Widget> _tabs = [
-    NewsView(),
+    HomeView(),
     MatchView(),
     PlayerView(),
     MyInfoView(),
@@ -32,9 +32,9 @@ class AppView extends GetView<AppController> {
           onTap: controller.changeTab,
           items: const [
             BottomNavigationBarItem(
-              icon: Icon(Icons.article_outlined),
-              activeIcon: Icon(Icons.article),
-              label: '뉴스',
+              icon: Icon(Icons.home_outlined),
+              activeIcon: Icon(Icons.home),
+              label: '홈',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.sports_tennis_outlined),

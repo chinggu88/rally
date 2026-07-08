@@ -2,7 +2,7 @@ abstract class Routes {
   Routes._();
 
   static const APP = '/app';
-  static const NEWS = '/news';
+  static const HOME = '/home';
   static const MATCH = '/match';
   static const MATCH_DETAIL = '/match/detail';
   static const MATCH_PARTICIPANTS = '/match/participants';

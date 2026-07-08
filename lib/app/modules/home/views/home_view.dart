@@ -10,9 +10,10 @@ import '../../../data/models/live_match_response.dart';
 import '../../../data/models/news_card_response.dart';
 import '../../../data/models/today_match_response.dart';
 import '../../../routes/app_routes.dart';
-import '../controllers/news_controller.dart';
+import '../controllers/home_controller.dart';
 import 'news_card_detail_view.dart';
 import 'widgets/active_tournament_card.dart';
+import 'widgets/home_skeleton.dart';
 import 'widgets/live_match_card.dart';
 import 'widgets/news_card_horizontal_item.dart';
 import 'widgets/today_match_card.dart';
@@ -22,8 +23,8 @@ import 'widgets/today_match_card.dart';
 /// 바텀 네비게이션 첫 번째 탭이며, 사용자 확정으로 "뉴스 = 홈"이다.
 /// 화면 상단에 라이브 매치 캐러셀이 고정되고, 그 아래 뉴스 영역(현재 placeholder)이
 /// 표시된다. Pull-to-refresh로 라이브 매치를 재조회한다.
-class NewsView extends GetView<NewsController> {
-  const NewsView({super.key});
+class HomeView extends GetView<HomeController> {
+  const HomeView({super.key});
 
   // 매거진 디자인 토큰 (Stitch 시안과 정합되는 미세 디테일).
   static const Color _accent = AppColors.accent;
@@ -38,36 +39,47 @@ class NewsView extends GetView<NewsController> {
       appBar: _buildAppBar(),
       body: SafeArea(
         top: false,
-        child: RefreshIndicator(
-          onRefresh: controller.refreshLiveMatches,
-          color: _accent,
-          backgroundColor: scheme.surfaceContainer,
-          child: NotificationListener<ScrollNotification>(
-            onNotification: (notification) {
-              // 바닥 근처(400px 이내) 도달 시 다음 페이지 로드.
-              if (notification.metrics.pixels >=
-                  notification.metrics.maxScrollExtent - 400.h) {
-                controller.loadMoreNewsCards();
-              }
-              return false;
-            },
-            child: CustomScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              slivers: [
-                SliverToBoxAdapter(child: SizedBox(height: 8.h)),
-                SliverToBoxAdapter(
-                  child: Obx(() => _buildActiveTournamentsSection(context)),
-                ),
-                SliverToBoxAdapter(child: _buildLiveSection(context, scheme)),
-                SliverToBoxAdapter(child: SizedBox(height: 24.h)),
-                SliverToBoxAdapter(child: _buildTodaySection(context, scheme)),
-                SliverToBoxAdapter(child: SizedBox(height: 24.h)),
-                SliverToBoxAdapter(child: _buildNewsSection(context, scheme)),
-                SliverToBoxAdapter(child: SizedBox(height: 32.h)),
-              ],
+        child: Obx(() {
+          // 초기 로딩 중에는 전체 스켈레톤 표시 (API 4개 완료 시 종료).
+          if (controller.isLoading) {
+            return const SingleChildScrollView(
+              physics: NeverScrollableScrollPhysics(),
+              child: HomeSkeleton(),
+            );
+          }
+          return RefreshIndicator(
+            onRefresh: controller.refreshLiveMatches,
+            color: _accent,
+            backgroundColor: scheme.surfaceContainer,
+            child: NotificationListener<ScrollNotification>(
+              onNotification: (notification) {
+                // 바닥 근처(400px 이내) 도달 시 다음 페이지 로드.
+                if (notification.metrics.pixels >=
+                    notification.metrics.maxScrollExtent - 400.h) {
+                  controller.loadMoreNewsCards();
+                }
+                return false;
+              },
+              child: CustomScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: [
+                  SliverToBoxAdapter(child: SizedBox(height: 8.h)),
+                  SliverToBoxAdapter(
+                    child: Obx(() => _buildActiveTournamentsSection(context)),
+                  ),
+                  SliverToBoxAdapter(child: _buildLiveSection(context, scheme)),
+                  SliverToBoxAdapter(child: SizedBox(height: 24.h)),
+                  SliverToBoxAdapter(
+                    child: _buildTodaySection(context, scheme),
+                  ),
+                  SliverToBoxAdapter(child: SizedBox(height: 24.h)),
+                  SliverToBoxAdapter(child: _buildNewsSection(context, scheme)),
+                  SliverToBoxAdapter(child: SizedBox(height: 32.h)),
+                ],
+              ),
             ),
-          ),
-        ),
+          );
+        }),
       ),
     );
   }
@@ -107,26 +119,17 @@ class NewsView extends GetView<NewsController> {
 
   // ── 남은 대회(진행중/예정) 섹션 ──────────────────────────
   Widget _buildActiveTournamentsSection(BuildContext context) {
-    final loading = controller.isActiveTournamentsLoading;
     final tournaments = controller.activeTournaments;
 
-    // 로딩 중이 아니고 보여줄 대회가 없으면 섹션 자체를 숨겨 상단을 비운다.
-    if (!loading && tournaments.isEmpty) {
+    // 보여줄 대회가 없으면 섹션 자체를 숨겨 상단을 비운다.
+    if (tournaments.isEmpty) {
       return const SizedBox.shrink();
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (loading && tournaments.isEmpty)
-          SizedBox(
-            height: 44.h,
-            child: const Center(
-              child: CircularProgressIndicator(color: _accent),
-            ),
-          )
-        else
-          _buildActiveTournamentsList(tournaments),
+        _buildActiveTournamentsList(tournaments),
         SizedBox(height: 24.h),
       ],
     );
@@ -225,13 +228,6 @@ class NewsView extends GetView<NewsController> {
   }
 
   Widget _buildLiveBody(BuildContext context, ColorScheme scheme) {
-    if (controller.isLiveLoading && controller.liveMatches.isEmpty) {
-      return SizedBox(
-        height: 220.h,
-        child: const Center(child: CircularProgressIndicator(color: _accent)),
-      );
-    }
-
     final error = controller.liveError;
     if (error != null && controller.liveMatches.isEmpty) {
       return _buildErrorState(error);
@@ -430,15 +426,7 @@ class NewsView extends GetView<NewsController> {
   }
 
   Widget _buildTodayBody(BuildContext context) {
-    final isLoading = controller.isTodayLoading;
     final items = controller.todayMerged;
-
-    if (isLoading && items.isEmpty) {
-      return SizedBox(
-        height: 118.h,
-        child: const Center(child: CircularProgressIndicator(color: _accent)),
-      );
-    }
 
     final error = controller.todayError;
     if (error != null && items.isEmpty) {
@@ -604,13 +592,6 @@ class NewsView extends GetView<NewsController> {
   }
 
   Widget _buildNewsBody(BuildContext context) {
-    if (controller.isNewsLoading && controller.newsCards.isEmpty) {
-      return SizedBox(
-        height: 220.h,
-        child: const Center(child: CircularProgressIndicator(color: _accent)),
-      );
-    }
-
     final error = controller.newsError;
     if (error != null && controller.newsCards.isEmpty) {
       return Padding(
@@ -776,7 +757,7 @@ class _LiveMatchPageView extends StatefulWidget {
   final List<LiveMatchResponse> matches;
   final double cardWidth;
   final double viewportFraction;
-  final NewsController controller;
+  final HomeController controller;
 
   @override
   State<_LiveMatchPageView> createState() => _LiveMatchPageViewState();
@@ -842,8 +823,9 @@ class _LiveMatchPageViewState extends State<_LiveMatchPageView> {
           tween: Tween<double>(end: _currentHeight),
           duration: const Duration(milliseconds: 250),
           curve: Curves.easeOutCubic,
-          builder: (context, height, child) =>
-              SizedBox(height: height, child: child),
+          builder:
+              (context, height, child) =>
+                  SizedBox(height: height, child: child),
           child: PageView.builder(
             controller: _pageController,
             physics: const BouncingScrollPhysics(),

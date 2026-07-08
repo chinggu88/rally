@@ -103,16 +103,6 @@ class _PlayerViewState extends State<PlayerView> {
           letterSpacing: 0.2,
         ),
       ),
-      leading: Padding(
-        padding: EdgeInsets.only(left: 12.w),
-        child: const Icon(Icons.menu, color: Colors.white),
-      ),
-      actions: [
-        Padding(
-          padding: EdgeInsets.only(right: 12.w),
-          child: const Icon(Icons.search, color: Colors.white),
-        ),
-      ],
     );
   }
 
@@ -613,7 +603,7 @@ class _PlayerCard extends StatelessWidget {
     final p2Display = _formatDoublesName(names.$2);
 
     // 복식 카드는 두 선수의 영역을 분리해 각자 상세 페이지로 이동할 수 있도록
-     // 외곽 InkWell 대신 컨테이너 + 행마다 InkWell을 사용한다.
+    // 외곽 InkWell 대신 컨테이너 + 행마다 InkWell을 사용한다.
     return Container(
       decoration: BoxDecoration(
         color: _cardBg,

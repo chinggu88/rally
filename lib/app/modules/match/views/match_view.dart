@@ -43,8 +43,7 @@ class _MatchViewState extends State<MatchView> {
   @override
   void initState() {
     super.initState();
-    _scrollWorker =
-        ever<int?>(controller.scrollTargetId, _handleScrollTarget);
+    _scrollWorker = ever<int?>(controller.scrollTargetId, _handleScrollTarget);
   }
 
   @override
@@ -107,16 +106,16 @@ class _MatchViewState extends State<MatchView> {
           letterSpacing: 0.2,
         ),
       ),
-      leading: Padding(
-        padding: EdgeInsets.only(left: 12.w),
-        child: const Icon(Icons.menu, color: Colors.white),
-      ),
-      actions: [
-        Padding(
-          padding: EdgeInsets.only(right: 12.w),
-          child: const Icon(Icons.search, color: Colors.white),
-        ),
-      ],
+      // leading: Padding(
+      //   padding: EdgeInsets.only(left: 12.w),
+      //   child: const Icon(Icons.menu, color: Colors.white),
+      // ),
+      // actions: [
+      //   Padding(
+      //     padding: EdgeInsets.only(right: 12.w),
+      //     child: const Icon(Icons.search, color: Colors.white),
+      //   ),
+      // ],
     );
   }
 
@@ -151,9 +150,7 @@ class _MatchViewState extends State<MatchView> {
           SizedBox(height: 8.h),
           Text(
             'BWF가 공인하는 국제 대회 일정을 한눈에 확인하세요.',
-            style: AppTypography.bodyMd.copyWith(
-              color: _subtleText,
-            ),
+            style: AppTypography.bodyMd.copyWith(color: _subtleText),
           ),
         ],
       ),
@@ -235,9 +232,7 @@ class _MatchViewState extends State<MatchView> {
       if (controller.isLoading && controller.tournaments.isEmpty) {
         return Padding(
           padding: EdgeInsets.symmetric(vertical: 80.h),
-          child: const Center(
-            child: CircularProgressIndicator(color: _accent),
-          ),
+          child: const Center(child: CircularProgressIndicator(color: _accent)),
         );
       }
 
@@ -301,16 +296,14 @@ class _MatchViewState extends State<MatchView> {
       padding: EdgeInsets.fromLTRB(20.w, 60.h, 20.w, 60.h),
       child: Column(
         children: [
-          Icon(
-            Icons.event_busy_outlined,
-            size: 48.sp,
-            color: _subtleText,
-          ),
+          Icon(Icons.event_busy_outlined, size: 48.sp, color: _subtleText),
           SizedBox(height: 12.h),
-          Obx(() => Text(
-                '${controller.selectedYear}년에는 등록된 대회가 없습니다.',
-                style: AppTypography.bodyMd.copyWith(color: Colors.white),
-              )),
+          Obx(
+            () => Text(
+              '${controller.selectedYear}년에는 등록된 대회가 없습니다.',
+              style: AppTypography.bodyMd.copyWith(color: Colors.white),
+            ),
+          ),
           SizedBox(height: 6.h),
           Text(
             '다른 연도를 선택해보세요.',
@@ -378,20 +371,17 @@ class _MatchViewState extends State<MatchView> {
     final Map<String, List<TournamentResponse>> map = {};
     for (final t in list) {
       final start = t.startDate;
-      final key = (start != null && start.length >= 7)
-          ? start.substring(0, 7) // YYYY-MM
-          : '9999-99';
+      final key =
+          (start != null && start.length >= 7)
+              ? start.substring(0, 7) // YYYY-MM
+              : '9999-99';
       map.putIfAbsent(key, () => <TournamentResponse>[]).add(t);
     }
 
     final keys = map.keys.toList()..sort();
     return [
       for (final k in keys)
-        _MonthGroup(
-          key: k,
-          label: _labelFromGroup(k, map[k]!),
-          items: map[k]!,
-        ),
+        _MonthGroup(key: k, label: _labelFromGroup(k, map[k]!), items: map[k]!),
     ];
   }
 
@@ -580,11 +570,7 @@ class _TournamentCard extends StatelessWidget {
                 children: [
                   _buildLogo(t.logoUrl ?? t.catLogoUrl),
                   SizedBox(height: 12.h),
-                  Icon(
-                    Icons.arrow_forward,
-                    color: Colors.white,
-                    size: 18.sp,
-                  ),
+                  Icon(Icons.arrow_forward, color: Colors.white, size: 18.sp),
                 ],
               ),
             ],
@@ -683,16 +669,12 @@ class _TournamentCard extends StatelessWidget {
         width: 18.w,
         height: 12.h,
         fit: BoxFit.cover,
-        placeholder: (context, _) => Container(
-          width: 18.w,
-          height: 12.h,
-          color: _cardBorder,
-        ),
-        errorWidget: (context, _, __) => Container(
-          width: 18.w,
-          height: 12.h,
-          color: _cardBorder,
-        ),
+        placeholder:
+            (context, _) =>
+                Container(width: 18.w, height: 12.h, color: _cardBorder),
+        errorWidget:
+            (context, _, __) =>
+                Container(width: 18.w, height: 12.h, color: _cardBorder),
       ),
     );
   }
@@ -708,11 +690,7 @@ class _TournamentCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(8.r),
         ),
         alignment: Alignment.center,
-        child: Icon(
-          Icons.sports_tennis,
-          color: _subtleText,
-          size: 24.sp,
-        ),
+        child: Icon(Icons.sports_tennis, color: _subtleText, size: 24.sp),
       );
     }
     // 대회 로고는 가로로 긴/투명 배경 PNG가 많아 cover로 자르면 안 된다.

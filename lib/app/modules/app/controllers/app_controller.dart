@@ -4,7 +4,7 @@ import 'dart:developer';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:rally/app/data/repositories/auth_repository.dart';
-import 'package:rally/app/modules/news/controllers/news_controller.dart';
+import 'package:rally/app/modules/home/controllers/home_controller.dart';
 import 'package:rally/app/routes/app_routes.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -19,7 +19,7 @@ import '../../player/controllers/player_controller.dart';
 class AppController extends GetxController with WidgetsBindingObserver {
   static AppController get to => Get.find();
 
-  /// 경기 탭 인덱스 (BottomNavigationBar 순서: 뉴스0 / 경기1 / 선수2 / 내정보3)
+  /// 경기 탭 인덱스 (BottomNavigationBar 순서: 홈0 / 경기1 / 선수2 / 내정보3)
   static const int matchTabIndex = 1;
 
   /// 선수 탭 인덱스
@@ -79,23 +79,23 @@ class AppController extends GetxController with WidgetsBindingObserver {
     switch (state) {
       case AppLifecycleState.resumed:
         // 앱이 포그라운드로 돌아왔을 때 필요한 작업 수행
-        NewsController.to.fetchActiveTournaments();
-        NewsController.to.fetchLiveMatches();
-        NewsController.to.subscribeRealtime();
+        HomeController.to.fetchActiveTournaments();
+        HomeController.to.fetchLiveMatches();
+        HomeController.to.subscribeRealtime();
         break;
       case AppLifecycleState.inactive:
         // 앱이 비활성화 상태가 되었을 때 필요한 작업 수행
         break;
       case AppLifecycleState.paused:
         // 앱이 백그라운드로 갔을 때 필요한 작업 수행
-        NewsController.to.unsubscribeRealtime();
+        HomeController.to.unsubscribeRealtime();
         break;
       case AppLifecycleState.detached:
         // 앱이 완전히 종료되었을 때 필요한 작업 수행
         break;
       case AppLifecycleState.hidden:
         // 앱이 숨겨졌을 때 필요한 작업 수행 (예: 화면이 꺼졌을 때)
-        NewsController.to.unsubscribeRealtime();
+        HomeController.to.unsubscribeRealtime();
         break;
     }
   }

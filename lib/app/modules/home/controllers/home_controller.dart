@@ -23,8 +23,8 @@ import '../../../data/repositories/tournament_repository.dart';
 ///
 /// 동시 호출(예: 빠른 pull-to-refresh)에서의 race condition을 방지하기 위해
 /// `_inflightToken` 카운터를 사용한다.
-class NewsController extends GetxController {
-  static NewsController get to => Get.find();
+class HomeController extends GetxController {
+  static HomeController get to => Get.find();
 
   final LiveMatchRepository _liveMatchRepository =
       Get.find<LiveMatchRepository>();
@@ -40,14 +40,31 @@ class NewsController extends GetxController {
   /// 카드뉴스 페이지당 개수 (Edge Function 기본값과 동일)
   static const int _newsPageSize = 20;
 
+  // ── 통합 로딩 상태 (스켈레톤) ────────────────────────────────
+
+  /// 초기 로딩에서 호출하는 API 수 (남은 대회 / 라이브 / 오늘 경기 / 카드뉴스)
+  static const int _initialApiCount = 4;
+
+  /// 초기 로딩이 완료된 API 수. [_initialApiCount]와 같아지면 로딩 종료.
+  int loadingCnt = 0;
+
+  /// 홈 초기 로딩 중 여부 (true면 스켈레톤 표시)
+  final _isLoading = true.obs;
+  bool get isLoading => _isLoading.value;
+
+  /// 초기 API 하나가 완료될 때마다 호출. 전부 완료되면 로딩을 끝낸다.
+  /// 초기 로딩이 끝난 뒤(pull-to-refresh 등)에는 no-op.
+  void _onApiLoaded() {
+    if (!_isLoading.value) return;
+    loadingCnt++;
+    if (loadingCnt >= _initialApiCount) {
+      _isLoading.value = false;
+    }
+  }
+
   /// 라이브 매치 목록 (start_date ASC → id ASC)
   final _liveMatches = <LiveMatchResponse>[].obs;
   List<LiveMatchResponse> get liveMatches => _liveMatches;
-
-  /// 라이브 매치 로딩 중 여부
-  final _isLiveLoading = false.obs;
-  bool get isLiveLoading => _isLiveLoading.value;
-  set isLiveLoading(bool v) => _isLiveLoading.value = v;
 
   /// 라이브 매치 에러 메시지 (null이면 정상)
   final _liveError = RxnString();
@@ -96,10 +113,6 @@ class NewsController extends GetxController {
     return [...results, ...upcoming];
   }
 
-  /// 오늘 경기 로딩 중 여부.
-  final _isTodayLoading = false.obs;
-  bool get isTodayLoading => _isTodayLoading.value;
-
   /// 오늘 경기 에러 메시지 (null이면 정상).
   final _todayError = RxnString();
   String? get todayError => _todayError.value;
@@ -112,10 +125,6 @@ class NewsController extends GetxController {
   /// 진행중/진행예정 대회 목록 (start_date ASC, 한국 선수 정보 포함)
   final _activeTournaments = <ActiveTournamentResponse>[].obs;
   List<ActiveTournamentResponse> get activeTournaments => _activeTournaments;
-
-  /// 남은 대회 로딩 중 여부
-  final _isActiveTournamentsLoading = false.obs;
-  bool get isActiveTournamentsLoading => _isActiveTournamentsLoading.value;
 
   /// 남은 대회 에러 메시지 (null이면 정상)
   final _activeTournamentsError = RxnString();
@@ -130,9 +139,8 @@ class NewsController extends GetxController {
   final _newsCards = <NewsCardResponse>[].obs;
   List<NewsCardResponse> get newsCards => _newsCards;
 
-  /// 첫 페이지 로딩 중 여부
-  final _isNewsLoading = false.obs;
-  bool get isNewsLoading => _isNewsLoading.value;
+  /// 첫 페이지 조회 진행 중 여부 (loadMore 동시 호출 가드용)
+  bool _isNewsFetching = false;
 
   /// 다음 페이지(더보기) 로딩 중 여부
   final _isNewsLoadingMore = false.obs;
@@ -179,7 +187,6 @@ class NewsController extends GetxController {
     final token = ++_inflightToken;
 
     try {
-      isLiveLoading = true;
       liveError = null;
 
       final response = await _liveMatchRepository.getLiveMatches();
@@ -190,12 +197,12 @@ class NewsController extends GetxController {
       _liveMatches.assignAll(response.matches ?? const <LiveMatchResponse>[]);
     } catch (e) {
       if (token != _inflightToken) return;
-      log('NewsController.fetchLiveMatches error: $e');
+      log('HomeController.fetchLiveMatches error: $e');
       liveError = '라이브 매치 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.';
       _liveMatches.clear();
     } finally {
       if (token == _inflightToken) {
-        isLiveLoading = false;
+        _onApiLoaded();
       }
     }
   }
@@ -219,7 +226,6 @@ class NewsController extends GetxController {
     final token = ++_todayInflightToken;
 
     try {
-      _isTodayLoading.value = true;
       _todayError.value = null;
 
       final response = await _todayMatchRepository.getTodayMatches();
@@ -233,13 +239,13 @@ class NewsController extends GetxController {
       );
     } catch (e) {
       if (token != _todayInflightToken) return;
-      log('NewsController.fetchTodayMatches error: $e');
+      log('HomeController.fetchTodayMatches error: $e');
       _todayError.value = '오늘 경기 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.';
       _todayResults.clear();
       _todayUpcoming.clear();
     } finally {
       if (token == _todayInflightToken) {
-        _isTodayLoading.value = false;
+        _onApiLoaded();
       }
     }
   }
@@ -249,7 +255,6 @@ class NewsController extends GetxController {
     final token = ++_activeTournamentsToken;
 
     try {
-      _isActiveTournamentsLoading.value = true;
       _activeTournamentsError.value = null;
 
       final response = await _tournamentRepository.getActiveTournamentsKr();
@@ -259,12 +264,12 @@ class NewsController extends GetxController {
       _activeTournaments.assignAll(response.tournaments);
     } catch (e) {
       if (token != _activeTournamentsToken) return;
-      log('NewsController.fetchActiveTournaments error: $e');
+      log('HomeController.fetchActiveTournaments error: $e');
       _activeTournamentsError.value = '대회 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.';
       _activeTournaments.clear();
     } finally {
       if (token == _activeTournamentsToken) {
-        _isActiveTournamentsLoading.value = false;
+        _onApiLoaded();
       }
     }
   }
@@ -278,7 +283,7 @@ class NewsController extends GetxController {
     final token = ++_newsInflightToken;
 
     try {
-      _isNewsLoading.value = true;
+      _isNewsFetching = true;
       _newsError.value = null;
 
       final response = await _newsCardRepository.getNewsCards(
@@ -290,13 +295,14 @@ class NewsController extends GetxController {
       _hasMoreNews.value = _computeHasMore(response);
     } catch (e) {
       if (token != _newsInflightToken) return;
-      log('NewsController.fetchNewsCards error: $e');
+      log('HomeController.fetchNewsCards error: $e');
       _newsError.value = '뉴스를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.';
       _newsCards.clear();
       _hasMoreNews.value = false;
     } finally {
       if (token == _newsInflightToken) {
-        _isNewsLoading.value = false;
+        _isNewsFetching = false;
+        _onApiLoaded();
       }
     }
   }
@@ -305,9 +311,7 @@ class NewsController extends GetxController {
   ///
   /// 이미 로딩 중이거나 더 불러올 페이지가 없으면 no-op.
   Future<void> loadMoreNewsCards() async {
-    if (_isNewsLoading.value ||
-        _isNewsLoadingMore.value ||
-        !_hasMoreNews.value) {
+    if (_isNewsFetching || _isNewsLoadingMore.value || !_hasMoreNews.value) {
       return;
     }
 
@@ -329,7 +333,7 @@ class NewsController extends GetxController {
       _newsPage = response.page ?? nextPage;
       _hasMoreNews.value = _computeHasMore(response);
     } catch (e) {
-      log('NewsController.loadMoreNewsCards error: $e');
+      log('HomeController.loadMoreNewsCards error: $e');
       // 더보기 실패는 조용히 무시(다음 스크롤에서 재시도 가능). 더 시도하지 않도록 막지 않는다.
     } finally {
       if (token == _newsInflightToken) {
@@ -371,11 +375,11 @@ class NewsController extends GetxController {
             _isRealtimeConnected.value =
                 status == RealtimeSubscribeStatus.subscribed;
             if (error != null) {
-              log('NewsController realtime subscribe error: $error');
+              log('HomeController realtime subscribe error: $error');
             }
           });
     } catch (e) {
-      log('NewsController._subscribeRealtime error: $e');
+      log('HomeController._subscribeRealtime error: $e');
       _isRealtimeConnected.value = false;
     }
   }
@@ -386,7 +390,7 @@ class NewsController extends GetxController {
     try {
       Supabase.instance.client.removeChannel(ch);
     } catch (e) {
-      log('NewsController._unsubscribeRealtime error: $e');
+      log('HomeController._unsubscribeRealtime error: $e');
     }
     _liveChannel = null;
     _isRealtimeConnected.value = false;
@@ -410,7 +414,7 @@ class NewsController extends GetxController {
           break;
       }
     } catch (e) {
-      log('NewsController._onLiveMatchChange error: $e');
+      log('HomeController._onLiveMatchChange error: $e');
     }
   }
 
@@ -500,7 +504,7 @@ class NewsController extends GetxController {
     // 그조차 비어있다면 publication/replica identity 설정이 누락된 것.
     // 안전망: 다음 polling 때 재동기화되도록 전체 재조회.
     log(
-      'NewsController._handleDelete: oldRow has no usable id — falling back to full refresh',
+      'HomeController._handleDelete: oldRow has no usable id — falling back to full refresh',
     );
     fetchLiveMatches();
   }

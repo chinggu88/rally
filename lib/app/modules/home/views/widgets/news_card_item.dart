@@ -17,7 +17,7 @@ class NewsCardItem extends StatefulWidget {
 
   final NewsCardResponse card;
 
-  // 매거진 디자인 토큰 (NewsView와 정합).
+  // 매거진 디자인 토큰 (HomeView와 정합).
   static const Color accent = AppColors.accent;
   static const Color cardBg = AppColors.cardBg;
   static const Color border = AppColors.cardBorder;
