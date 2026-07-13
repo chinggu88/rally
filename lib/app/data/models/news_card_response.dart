@@ -3,6 +3,8 @@
 /// 원본 컬럼 `badminton_planet_news.card_storage_paths` 는 JSONB 객체이며,
 /// 카드 이미지 배열(`cards`)과 버킷/폴더/미리보기 메타를 함께 담는다.
 ///
+/// 행에는 `source`(뉴스 출처, 예: "badmintonplanet.com")도 함께 내려온다.
+///
 /// 응답 예시(card_storage_paths):
 /// ```json
 /// {
@@ -19,6 +21,9 @@
 class NewsCardResponse {
   /// badminton_planet_news.id (기사 식별자)
   int? _id;
+
+  /// 뉴스 출처 slug (badminton_planet_news.source, 예: badmintonplanet.com)
+  String? _source;
 
   /// Storage 버킷명 (예: badminton-planet-news)
   String? _bucket;
@@ -37,6 +42,7 @@ class NewsCardResponse {
 
   NewsCardResponse({
     int? id,
+    String? source,
     String? bucket,
     String? folder,
     List<NewsCardImage>? cards,
@@ -44,6 +50,7 @@ class NewsCardResponse {
     String? generatedAt,
   }) {
     _id = id;
+    _source = source;
     _bucket = bucket;
     _folder = folder;
     _cards = cards;
@@ -52,6 +59,7 @@ class NewsCardResponse {
   }
 
   int? get id => _id;
+  String? get source => _source;
   String? get bucket => _bucket;
   String? get folder => _folder;
   List<NewsCardImage> get cards => _cards ?? const <NewsCardImage>[];
@@ -68,9 +76,10 @@ class NewsCardResponse {
       .where((u) => u.isNotEmpty)
       .toList();
 
-  /// 행 `{ id, card_storage_paths: {...} }` 를 파싱한다.
+  /// 행 `{ id, source, card_storage_paths: {...} }` 를 파싱한다.
   NewsCardResponse.fromJson(Map<String, dynamic> json) {
     _id = _asInt(json['id']);
+    _source = json['source'] as String?;
 
     final raw = json['card_storage_paths'];
     final Map<String, dynamic> p = raw is Map
@@ -101,6 +110,7 @@ class NewsCardResponse {
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
       'id': _id,
+      'source': _source,
       'card_storage_paths': <String, dynamic>{
         'bucket': _bucket,
         'folder': _folder,

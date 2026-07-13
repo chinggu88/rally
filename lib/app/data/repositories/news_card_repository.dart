@@ -20,6 +20,7 @@ class NewsCardRepository {
   ///
   /// [page] 1부터 시작하는 페이지 번호(기본 1).
   /// [perPage] 페이지당 개수(기본 20).
+  /// [source] 뉴스 출처 필터 slug (null/빈 문자열이면 전체).
   ///
   /// 데이터가 0건이거나 미존재(404)인 경우 에러가 아니라 "데이터 없음"으로
   /// 간주하여 빈 목록을 가진 [GetNewsCardsResponse]를 반환한다.
@@ -27,6 +28,7 @@ class NewsCardRepository {
   Future<GetNewsCardsResponse> getNewsCards({
     int page = 1,
     int perPage = 20,
+    String? source,
   }) async {
     try {
       final res = await _client.functions.invoke(
@@ -35,6 +37,7 @@ class NewsCardRepository {
         queryParameters: <String, dynamic>{
           'page': '$page',
           'per_page': '$perPage',
+          if (source != null && source.isNotEmpty) 'source': source,
         },
       );
 

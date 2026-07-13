@@ -160,6 +160,19 @@ class HomeController extends GetxController {
   /// 카드뉴스 inflight 토큰 (race condition 방지)
   int _newsInflightToken = 0;
 
+  /// 선택된 뉴스 소스 필터 slug (null이면 전체)
+  final _selectedNewsSource = RxnString();
+  String? get selectedNewsSource => _selectedNewsSource.value;
+
+  /// 필터 칩에 노출할 뉴스 소스 slug 목록 (신규 소스 크롤러 추가 시 여기에 등록)
+  static const List<String> newsSources = ['badmintonplanet.com'];
+
+  /// slug → 한글 표시명. 미등록 slug는 slug 그대로 반환.
+  static String newsSourceLabelOf(String? slug) => switch (slug) {
+        'badmintonplanet.com' => '배드민턴 플래닛',
+        _ => slug ?? '',
+      };
+
   /// 진행 중인 inflight 요청 토큰 (race condition 방지)
   int _inflightToken = 0;
 
@@ -289,7 +302,12 @@ class HomeController extends GetxController {
       final response = await _newsCardRepository.getNewsCards(
         page: 1,
         perPage: _newsPageSize,
+        source: _selectedNewsSource.value,
       );
+
+      // race condition 가드: 더 새로운 요청(필터 변경 등)이 발생했으면 결과 무시
+      if (token != _newsInflightToken) return;
+
       _newsCards.assignAll(response.cards);
       _newsPage = response.page ?? 1;
       _hasMoreNews.value = _computeHasMore(response);
@@ -305,6 +323,15 @@ class HomeController extends GetxController {
         _onApiLoaded();
       }
     }
+  }
+
+  /// 뉴스 소스 필터를 변경한다. 같은 값이면 no-op, 변경 시 첫 페이지부터 재로드.
+  ///
+  /// [source] null이면 전체.
+  Future<void> changeNewsSource(String? source) async {
+    if (_selectedNewsSource.value == source) return;
+    _selectedNewsSource.value = source;
+    await fetchNewsCards();
   }
 
   /// 다음 페이지를 조회해 기존 목록 뒤에 누적한다(무한 스크롤).
@@ -324,6 +351,7 @@ class HomeController extends GetxController {
       final response = await _newsCardRepository.getNewsCards(
         page: nextPage,
         perPage: _newsPageSize,
+        source: _selectedNewsSource.value,
       );
 
       // fetchNewsCards(refresh)가 끼어들었으면 더보기 결과는 버린다.

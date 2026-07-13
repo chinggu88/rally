@@ -586,8 +586,41 @@ class HomeView extends GetView<HomeController> {
           ),
         ),
         SizedBox(height: 12.h),
+        _buildNewsSourceChips(),
+        SizedBox(height: 12.h),
         Obx(() => _buildNewsBody(context)),
       ],
+    );
+  }
+
+  /// 뉴스 출처 필터 칩 그룹 (전체 + 소스별 — 가로 스크롤 가능)
+  Widget _buildNewsSourceChips() {
+    return SizedBox(
+      height: 40.h,
+      child: Obx(() {
+        final selected = controller.selectedNewsSource;
+        return ListView.separated(
+          padding: EdgeInsets.symmetric(horizontal: 20.w),
+          scrollDirection: Axis.horizontal,
+          itemCount: 1 + HomeController.newsSources.length,
+          separatorBuilder: (_, __) => SizedBox(width: 8.w),
+          itemBuilder: (context, index) {
+            if (index == 0) {
+              return _NewsSourceChip(
+                label: '전체',
+                selected: selected == null,
+                onTap: () => controller.changeNewsSource(null),
+              );
+            }
+            final slug = HomeController.newsSources[index - 1];
+            return _NewsSourceChip(
+              label: HomeController.newsSourceLabelOf(slug),
+              selected: selected == slug,
+              onTap: () => controller.changeNewsSource(slug),
+            );
+          },
+        );
+      }),
     );
   }
 
@@ -641,6 +674,7 @@ class HomeView extends GetView<HomeController> {
             key: ValueKey<Object>(card.id ?? 'news-$index'),
             card: card,
             width: cardWidth,
+            sourceLabel: HomeController.newsSourceLabelOf(card.source),
             onTap: () => _openNewsDetail(context, card),
           );
         },
@@ -1118,6 +1152,55 @@ class _TodayMatchListState extends State<_TodayMatchList> {
               match: items[i],
               onTap: () {},
             ),
+      ),
+    );
+  }
+}
+
+/// 뉴스 출처 선택 칩 (선택 시 라임 옐로우 fill)
+class _NewsSourceChip extends StatelessWidget {
+  const _NewsSourceChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  static const Color _accent = AppColors.accent;
+  static const Color _accentDark = AppColors.accentDark;
+  static const Color _chipBg = AppColors.chipBg;
+  static const Color _chipBorder = AppColors.cardBorder;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(999.r),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+          decoration: BoxDecoration(
+            color: selected ? _accent : _chipBg,
+            borderRadius: BorderRadius.circular(999.r),
+            border: Border.all(color: selected ? _accent : _chipBorder),
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            label,
+            style: TextStyle(
+              fontFamily: AppTypography.chivo,
+              fontWeight: FontWeight.w700,
+              fontSize: 12.sp,
+              letterSpacing: 0.2,
+              color: selected ? _accentDark : Colors.white,
+            ),
+          ),
+        ),
       ),
     );
   }
