@@ -1,9 +1,10 @@
-// GET /functions/v1/get-news-cards?page=1&per_page=20
+// GET /functions/v1/get-news-cards?page=1&per_page=20&source=badmintonplanet.com
 // - card_created = true 인 badminton_planet_news 행만 조회한다 (카드뉴스가 만들어진 기사).
 // - page:     1부터 시작하는 페이지 번호 (기본 1, 1 미만이면 1로 보정)
 // - per_page: 페이지당 개수 (기본 20, 1~100 범위로 보정)
-// - 응답: { page, per_page, count, total, cards: [{ id, card_storage_paths }] }
-//         count = 이번 페이지 행 수, total = card_created=true 전체 건수
+// - source:   뉴스 출처 필터 (미전달/빈 문자열이면 전체. 미존재 소스는 빈 결과)
+// - 응답: { page, per_page, count, total, source, cards: [{ id, source, card_storage_paths }] }
+//         count = 이번 페이지 행 수, total = 필터 기준 전체 건수
 //         card_storage_paths = 생성된 카드뉴스 이미지의 Storage 경로 배열
 //         정렬: published_at DESC NULLS LAST → id DESC (최신 기사 우선)
 // - 인증: 공개 (anon 키)
@@ -51,15 +52,20 @@ Deno.serve(async (req) => {
       MAX_PER_PAGE,
     );
 
+    // 소스 필터 (미전달/빈 문자열이면 전체). 알 수 없는 값은 빈 목록으로 자연 처리.
+    const source = url.searchParams.get("source")?.trim() ?? "";
+
     const from = (page - 1) * perPage;
     const to = from + perPage - 1;
 
     const supabase = serviceClient();
-    const { data, count, error: dbErr } = await supabase
+    let query = supabase
       .from("badminton_planet_news")
-      .select("id, card_storage_paths", { count: "exact" })
+      .select("id, source, card_storage_paths", { count: "exact" })
       .eq("card_created", true)
-      .not("card_storage_paths", "is", null)
+      .not("card_storage_paths", "is", null);
+    if (source !== "") query = query.eq("source", source);
+    const { data, count, error: dbErr } = await query
       .order("published_at", { ascending: false, nullsFirst: false })
       .order("id", { ascending: false })
       .range(from, to);
@@ -76,6 +82,7 @@ Deno.serve(async (req) => {
           per_page: perPage,
           count: 0,
           total: count ?? 0,
+          source: source === "" ? null : source,
           cards: [],
         });
       }
@@ -84,6 +91,7 @@ Deno.serve(async (req) => {
 
     const cards = (data ?? []).map((r) => ({
       id: r.id,
+      source: r.source,
       card_storage_paths: r.card_storage_paths,
     }));
 
@@ -92,6 +100,7 @@ Deno.serve(async (req) => {
       per_page: perPage,
       count: cards.length,
       total: count ?? cards.length,
+      source: source === "" ? null : source,
       cards,
     });
   } catch (e) {

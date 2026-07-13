@@ -2,6 +2,9 @@ from typing import Any
 
 from bs4 import BeautifulSoup
 
+# badmintonplanet.com 뉴스 목록은 전부 이 카테고리이므로 파싱하지 않고 고정값 사용.
+CATEGORY = "Badminton News"
+
 
 def parse_articles(html: str) -> list[dict[str, Any]]:
     """목록 페이지 HTML에서 기사 카드를 파싱한다.
@@ -29,15 +32,11 @@ def parse_articles(html: str) -> list[dict[str, Any]]:
         card = h3.find_parent(class_="td-meta-info-container") or h3.parent
 
         author = None
-        category = None
         published_at = None
         if card is not None:
             a_author = card.select_one(".td-post-author-name a")
             if a_author:
                 author = a_author.get_text(strip=True) or None
-            a_cat = card.select_one(".td-post-category")
-            if a_cat:
-                category = a_cat.get_text(strip=True) or None
             t = card.select_one("time[datetime]")
             if t and t.get("datetime"):
                 published_at = t["datetime"].strip()
@@ -47,11 +46,11 @@ def parse_articles(html: str) -> list[dict[str, Any]]:
                 "url": url,
                 "title": title,
                 "author": author,
-                "category": category,
+                "category": CATEGORY,
                 "published_at": published_at,
                 "raw": {
                     "author": author,
-                    "category": category,
+                    "category": CATEGORY,
                     "published_at": published_at,
                 },
             }
