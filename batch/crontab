@@ -4,6 +4,8 @@
 # 매일 08:00, 17:00 (10분 간격 분산)
 0  8,17 * * *   cd /app && python -m batch.jobs.badminton_planet_news.main
 10 8,17 * * *   cd /app && python -m batch.jobs.bwf_matches.main
+50 8,17 * * *   cd /app && python -m batch.jobs.focus_taiwan_news.main
+55 8,17 * * *   cd /app && python -m batch.jobs.smash_net_news.main
 
 # 매주 월요일 08:20, 08:30, 08:40 (10분 간격 분산)
 20 8 * * 1      cd /app && python -m batch.jobs.bwf_calendar.main
