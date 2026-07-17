@@ -27,10 +27,7 @@ class LiveMatchChatView extends GetView<LiveMatchChatController> {
       body: SafeArea(
         top: false,
         child: Column(
-          children: [
-            Expanded(child: _buildMessageList()),
-            _buildComposer(),
-          ],
+          children: [Expanded(child: _buildMessageList()), _buildComposer()],
         ),
       ),
     );
@@ -63,7 +60,7 @@ class LiveMatchChatView extends GetView<LiveMatchChatController> {
           Obx(() {
             final count = controller.onlineCount;
             return Text(
-              '${_formatCount(count)} ONLINE  •  LIVE MATCH',
+              '${_formatCount(count)}명 접속중',
               style: TextStyle(
                 color: AppColors.subtleText,
                 fontSize: 10.sp,
@@ -74,17 +71,6 @@ class LiveMatchChatView extends GetView<LiveMatchChatController> {
           }),
         ],
       ),
-      actions: [
-        IconButton(
-          onPressed: () {},
-          icon: Icon(Icons.search_rounded, color: Colors.white, size: 22.sp),
-        ),
-        IconButton(
-          onPressed: () {},
-          icon: Icon(Icons.more_vert_rounded, color: Colors.white, size: 22.sp),
-        ),
-        SizedBox(width: 4.w),
-      ],
     );
   }
 
@@ -93,12 +79,10 @@ class LiveMatchChatView extends GetView<LiveMatchChatController> {
     if (tournament != null && tournament.trim().isNotEmpty) {
       return tournament.trim().toUpperCase();
     }
-    final p1 = controller.team1Names.isNotEmpty
-        ? controller.team1Names.first
-        : null;
-    final p2 = controller.team2Names.isNotEmpty
-        ? controller.team2Names.first
-        : null;
+    final p1 =
+        controller.team1Names.isNotEmpty ? controller.team1Names.first : null;
+    final p2 =
+        controller.team2Names.isNotEmpty ? controller.team2Names.first : null;
     if (p1 != null && p2 != null) {
       return '$p1 VS $p2'.toUpperCase();
     }
@@ -171,40 +155,114 @@ class LiveMatchChatView extends GetView<LiveMatchChatController> {
 
     // 시간 오름차순으로 한 번 훑으며 디바이더와 버블을 만든다.
     DateTime? prevDay;
-    for (final m in asc) {
-      final day = DateTime(m.createdAt.year, m.createdAt.month, m.createdAt.day);
-      if (prevDay == null || prevDay != day) {
+    for (var i = 0; i < asc.length; i++) {
+      final m = asc[i];
+      final day = DateTime(
+        m.createdAt.year,
+        m.createdAt.month,
+        m.createdAt.day,
+      );
+      final dayChanged = prevDay == null || prevDay != day;
+      if (dayChanged) {
         widgets.add(ChatDayDivider(label: _dayLabel(day)));
         prevDay = day;
       }
+
+      final prev = i > 0 ? asc[i - 1] : null;
+      final next = i + 1 < asc.length ? asc[i + 1] : null;
+
+      // 그룹 첫 메시지: 날짜가 바뀌었거나 이전 메시지의 보낸 사람이 다름
+      final isFirstInGroup =
+          dayChanged || prev == null || prev.userId != m.userId;
+
+      // 다음 메시지가 같은 사람 + 같은 분이면 시간은 마지막 메시지에서만 표시
+      final showTime =
+          next == null ||
+          next.userId != m.userId ||
+          !_sameMinute(next.createdAt, m.createdAt);
+
       widgets.add(
         ChatMessageBubble(
           key: ValueKey(m.id),
           message: m,
           isMine: m.userId == myId,
+          isFirstInGroup: isFirstInGroup,
+          showTime: showTime,
           onLongPress: () => _confirmDelete(m),
         ),
       );
     }
 
-    // 라이브 상태 pill: 가장 최신 메시지 바로 위에 1회 노출.
+    // 라이브 상태 pill: 가장 최신 메시지 바로 위에 1회 노출. 실시간 스코어 표시.
     if (widgets.isNotEmpty) {
-      widgets.add(
-        const ChatLiveStatusPill(label: 'MATCH LIVE: FINAL SET UNDERWAY'),
-      );
+      widgets.add(_buildLivePill());
     }
 
     // reverse=true이므로 마지막 항목이 화면 최상단. index 0이 최신이 되도록 뒤집는다.
     return widgets.reversed.toList();
   }
 
+  /// 라이브 스코어보드 pill. controller.liveScore(Realtime 갱신)에서
+  /// 진행 중인 게임 점수와 세트 번호를 파싱해 전달한다.
+  Widget _buildLivePill() {
+    final pairs = _scorePairs(controller.liveScore);
+    List<int>? current;
+    int? setNumber;
+    for (var i = 0; i < pairs.length; i++) {
+      final p = pairs[i];
+      // 완료 게임 판정(21점 이상 + 2점차)은 LiveMatchResponse.currentGameIndex와 동일.
+      final done = (p[0] >= 21 || p[1] >= 21) && (p[0] - p[1]).abs() >= 2;
+      if (!done) {
+        current = p;
+        setNumber = i + 1;
+        break;
+      }
+    }
+    if (current == null && pairs.isNotEmpty) {
+      current = pairs.last;
+      setNumber = pairs.length;
+    }
+    return ChatLiveStatusPill(
+      team1Name: _teamLabel(controller.team1Names),
+      team2Name: _teamLabel(controller.team2Names),
+      team1Score: current?[0],
+      team2Score: current?[1],
+      setNumber: setNumber,
+    );
+  }
+
+  /// 스코어 문자열(예: "21-18, 15-12")을 게임별 점수쌍 리스트로 파싱.
+  static List<List<int>> _scorePairs(String? score) {
+    if (score == null || score.trim().isEmpty) return const [];
+    final pairs = <List<int>>[];
+    for (final m in RegExp(r'(\d+)\s*[-:/]\s*(\d+)').allMatches(score)) {
+      pairs.add(<int>[int.parse(m.group(1)!), int.parse(m.group(2)!)]);
+    }
+    return pairs;
+  }
+
+  /// 팀 표시 이름. 복식은 두 선수를 ' / '로 연결.
+  static String _teamLabel(List<String> names) {
+    if (names.isEmpty) return 'TBD';
+    return names.take(2).map((n) => n.trim()).join(' / ');
+  }
+
+  static bool _sameMinute(DateTime a, DateTime b) {
+    return a.year == b.year &&
+        a.month == b.month &&
+        a.day == b.day &&
+        a.hour == b.hour &&
+        a.minute == b.minute;
+  }
+
   String _dayLabel(DateTime day) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final diff = today.difference(day).inDays;
-    final base = diff == 0
-        ? 'TODAY'
-        : diff == 1
+    final base =
+        diff == 0
+            ? 'TODAY'
+            : diff == 1
             ? 'YESTERDAY'
             : '${day.year}.${day.month.toString().padLeft(2, '0')}.${day.day.toString().padLeft(2, '0')}';
     final suffix = controller.tournamentName;
@@ -254,11 +312,8 @@ class LiveMatchChatView extends GetView<LiveMatchChatController> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              _circleIconButton(
-                icon: Icons.add_rounded,
-                onTap: () {},
-              ),
-              SizedBox(width: 6.w),
+              // _circleIconButton(icon: Icons.add_rounded, onTap: () {}),
+              SizedBox(width: 10.w),
               Expanded(
                 child: TextField(
                   controller: controller.composer,
@@ -282,21 +337,22 @@ class LiveMatchChatView extends GetView<LiveMatchChatController> {
                   ),
                 ),
               ),
-              SizedBox(width: 6.w),
-              IconButton(
-                onPressed: () {},
-                icon: Icon(
-                  Icons.image_outlined,
-                  color: AppColors.subtleText,
-                  size: 22.sp,
-                ),
-              ),
-              SizedBox(width: 2.w),
+              // SizedBox(width: 6.w),
+              // IconButton(
+              //   onPressed: () {},
+              //   icon: Icon(
+              //     Icons.image_outlined,
+              //     color: AppColors.subtleText,
+              //     size: 22.sp,
+              //   ),
+              // ),
+              SizedBox(width: 10.w),
               Obx(
                 () => GestureDetector(
-                  onTap: controller.isSending
-                      ? null
-                      : controller.sendComposerMessage,
+                  onTap:
+                      controller.isSending
+                          ? null
+                          : controller.sendComposerMessage,
                   child: Container(
                     width: 44.w,
                     height: 44.w,
@@ -312,20 +368,21 @@ class LiveMatchChatView extends GetView<LiveMatchChatController> {
                       ],
                     ),
                     alignment: Alignment.center,
-                    child: controller.isSending
-                        ? SizedBox(
-                            width: 18.w,
-                            height: 18.w,
-                            child: const CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Color(0xFF1A1F00),
+                    child:
+                        controller.isSending
+                            ? SizedBox(
+                              width: 18.w,
+                              height: 18.w,
+                              child: const CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Color(0xFF1A1F00),
+                              ),
+                            )
+                            : Icon(
+                              Icons.send_rounded,
+                              color: const Color(0xFF1A1F00),
+                              size: 20.sp,
                             ),
-                          )
-                        : Icon(
-                            Icons.send_rounded,
-                            color: const Color(0xFF1A1F00),
-                            size: 20.sp,
-                          ),
                   ),
                 ),
               ),

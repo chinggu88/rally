@@ -11,11 +11,20 @@ class ChatMessageBubble extends StatelessWidget {
     super.key,
     required this.message,
     required this.isMine,
+    this.isFirstInGroup = true,
+    this.showTime = true,
     this.onLongPress,
   });
 
   final ChatMessageResponse message;
   final bool isMine;
+
+  /// 같은 사람 연속 메시지 그룹의 첫 메시지 여부. 아바타/닉네임 표시에 사용.
+  final bool isFirstInGroup;
+
+  /// 시간(HH:MM) 표시 여부. 같은 사람 + 같은 분 그룹의 마지막 메시지에만 true.
+  final bool showTime;
+
   final VoidCallback? onLongPress;
 
   @override
@@ -23,7 +32,7 @@ class ChatMessageBubble extends StatelessWidget {
     return GestureDetector(
       onLongPress: isMine ? onLongPress : null,
       child: Padding(
-        padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 10.h),
+        padding: EdgeInsets.fromLTRB(16.w, isFirstInGroup ? 10.h : 2.h, 16.w, 10.h),
         child: isMine ? _buildMine() : _buildOther(),
       ),
     );
@@ -34,21 +43,26 @@ class ChatMessageBubble extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildAvatar(displayName),
+        if (isFirstInGroup)
+          _buildAvatar(displayName)
+        else
+          SizedBox(width: 36.w),
         SizedBox(width: 10.w),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                displayName,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 13.sp,
-                  fontWeight: FontWeight.w700,
+              if (isFirstInGroup) ...[
+                Text(
+                  displayName,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-              ),
-              SizedBox(height: 6.h),
+                SizedBox(height: 6.h),
+              ],
               Container(
                 padding: EdgeInsets.symmetric(
                   horizontal: 14.w,
@@ -67,14 +81,16 @@ class ChatMessageBubble extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(height: 6.h),
-              Text(
-                _formatHm(message.createdAt),
-                style: TextStyle(
-                  color: AppColors.hint,
-                  fontSize: 11.sp,
+              if (showTime) ...[
+                SizedBox(height: 6.h),
+                Text(
+                  _formatHm(message.createdAt),
+                  style: TextStyle(
+                    color: AppColors.hint,
+                    fontSize: 11.sp,
+                  ),
                 ),
-              ),
+              ],
             ],
           ),
         ),
@@ -103,25 +119,27 @@ class ChatMessageBubble extends StatelessWidget {
             ),
           ),
         ),
-        SizedBox(height: 6.h),
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              _formatHm(message.createdAt),
-              style: TextStyle(
-                color: AppColors.hint,
-                fontSize: 11.sp,
+        if (showTime) ...[
+          SizedBox(height: 6.h),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                _formatHm(message.createdAt),
+                style: TextStyle(
+                  color: AppColors.hint,
+                  fontSize: 11.sp,
+                ),
               ),
-            ),
-            SizedBox(width: 4.w),
-            Icon(
-              Icons.done_all_rounded,
-              size: 12.sp,
-              color: AppColors.accentLime,
-            ),
-          ],
-        ),
+              SizedBox(width: 4.w),
+              Icon(
+                Icons.done_all_rounded,
+                size: 12.sp,
+                color: AppColors.accentLime,
+              ),
+            ],
+          ),
+        ],
       ],
     );
   }

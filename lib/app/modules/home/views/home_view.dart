@@ -897,7 +897,13 @@ class _LiveMatchPageViewState extends State<_LiveMatchPageView> {
                             'event_name': m.eventName,
                             'round_name': m.roundName,
                             'tournament_name': m.name,
-                            'score': m.scoreDisplay,
+                            // 채팅방 pill 파싱을 위해 "21-18, 15-12" 형식으로 정규화.
+                            'score':
+                                m.hasGameScores
+                                    ? m.games
+                                        .map((g) => '${g.team1}-${g.team2}')
+                                        .join(', ')
+                                    : m.scoreDisplay,
                             'court_name': m.courtName,
                           },
                         );

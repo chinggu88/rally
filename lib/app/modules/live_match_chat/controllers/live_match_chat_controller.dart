@@ -54,6 +54,11 @@ class LiveMatchChatController extends GetxController {
   final _onlineCount = 0.obs;
   int get onlineCount => _onlineCount.value;
 
+  /// 실시간 스코어. 진입 시 arguments의 score 스냅샷으로 시작하고
+  /// bwf_live_matches UPDATE 이벤트로 갱신된다.
+  final _liveScore = RxnString();
+  String? get liveScore => _liveScore.value;
+
   final composer = TextEditingController();
   String? get currentUserId =>
       Supabase.instance.client.auth.currentUser?.id;
@@ -97,6 +102,7 @@ class LiveMatchChatController extends GetxController {
     tournamentName = map['tournament_name'] as String?;
     courtName = map['court_name'] as String?;
     scoreSnapshot = map['score'] as String?;
+    _liveScore.value = scoreSnapshot;
   }
 
   static List<String> _stringList(dynamic v) {
@@ -233,6 +239,17 @@ class LiveMatchChatController extends GetxController {
             ),
             callback: _onDelete,
           )
+          .onPostgresChanges(
+            event: PostgresChangeEvent.update,
+            schema: 'public',
+            table: 'bwf_live_matches',
+            filter: PostgresChangeFilter(
+              type: PostgresChangeFilterType.eq,
+              column: 'id',
+              value: liveMatchId,
+            ),
+            callback: _onScoreUpdate,
+          )
           .onPresenceSync((_) => _refreshOnlineCount())
           .onPresenceJoin((_) => _refreshOnlineCount())
           .onPresenceLeave((_) => _refreshOnlineCount())
@@ -313,6 +330,36 @@ class LiveMatchChatController extends GetxController {
     } catch (e) {
       log('LiveMatchChatController._onInsert error: $e');
     }
+  }
+
+  void _onScoreUpdate(PostgresChangePayload payload) {
+    final score = _scoreToString(payload.newRecord['score']);
+    if (score != null && score.isNotEmpty) {
+      _liveScore.value = score;
+    }
+  }
+
+  /// score 컬럼은 문자열("21-18, 15-12"), 문자열 배열(["21-18","15-12"]),
+  /// 맵 배열([{"set":1,"home":22,"away":20}, ...]) 형태로 내려올 수 있어
+  /// "home-away, home-away" 문자열로 정규화한다.
+  static String? _scoreToString(dynamic raw) {
+    if (raw == null) return null;
+    if (raw is String) return raw.trim();
+    if (raw is List) {
+      final parts = <String>[];
+      for (final e in raw) {
+        if (e is Map) {
+          final home = e['home'] ?? e['team1'];
+          final away = e['away'] ?? e['team2'];
+          if (home != null && away != null) parts.add('$home-$away');
+        } else {
+          final s = e?.toString().trim();
+          if (s != null && s.isNotEmpty) parts.add(s);
+        }
+      }
+      return parts.join(', ').trim();
+    }
+    return raw.toString().trim();
   }
 
   void _onDelete(PostgresChangePayload payload) {

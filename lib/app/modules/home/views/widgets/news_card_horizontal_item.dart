@@ -42,51 +42,53 @@ class NewsCardHorizontalItem extends StatelessWidget {
           child: Stack(
             children: [
               Positioned.fill(
-                child: coverUrl == null
-                    ? _placeholder()
-                    : CachedNetworkImage(
-                        imageUrl: coverUrl,
-                        width: width,
-                        height: height,
-                        fit: BoxFit.cover,
-                        placeholder: (_, __) => Container(
-                          color: AppColors.surfaceAlt,
-                          alignment: Alignment.center,
-                          child: SizedBox(
-                            width: 26.w,
-                            height: 26.w,
-                            child: const CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: NewsCardItem.accent,
-                            ),
-                          ),
+                child:
+                    coverUrl == null
+                        ? _placeholder()
+                        : CachedNetworkImage(
+                          imageUrl: coverUrl,
+                          width: width,
+                          height: height,
+                          fit: BoxFit.cover,
+                          placeholder:
+                              (_, __) => Container(
+                                color: AppColors.surfaceAlt,
+                                alignment: Alignment.center,
+                                child: SizedBox(
+                                  width: 26.w,
+                                  height: 26.w,
+                                  child: const CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: NewsCardItem.accent,
+                                  ),
+                                ),
+                              ),
+                          errorWidget: (_, __, ___) => _placeholder(),
                         ),
-                        errorWidget: (_, __, ___) => _placeholder(),
-                      ),
               ),
-              if (label != null && label.isNotEmpty)
-                Positioned(
-                  top: 10.h,
-                  left: 10.w,
-                  child: Container(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.55),
-                      borderRadius: BorderRadius.circular(999.r),
-                    ),
-                    child: Text(
-                      label,
-                      style: TextStyle(
-                        fontFamily: AppTypography.chivo,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 10.sp,
-                        letterSpacing: 0.2,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
+              // if (label != null && label.isNotEmpty)
+              //   Positioned(
+              //     top: 10.h,
+              //     left: 10.w,
+              //     child: Container(
+              //       padding:
+              //           EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+              //       decoration: BoxDecoration(
+              //         color: Colors.black.withValues(alpha: 0.55),
+              //         borderRadius: BorderRadius.circular(999.r),
+              //       ),
+              //       child: Text(
+              //         label,
+              //         style: TextStyle(
+              //           fontFamily: AppTypography.chivo,
+              //           fontWeight: FontWeight.w700,
+              //           fontSize: 10.sp,
+              //           letterSpacing: 0.2,
+              //           color: Colors.white,
+              //         ),
+              //       ),
+              //     ),
+              //   ),
             ],
           ),
         ),
