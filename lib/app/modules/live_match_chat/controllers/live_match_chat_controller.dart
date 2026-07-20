@@ -59,6 +59,12 @@ class LiveMatchChatController extends GetxController {
   final _liveScore = RxnString();
   String? get liveScore => _liveScore.value;
 
+  /// 라이브 스코어 가리기 (AppBar 체크박스로 토글).
+  final _hideLiveScore = false.obs;
+  bool get hideLiveScore => _hideLiveScore.value;
+  void toggleHideLiveScore(bool? value) =>
+      _hideLiveScore.value = value ?? false;
+
   final composer = TextEditingController();
   String? get currentUserId =>
       Supabase.instance.client.auth.currentUser?.id;

@@ -34,7 +34,7 @@ class LiveMatchChatView extends GetView<LiveMatchChatController> {
   }
 
   PreferredSizeWidget _buildAppBar() {
-    final title = _resolveTitle();
+    // final title = _resolveTitle();
     return AppBar(
       backgroundColor: AppColors.bg,
       elevation: 0,
@@ -46,7 +46,7 @@ class LiveMatchChatView extends GetView<LiveMatchChatController> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            title,
+            '실시간 채팅',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
@@ -71,22 +71,34 @@ class LiveMatchChatView extends GetView<LiveMatchChatController> {
           }),
         ],
       ),
+      actions: [
+        Obx(
+          () => Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '스코어 가리기',
+                style: TextStyle(
+                  color: AppColors.subtleText,
+                  fontSize: 11.sp,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              Checkbox(
+                value: controller.hideLiveScore,
+                onChanged: controller.toggleHideLiveScore,
+                activeColor: AppColors.accentLime,
+                checkColor: const Color(0xFF1A1F00),
+                side: const BorderSide(color: Color(0xFF3A3F3C), width: 1.5),
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                visualDensity: VisualDensity.compact,
+              ),
+            ],
+          ),
+        ),
+        SizedBox(width: 8.w),
+      ],
     );
-  }
-
-  String _resolveTitle() {
-    final tournament = controller.tournamentName;
-    if (tournament != null && tournament.trim().isNotEmpty) {
-      return tournament.trim().toUpperCase();
-    }
-    final p1 =
-        controller.team1Names.isNotEmpty ? controller.team1Names.first : null;
-    final p2 =
-        controller.team2Names.isNotEmpty ? controller.team2Names.first : null;
-    if (p1 != null && p2 != null) {
-      return '$p1 VS $p2'.toUpperCase();
-    }
-    return 'LIVE CHAT';
   }
 
   String _formatCount(int n) {
@@ -194,7 +206,8 @@ class LiveMatchChatView extends GetView<LiveMatchChatController> {
     }
 
     // 라이브 상태 pill: 가장 최신 메시지 바로 위에 1회 노출. 실시간 스코어 표시.
-    if (widgets.isNotEmpty) {
+    // AppBar 체크박스로 가리기 가능.
+    if (widgets.isNotEmpty && !controller.hideLiveScore) {
       widgets.add(_buildLivePill());
     }
 
