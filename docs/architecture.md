@@ -124,6 +124,7 @@ rally/lib/
   - `player` 모듈 ↔ `supabase/functions/get-player` (선수 상세)
   - `news` 모듈(홈) ↔ `supabase/functions/get-live-matches` (현재 진행 중 라이브 매치 목록 — `tournament_status='live'`)
   - `news` 모듈(홈) ↔ `supabase/functions/get-today-matches` (KST 오늘 매치 — results/upcoming 분류, `bwf_live_matches` 중 `tournament_status='live'`만 제외 / 응답에 `match_time_kst_hhmm` 사전계산 포함) — TASK-007
+- **푸시 알림 (관심 선수 라이브 경기 시작)**: `bwf_live_matches`에 새 라이브 행 INSERT(또는 post→live 재승격) 시 DB 트리거 `trg_notify_favorite_live_match`가 `favorite_players`×`profiles.notifications_enabled` 유저를 찾아 `notifications`에 INSERT → 기존 웹훅(`send-push-on-notification`)이 `send-push` Edge Function으로 FCM 발송. 유저+경기당 1회만(부분 유니크 인덱스 dedup). 마이그레이션: `supabase/migrations/20260720000000_live_match_start_notifications.sql`
 
 ## 주요 의존성
 

@@ -153,29 +153,39 @@ class NotificationService extends GetxService {
       await _saveTokenIfLoggedIn(newToken);
     });
 
-    // iOS는 APNs 토큰이 먼저 발급된 후에야 FCM 토큰이 발급된다.
-    // requestPermission() 직후엔 아직 등록 전이라 null인 경우가 많으므로
-    // 발급될 때까지 짧게 폴링한다. (시뮬레이터/프로비저닝 미설정 시 끝까지 null)
+    final token = await _acquireToken();
+    if (token != null) {
+      await _saveTokenIfLoggedIn(token);
+    }
+  }
+
+  /// FCM 토큰을 발급받아 `_currentToken`에 보관한다. 실패 시 null.
+  ///
+  /// iOS는 APNs 토큰이 먼저 발급된 후에야 FCM 토큰이 발급된다.
+  /// requestPermission() 직후엔 아직 등록 전이라 null인 경우가 많으므로
+  /// 발급될 때까지 짧게 폴링한다. (시뮬레이터/프로비저닝 미설정 시 끝까지 null)
+  /// 발급 실패는 호출부 흐름을 막지 않도록 격리한다.
+  Future<String?> _acquireToken() async {
     if (Platform.isIOS) {
       final apns = await _waitForApnsToken();
       if (apns == null) {
         log(
-          'NotificationService._bindFcmToken: APNs token unavailable — '
+          'NotificationService._acquireToken: APNs token unavailable — '
           'skip getToken (will retry via onTokenRefresh)',
         );
-        return;
+        return null;
       }
     }
 
-    // FCM 토큰 발급은 실패하더라도 나머지 초기화를 막지 않도록 격리한다.
     try {
       final token = await FirebaseMessaging.instance.getToken();
       if (token != null) {
         _currentToken = token;
-        await _saveTokenIfLoggedIn(token);
       }
+      return token;
     } catch (e) {
-      log('NotificationService._bindFcmToken: getToken failed — $e');
+      log('NotificationService._acquireToken: getToken failed — $e');
+      return null;
     }
   }
 
@@ -293,8 +303,10 @@ class NotificationService extends GetxService {
       state,
     ) async {
       if (state.event == AuthChangeEvent.signedIn) {
-        if (_currentToken != null) {
-          await _saveTokenIfLoggedIn(_currentToken!);
+        // 부팅 시점 발급이 실패했을 수 있으므로(APNs 지연 등) 없으면 재시도.
+        final token = _currentToken ?? await _acquireToken();
+        if (token != null) {
+          await _saveTokenIfLoggedIn(token);
         }
       } else if (state.event == AuthChangeEvent.signedOut) {
         if (_currentToken != null) {
