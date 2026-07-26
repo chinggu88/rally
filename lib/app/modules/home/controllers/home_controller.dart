@@ -79,6 +79,19 @@ class HomeController extends GetxController {
   /// View에서 카드별 펄스 애니메이션 트리거에 사용한다.
   final RxMap<int, DateTime> scoreBumpAt = <int, DateTime>{}.obs;
 
+  // ── 채팅방 접속 인원 (presence 관찰) ─────────────────────────
+
+  /// 라이브 매치 id → 채팅방 접속 인원 수.
+  final RxMap<int, int> chatOnlineCounts = <int, int>{}.obs;
+
+  /// 매치별 presence 관찰 채널 (track 없이 구독만 하므로 인원에 포함되지 않음).
+  final Map<int, RealtimeChannel> _chatPresenceChannels = {};
+
+  /// 채팅방 입장으로 관찰을 일시 중지한 매치 id 집합.
+  /// 같은 topic을 이중 join하면 서버가 기존 채널을 닫아 채팅방 realtime이
+  /// 끊기므로, 입장 전에 관찰 채널을 내리고 퇴장 후 재구독한다.
+  final Set<int> _pausedChatPresenceIds = {};
+
   // ── 오늘 경기 상태 ──────────────────────────────────────────
 
   /// 오늘 경기 결과 목록 (match_time ASC).
@@ -187,11 +200,15 @@ class HomeController extends GetxController {
     fetchTodayMatches();
     fetchNewsCards();
     subscribeRealtime();
+    ever(_liveMatches, (_) => _syncChatPresence());
   }
 
   @override
   void onClose() {
     unsubscribeRealtime();
+    for (final id in _chatPresenceChannels.keys.toList()) {
+      _removeChatPresenceChannel(id);
+    }
     super.onClose();
   }
 
@@ -557,5 +574,94 @@ class HomeController extends GetxController {
       return false;
     }
     return true;
+  }
+
+  // ── 채팅방 presence 관찰 ─────────────────────────────────────
+
+  /// 현재 라이브 매치 목록과 presence 관찰 채널을 동기화한다.
+  ///
+  /// 라이브 종료된 매치의 채널/카운트는 제거하고, 새 매치는 구독한다.
+  /// (채팅방 입장으로 일시 중지된 매치는 건너뛴다.)
+  void _syncChatPresence() {
+    final liveIds = _liveMatches.map((m) => m.id).whereType<int>().toSet();
+
+    final stale =
+        _chatPresenceChannels.keys
+            .where((id) => !liveIds.contains(id))
+            .toList();
+    for (final id in stale) {
+      _removeChatPresenceChannel(id);
+      chatOnlineCounts.remove(id);
+    }
+    _pausedChatPresenceIds.removeWhere((id) => !liveIds.contains(id));
+
+    for (final id in liveIds) {
+      if (_chatPresenceChannels.containsKey(id)) continue;
+      if (_pausedChatPresenceIds.contains(id)) continue;
+      _subscribeChatPresence(id);
+    }
+  }
+
+  /// 채팅방 채널(`live_match_chat:{id}`)을 track 없이 구독해
+  /// presence 인원 수만 관찰한다.
+  void _subscribeChatPresence(int id) {
+    try {
+      final ch = Supabase.instance.client
+          .channel('live_match_chat:$id')
+          .onPresenceSync((_) => _refreshChatOnlineCount(id))
+          .onPresenceJoin((_) => _refreshChatOnlineCount(id))
+          .onPresenceLeave((_) => _refreshChatOnlineCount(id))
+          .subscribe();
+      _chatPresenceChannels[id] = ch;
+    } catch (e) {
+      log('HomeController._subscribeChatPresence($id) error: $e');
+    }
+  }
+
+  /// 채팅 컨트롤러와 동일하게 user_id로 dedupe해 접속 인원을 계산한다.
+  void _refreshChatOnlineCount(int id) {
+    final ch = _chatPresenceChannels[id];
+    if (ch == null) return;
+    try {
+      final state = ch.presenceState();
+      final userIds = <String>{};
+      var unknownConnections = 0;
+      for (final entry in state) {
+        for (final p in entry.presences) {
+          final uid = p.payload['user_id'];
+          if (uid is String && uid.isNotEmpty) {
+            userIds.add(uid);
+          } else {
+            unknownConnections += 1;
+          }
+        }
+      }
+      chatOnlineCounts[id] = userIds.length + unknownConnections;
+    } catch (e) {
+      log('HomeController._refreshChatOnlineCount($id) error: $e');
+    }
+  }
+
+  void _removeChatPresenceChannel(int id) {
+    final ch = _chatPresenceChannels.remove(id);
+    if (ch == null) return;
+    try {
+      Supabase.instance.client.removeChannel(ch);
+    } catch (e) {
+      log('HomeController._removeChatPresenceChannel($id) error: $e');
+    }
+  }
+
+  /// 채팅방 입장 직전 호출 — 해당 매치의 presence 관찰을 중단한다.
+  /// 채팅방과 같은 topic을 이중 join하면 기존 채널이 닫히는 것을 방지.
+  void pauseChatPresence(int id) {
+    _pausedChatPresenceIds.add(id);
+    _removeChatPresenceChannel(id);
+  }
+
+  /// 채팅방 퇴장 후 호출 — 매치가 아직 라이브면 관찰을 재개한다.
+  void resumeChatPresence(int id) {
+    _pausedChatPresenceIds.remove(id);
+    _syncChatPresence();
   }
 }

@@ -24,12 +24,16 @@ class LiveMatchCard extends StatefulWidget {
     this.onTap,
     this.width = 320,
     this.scoreBumpAt,
+    this.chatOnlineCount = 0,
   });
 
   final LiveMatchResponse match;
   final VoidCallback? onTap;
   final double width;
   final DateTime? scoreBumpAt;
+
+  /// 채팅방 현재 접속 인원 수 (presence 기반).
+  final int chatOnlineCount;
 
   static const Color accent = AppColors.accent;
   static const Color accentDark = AppColors.accentDark;
@@ -186,6 +190,8 @@ class _LiveMatchCardState extends State<LiveMatchCard>
                       _buildTeamColumn(side: 2),
                     ],
                   ),
+                  SizedBox(height: 14.h),
+                  _buildChatEntryBar(),
                 ],
               ),
             ),
@@ -815,6 +821,61 @@ class _LiveMatchCardState extends State<LiveMatchCard>
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // ── 채팅 입장 배지 (하단 풀폭 바) ─────────────────────────────
+  Widget _buildChatEntryBar() {
+    final count = widget.chatOnlineCount;
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 9.h),
+      decoration: BoxDecoration(
+        color: LiveMatchCard.accent.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(10.r),
+        border: Border.all(
+          color: LiveMatchCard.accent.withValues(alpha: 0.35),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.chat_bubble_outline,
+            size: 13.sp,
+            color: LiveMatchCard.accent,
+          ),
+          SizedBox(width: 6.w),
+          Text(
+            '실시간 채팅 입장',
+            style: TextStyle(
+              fontFamily: AppTypography.chivo,
+              fontWeight: FontWeight.w800,
+              fontSize: 11.sp,
+              letterSpacing: 0.4,
+              color: LiveMatchCard.accent,
+            ),
+          ),
+          SizedBox(width: 8.w),
+          Icon(
+            Icons.person_outline,
+            size: 12.sp,
+            color: LiveMatchCard.subtleText,
+          ),
+          SizedBox(width: 3.w),
+          Text(
+            '$count명 참여중',
+            style: TextStyle(
+              fontFamily: AppTypography.chivo,
+              fontWeight: FontWeight.w700,
+              fontSize: 11.sp,
+              letterSpacing: 0.2,
+              color: LiveMatchCard.subtleText,
+            ),
+          ),
+        ],
       ),
     );
   }

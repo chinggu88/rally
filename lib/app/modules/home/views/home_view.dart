@@ -878,15 +878,23 @@ class _LiveMatchPageViewState extends State<_LiveMatchPageView> {
                   child: Obx(() {
                     final bumpAt =
                         id == null ? null : widget.controller.scoreBumpAt[id];
+                    final chatCount =
+                        id == null
+                            ? 0
+                            : (widget.controller.chatOnlineCounts[id] ?? 0);
                     return LiveMatchCard(
                       // 정렬 변경 시에도 동일 매치의 State가 재사용되도록 매치 id 키 사용.
                       key: ValueKey<Object>(id ?? 'match-$index'),
                       match: m,
                       width: widget.cardWidth,
                       scoreBumpAt: bumpAt,
-                      onTap: () {
+                      chatOnlineCount: chatCount,
+                      onTap: () async {
                         if (id == null) return;
-                        Get.toNamed(
+                        // 채팅방과 같은 presence topic 이중 join 방지:
+                        // 입장 전 관찰 채널을 내리고, 복귀 후 재구독한다.
+                        widget.controller.pauseChatPresence(id);
+                        await Get.toNamed(
                           Routes.LIVE_MATCH_CHAT,
                           arguments: <String, dynamic>{
                             'live_match_id': id,
@@ -907,6 +915,7 @@ class _LiveMatchPageViewState extends State<_LiveMatchPageView> {
                             'court_name': m.courtName,
                           },
                         );
+                        widget.controller.resumeChatPresence(id);
                       },
                     );
                   }),
