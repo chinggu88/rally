@@ -32,15 +32,23 @@ def fetch_interested_users(supabase: Any, player_ids: list[int]) -> list[str]:
     """player_ids 중 하나라도 관심등록한 user_id 목록 (알림 활성 유저만)."""
     if not player_ids:
         return []
-    res = (
+    fav = (
         supabase.table("favorite_players")
-        .select("user_id, profiles!inner(notifications_enabled)")
+        .select("user_id")
         .in_("player_id", player_ids)
-        .eq("profiles.notifications_enabled", True)
         .execute()
     )
-    rows = res.data or []
-    return list({r["user_id"] for r in rows})
+    user_ids = list({r["user_id"] for r in (fav.data or [])})
+    if not user_ids:
+        return []
+    prof = (
+        supabase.table("profiles")
+        .select("id")
+        .in_("id", user_ids)
+        .eq("notifications_enabled", True)
+        .execute()
+    )
+    return [r["id"] for r in (prof.data or [])]
 
 
 def fetch_summary_notified_user_ids(
