@@ -1,3 +1,9 @@
-- [Task tool unavailable](environment_no_task_tool.md) — Task 서브에이전트 호출 도구가 이 세션에서 노출되지 않음. team-lead가 각 agent 가이드를 직접 따라 수행한다
+- [Direct implementation, no subagent delegation](environment_no_task_tool.md) — Agent 도구 임의 호출 금지. team-lead가 각 agent 가이드를 직접 따라 수행한다
 - [Edge Function module pattern](edge_function_module_pattern.md) — rally에서 Supabase Edge Function 매거진 화면을 추가할 때의 정형 패턴 (data 모델 2개 + 레포 1개 + 모듈 3파일 수정)
-- [Bottom-nav tab binding pattern](bottom_nav_tab_binding_pattern.md) — 바텀 네비 탭 컨트롤러가 새 레포지토리를 의존하면 모듈 Binding + AppBinding 두 곳 모두에 등록해야 한다
+- [Bottom-nav tab binding pattern](bottom_nav_tab_binding_pattern.md) — AppBinding 이중 등록 + 탭 진입 로딩 정책(loadIfNeeded vs reloadFromTab) + 5탭 라벨 12pt
+- [Stitch MCP unavailable](stitch_mcp_unavailable.md) — Stitch 호출은 인증 오류로 실패한다. PlayerView 레이아웃으로 폴백하고 screenId를 지어내지 않는다
+- [flutter analyze crashes here](flutter_analyze_crashes.md) — `dart analyze lib/` 로 검증한다. 기준선 169 issues / error 2 / warning 4 는 전부 선행 이슈
+- [Community writes are RPC-only](community_write_path_rpc_only.md) — 컬럼 단위 GRANT 때문에 status/카운터 직접 UPDATE 는 42501. 삭제·조회수는 RPC
+- [Community write gate](community_write_gate.md) — ensureCanWrite() 단일 진입점 + EULA/정규화 상수 동기화 + 이미지 업로드 순서 규칙
+- [Community moderation surface](community_moderation_surface.md) — 23505 문구 충돌 · 운영자 화면 없음 · 차단 후 화면 분기 · 신고 완료 CTA
+- [Live chat moderation gap](chat_moderation_gap.md) — 채팅은 RLS가 차단을 안 걸러준다(클라 3경로 필터) · user 신고는 자동숨김 없음 · 금칙어/관리자삭제 부재

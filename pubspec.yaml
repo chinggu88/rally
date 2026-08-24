@@ -119,6 +119,8 @@ flutter:
   assets:
     - .env
     - assets/images/google_logo.png
+    # 커뮤니티 이용규칙 원문. 온보딩 시트가 rootBundle로 읽는다.
+    - assets/docs/
 
   fonts:
     - family: Chivo

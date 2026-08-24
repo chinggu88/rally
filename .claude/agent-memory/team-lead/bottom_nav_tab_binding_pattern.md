@@ -1,20 +1,32 @@
 ---
 name: bottom-nav-tab-binding-pattern
-description: rally에서 바텀 네비게이션 탭 화면(NewsView 등)에 새 레포지토리 의존성을 추가할 때는 AppBinding에도 같이 등록해야 한다
+description: rally 바텀네비 탭 화면에 새 레포지토리/컨트롤러를 추가할 때 AppBinding 이중 등록 + 탭 진입 로딩 정책 (탭별로 다름)
 metadata:
   type: project
 ---
 
-rally의 `AppView`는 4개 탭(News/Match/Player/MyInfo)을 `IndexedStack`으로 동시에 마운트한다. 즉 `AppView` 진입 시점에 4개 탭 View 모두가 `build()`되며, `GetView<X>`의 controller는 `Get.find<X>()`로 즉시 조회된다.
+rally의 `AppView`는 바텀 네비 탭 전부를 `IndexedStack`으로 **동시에 마운트**한다
+(2026-08 기준 5탭: 홈0 / 경기1 / 선수2 / 커뮤니티3 / 내정보4 — 홈 탭의 모듈 디렉터리 이름은 `home`이다).
+즉 `/app` 진입 시점에 모든 탭 View가 `build()`되며, 컨트롤러는 `Get.find()`로 즉시 조회된다.
 
-이 때문에 탭 화면용 컨트롤러가 새 레포지토리를 `Get.find<Repo>()`로 주입받을 경우, **NewsBinding에만 fenix로 등록하는 것으로는 부족**하다. `AppBinding`도 라우트 진입 시 한 번 실행되므로 거기서도 같은 레포지토리를 lazyPut으로 보장해야 한다. 그렇지 않으면 AppView 진입 직후 NewsView가 build되며 컨트롤러가 `Get.find<NotRegisteredRepo>()`에서 `"NotRegisteredRepo not found"` 예외를 던진다.
+**1) 의존성은 두 곳에 등록한다.** 모듈 Binding(`<tab>_binding.dart`)은 딥링크로 해당 라우트에
+직접 들어올 때만 실행되고, `/app` 경로에서는 `AppBinding`만 실행된다. 탭 컨트롤러가 새
+레포지토리를 의존하면 `AppBinding.dependencies()`에도
+`Get.lazyPut<Repo>(() => Repo(), fenix: true)` 로 등록해야 하며, 빠뜨리면 앱 진입 즉시
+`"Repo not found"` 예외가 난다.
 
-**How to apply:**
-- 탭 화면 컨트롤러가 새 레포지토리를 의존하면 두 곳에 등록:
-  1. `lib/app/modules/<tab>/bindings/<tab>_binding.dart` — 직접 라우트 진입(딥링크 등) 대비
-  2. `lib/app/modules/app/bindings/app_binding.dart` — 바텀 네비 진입 보장
-- 등록 방식은 `Get.lazyPut<Repo>(() => Repo(), fenix: true)` — fenix를 줘야 탭 전환·재호출 시에도 재생성된다.
+**2) 탭 진입 로딩 정책은 탭마다 다르다.** 같은 IndexedStack 구조 때문에 `onInit()`에서
+fetch하면 콜드 스타트마다 그 탭의 쿼리가 붙는다. 두 가지 패턴이 공존한다:
+- `PlayerController.reloadFromTab()` — 탭 진입마다 리셋+재로드 (랭킹처럼 항상 최신이 맞는 화면)
+- `CommunityController.loadIfNeeded()` — `_hasLoadedOnce` 플래그로 **최초 1회만** 로드
+  (글을 읽다 탭을 옮긴 사용자의 스크롤/목록을 보존해야 하는 화면). 갱신은 pull-to-refresh로만.
 
-**Why:** 라이브 매치(`get-live-matches`)를 NewsView 홈에 붙이면서 `NewsBinding`에만 `LiveMatchRepository`를 lazyPut했더니, AppView가 NewsView를 즉시 마운트하는 구조 때문에 NewsBinding 실행 전에 NewsController.onInit()이 호출돼 `Get.find<LiveMatchRepository>()`가 실패할 위험을 발견했다. AppBinding에도 추가해 두 번째 안전망을 둔다.
+두 경우 모두 `AppController.changeTab`의 `if (index == xTabIndex && Get.isRegistered<XController>())`
+분기에서 호출한다. 새 탭은 **기존 인덱스 상수를 밀지 않는 위치**(끝 또는 내정보 앞)에 넣어
+`matchTabIndex`/`playerTabIndex` 하드코딩을 유지한다. 탭이 5개가 되면
+`app_theme.dart`의 `bottomNavigationBarTheme` 라벨을 12pt로 낮춰야 320pt 기기에서 안 잘린다.
 
-관련: [[edge-function-module-pattern]], [[environment-no-task-tool]]
+**Why:** TASK-009(커뮤니티 탭)에서 이 세 가지가 모두 실제 요구사항으로 확인됐다. AppBinding
+누락은 기획서가 "가장 확실하게 터지는 것"으로 지목한 항목이다.
+
+관련: [[edge-function-module-pattern]], [[stitch-mcp-unavailable]]

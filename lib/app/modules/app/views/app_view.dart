@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../community/views/community_view.dart';
 import '../../match/views/match_view.dart';
 import '../../my_info/views/my_info_view.dart';
 import '../../home/views/home_view.dart';
@@ -14,6 +15,7 @@ class AppView extends GetView<AppController> {
     HomeView(),
     MatchView(),
     PlayerView(),
+    CommunityView(),
     MyInfoView(),
   ];
 
@@ -45,6 +47,11 @@ class AppView extends GetView<AppController> {
               icon: Icon(Icons.person_outline),
               activeIcon: Icon(Icons.person),
               label: '선수',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.forum_outlined),
+              activeIcon: Icon(Icons.forum),
+              label: '커뮤니티',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.account_circle_outlined),

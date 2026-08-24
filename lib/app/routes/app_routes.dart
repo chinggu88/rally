@@ -8,6 +8,11 @@ abstract class Routes {
   static const MATCH_PARTICIPANTS = '/match/participants';
   static const PLAYER = '/player';
   static const PLAYER_DETAIL = '/player/detail';
+  static const COMMUNITY = '/community';
+  static const COMMUNITY_POST_DETAIL = '/community/post';
+  static const COMMUNITY_COMPOSE = '/community/compose';
+  static const COMMUNITY_BLOCKED_USERS = '/community/blocked-users';
+  static const COMMUNITY_TERMS = '/community/terms';
   static const MY_INFO = '/my-info';
   static const PROFILE_EDIT = '/profile-edit';
   static const FAVORITE_PLAYERS = '/favorite-players';

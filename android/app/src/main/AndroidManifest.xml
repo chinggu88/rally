@@ -56,5 +56,12 @@
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
+        <!-- 내정보 > 도움말 / 피드백 보내기의 mailto: 실행에 필요하다.
+             Android 11+ 는 패키지 가시성이 기본 차단이라 이 선언이 없으면
+             메일 앱이 설치돼 있어도 launchUrl 이 실패한다. -->
+        <intent>
+            <action android:name="android.intent.action.SENDTO"/>
+            <data android:scheme="mailto"/>
+        </intent>
     </queries>
 </manifest>

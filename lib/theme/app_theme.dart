@@ -156,8 +156,10 @@ class AppTheme {
         unselectedItemColor: scheme.onSurfaceVariant,
         type: BottomNavigationBarType.fixed,
         elevation: 0,
-        selectedLabelStyle: AppTypography.labelLg,
-        unselectedLabelStyle: AppTypography.labelLg,
+        // 5탭에서 "커뮤니티" 라벨이 320pt 기기에서 잘리지 않도록 12pt로 낮춘다
+        // (Material 바텀 네비게이션 표준 크기이기도 하다).
+        selectedLabelStyle: AppTypography.labelLg.copyWith(fontSize: 12),
+        unselectedLabelStyle: AppTypography.labelLg.copyWith(fontSize: 12),
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: scheme.surfaceContainer,
