@@ -8,6 +8,7 @@ import 'package:rally/app/modules/home/controllers/home_controller.dart';
 import 'package:rally/app/routes/app_routes.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../community/controllers/community_controller.dart';
 import '../../match/controllers/match_controller.dart';
 import '../../player/controllers/player_controller.dart';
 
@@ -19,11 +20,15 @@ import '../../player/controllers/player_controller.dart';
 class AppController extends GetxController with WidgetsBindingObserver {
   static AppController get to => Get.find();
 
-  /// 경기 탭 인덱스 (BottomNavigationBar 순서: 홈0 / 경기1 / 선수2 / 내정보3)
+  /// 경기 탭 인덱스
+  /// (BottomNavigationBar 순서: 홈0 / 경기1 / 선수2 / 커뮤니티3 / 내정보4)
   static const int matchTabIndex = 1;
 
   /// 선수 탭 인덱스
   static const int playerTabIndex = 2;
+
+  /// 커뮤니티 탭 인덱스 — 내정보 앞에 넣어 경기/선수 인덱스를 유지한다.
+  static const int communityTabIndex = 3;
 
   final _currentIndex = 0.obs;
 
@@ -44,6 +49,12 @@ class AppController extends GetxController with WidgetsBindingObserver {
     // 선수 탭 진입 시 첫 페이지를 다시 로드(로딩 인디케이터 노출).
     if (index == playerTabIndex && Get.isRegistered<PlayerController>()) {
       PlayerController.to.reloadFromTab();
+    }
+
+    // 커뮤니티 탭은 최초 진입 시에만 로드한다. onInit에서 부르면 IndexedStack
+    // 때문에 콜드 스타트마다 쿼리가 붙고, 매번 리셋하면 스크롤·목록이 날아간다.
+    if (index == communityTabIndex && Get.isRegistered<CommunityController>()) {
+      CommunityController.to.loadIfNeeded();
     }
   }
 

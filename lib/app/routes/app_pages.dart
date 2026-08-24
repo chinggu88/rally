@@ -2,6 +2,15 @@ import 'package:get/get.dart';
 
 import '../modules/app/bindings/app_binding.dart';
 import '../modules/app/views/app_view.dart';
+import '../modules/community/bindings/blocked_users_binding.dart';
+import '../modules/community/bindings/community_binding.dart';
+import '../modules/community/bindings/community_compose_binding.dart';
+import '../modules/community/bindings/community_post_detail_binding.dart';
+import '../modules/community/views/blocked_users_view.dart';
+import '../modules/community/views/community_compose_view.dart';
+import '../modules/community/views/community_post_detail_view.dart';
+import '../modules/community/views/community_terms_view.dart';
+import '../modules/community/views/community_view.dart';
 import '../modules/login/bindings/login_binding.dart';
 import '../modules/login/views/login_view.dart';
 import '../modules/match/bindings/match_binding.dart';
@@ -68,6 +77,31 @@ abstract class AppPages {
       name: Routes.PLAYER_DETAIL,
       page: () => const PlayerDetailView(),
       binding: PlayerDetailBinding(),
+    ),
+    GetPage(
+      name: Routes.COMMUNITY,
+      page: () => const CommunityView(),
+      binding: CommunityBinding(),
+    ),
+    GetPage(
+      name: Routes.COMMUNITY_POST_DETAIL,
+      page: () => const CommunityPostDetailView(),
+      binding: CommunityPostDetailBinding(),
+    ),
+    GetPage(
+      name: Routes.COMMUNITY_COMPOSE,
+      page: () => const CommunityComposeView(),
+      binding: CommunityComposeBinding(),
+    ),
+    GetPage(
+      name: Routes.COMMUNITY_BLOCKED_USERS,
+      page: () => const BlockedUsersView(),
+      binding: BlockedUsersBinding(),
+    ),
+    // 이용규칙은 애셋 한 개를 읽어 그리는 것이 전부라 바인딩이 없다.
+    GetPage(
+      name: Routes.COMMUNITY_TERMS,
+      page: () => const CommunityTermsView(),
     ),
     GetPage(
       name: Routes.MY_INFO,

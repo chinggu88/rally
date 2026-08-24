@@ -44,12 +44,28 @@ class ProfileRepository {
   }
 
   /// 닉네임 갱신.
+  ///
+  /// 두 종류의 서버 거부를 **그대로 rethrow** 한다. 호출부가
+  /// `communityErrorMessage()` 로 각각 다른 한국어 문구를 띄워야 하기 때문에
+  /// 여기서 삼키거나 뭉뚱그리면 안 된다.
+  ///   · `23505` — 부분 유니크 인덱스 `profiles_nickname_norm_key` 위반
+  ///     (`lower(btrim(nickname))` 기준 중복) → "이미 사용 중인 닉네임입니다"
+  ///   · `hint = 'banned_word'` — `profiles_banned_nickname` 트리거
+  ///     (`20260823000300`) → "사용할 수 없는 표현이 포함되어 있습니다"
   Future<void> updateNickname(String nickname) async {
     final user = _requireUser();
-    await _client
-        .from(_table)
-        .update({'nickname': nickname.trim()})
-        .eq('id', user.id);
+    try {
+      await _client
+          .from(_table)
+          .update({'nickname': nickname.trim()})
+          .eq('id', user.id);
+    } on PostgrestException catch (e) {
+      log(
+        'ProfileRepository.updateNickname Postgrest: '
+        'code=${e.code} hint=${e.hint} ${e.message}',
+      );
+      rethrow;
+    }
   }
 
   /// 알림 on/off 플래그 갱신.

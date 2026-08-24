@@ -3,7 +3,9 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../data/models/profile_response.dart';
 import '../../../data/repositories/account_repository.dart';
@@ -99,6 +101,18 @@ class MyInfoController extends GetxController {
     Get.toNamed(Routes.FAVORITE_PLAYERS);
   }
 
+  /// 차단한 사용자 목록. 차단을 걸 수 있는 것만으로는 부족하고 되돌릴 수도
+  /// 있어야 한다는 것이 Apple App Review Guideline 1.2 의 요구다.
+  void goToBlockedUsers() {
+    Get.toNamed(Routes.COMMUNITY_BLOCKED_USERS);
+  }
+
+  /// 커뮤니티 이용규칙 상시 열람. 동의 시점 외에도 언제든 볼 수 있어야 한다
+  /// (Guideline 1.2 / 기획서 S-6). 로그인 없이도 열린다.
+  void goToCommunityTerms() {
+    Get.toNamed(Routes.COMMUNITY_TERMS);
+  }
+
   /// 아직 구현되지 않은 메뉴 항목에 대한 안내.
   void _showComingSoon(String label) {
     Get.snackbar(label, '곧 제공될 예정입니다.', snackPosition: SnackPosition.BOTTOM);
@@ -106,8 +120,64 @@ class MyInfoController extends GetxController {
 
   void goToInviteFriends() => _showComingSoon('친구 초대');
   void goToBecomeSpecialist() => _showComingSoon('전문가 되기');
-  void goToHelp() => _showComingSoon('도움말');
-  void goToFeedback() => _showComingSoon('피드백 보내기');
+
+  /// 앱 내 개발자 연락 경로 (Apple App Review Guideline 1.2).
+  ///
+  /// UGC(커뮤니티·라이브 채팅)를 제공하는 앱은 신고·차단과 함께 **개발자에게
+  /// 직접 연락할 수단**을 앱 안에 두어야 한다. 별도 문의 화면 대신 기본 메일
+  /// 앱을 여는 것으로 충족한다.
+  Future<void> goToHelp() => _composeSupportMail('도움말 문의');
+  Future<void> goToFeedback() => _composeSupportMail('피드백');
+
+  /// 문의 메일 수신 주소.
+  static const String supportEmail = 'cuunit.store@gmail.com';
+
+  /// `mailto:` 를 연다.
+  ///
+  /// 제목에 앱 버전(빌드 번호 포함)을 넣어 두면 사용자가 따로 적지 않아도
+  /// 어느 빌드에서 온 문의인지 알 수 있다. 버전 조회에 실패해도 메일 자체는
+  /// 열려야 하므로 조회 실패는 삼키고 제목만 짧아진다.
+  ///
+  /// 메일 앱이 없는 기기에서는 `launchUrl` 이 false 를 돌려주거나 예외를
+  /// 던진다. 둘 다 조용히 넘기지 않고 주소를 안내한다 — 아무 반응도 없으면
+  /// 사용자는 연락 수단이 없다고 판단한다.
+  Future<void> _composeSupportMail(String label) async {
+    final subject = '[Rally] $label${await _versionSuffix()}';
+    final uri = Uri(
+      scheme: 'mailto',
+      path: supportEmail,
+      query: 'subject=${Uri.encodeComponent(subject)}',
+    );
+
+    try {
+      final launched = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+      if (!launched) _showMailFallback();
+    } catch (e) {
+      log('MyInfoController._composeSupportMail error: $e');
+      _showMailFallback();
+    }
+  }
+
+  Future<String> _versionSuffix() async {
+    try {
+      final info = await PackageInfo.fromPlatform();
+      return ' (v${info.version}+${info.buildNumber})';
+    } catch (e) {
+      log('MyInfoController._versionSuffix error: $e');
+      return '';
+    }
+  }
+
+  void _showMailFallback() {
+    Get.snackbar(
+      '메일 앱을 열 수 없습니다',
+      '$supportEmail 으로 보내주세요.',
+      snackPosition: SnackPosition.BOTTOM,
+    );
+  }
 
   /// 알림 on/off 토글 — profiles 플래그 + 디바이스 토큰 등록/삭제.
   Future<void> toggleNotifications(bool enabled) async {
