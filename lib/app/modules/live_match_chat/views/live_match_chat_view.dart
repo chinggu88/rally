@@ -200,7 +200,7 @@ class LiveMatchChatView extends GetView<LiveMatchChatController> {
           isMine: m.userId == myId,
           isFirstInGroup: isFirstInGroup,
           showTime: showTime,
-          onLongPress: () => _confirmDelete(m),
+          onLongPress: () => _onLongPress(m, isMine: m.userId == myId),
         ),
       );
     }
@@ -283,6 +283,77 @@ class LiveMatchChatView extends GetView<LiveMatchChatController> {
       return '$base — ${suffix.trim().toUpperCase()}';
     }
     return base;
+  }
+
+  /// 롱프레스 분기. 본인 메시지는 기존 삭제 확인 그대로, 타인 메시지는
+  /// 신고/차단 액션시트를 연다.
+  void _onLongPress(ChatMessageResponse message, {required bool isMine}) {
+    if (isMine) {
+      _confirmDelete(message);
+      return;
+    }
+    _showModerationSheet(message);
+  }
+
+  /// 타인 메시지 롱프레스 메뉴 (신고 / 차단).
+  ///
+  /// 실제 동작은 컨트롤러가 맡는다 — 신고 시트는 커뮤니티와 같은
+  /// `CommunityReportSheet` 를, 차단은 같은 `user_blocks` 를 쓴다.
+  void _showModerationSheet(ChatMessageResponse message) {
+    Get.bottomSheet<void>(
+      SafeArea(
+        top: false,
+        child: Container(
+          margin: EdgeInsets.fromLTRB(12.w, 0, 12.w, 12.h),
+          decoration: BoxDecoration(
+            color: AppColors.cardBg,
+            borderRadius: BorderRadius.circular(16.r),
+            border: Border.all(color: AppColors.cardBorder),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _moderationTile(
+                icon: Icons.flag_outlined,
+                label: '신고',
+                onTap: () {
+                  Get.back<void>();
+                  controller.reportMessage(message);
+                },
+              ),
+              const Divider(height: 1, color: AppColors.cardBorder),
+              _moderationTile(
+                icon: Icons.block,
+                label: '이 사용자 차단',
+                danger: true,
+                onTap: () {
+                  Get.back<void>();
+                  controller.confirmBlockUser(message.userId);
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+      backgroundColor: Colors.transparent,
+    );
+  }
+
+  Widget _moderationTile({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    bool danger = false,
+  }) {
+    final color = danger ? AppColors.downRed : Colors.white;
+    return ListTile(
+      onTap: onTap,
+      leading: Icon(icon, color: color, size: 20.sp),
+      title: Text(
+        label,
+        style: TextStyle(color: color, fontSize: 15.sp),
+      ),
+    );
   }
 
   Future<void> _confirmDelete(ChatMessageResponse message) async {

@@ -25,12 +25,14 @@ class ChatMessageBubble extends StatelessWidget {
   /// 시간(HH:MM) 표시 여부. 같은 사람 + 같은 분 그룹의 마지막 메시지에만 true.
   final bool showTime;
 
+  /// 롱프레스 액션. 본인 메시지는 삭제, 타인 메시지는 신고/차단 메뉴로
+  /// 갈라지는데 그 분기는 화면(`LiveMatchChatView`)이 정한다.
   final VoidCallback? onLongPress;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onLongPress: isMine ? onLongPress : null,
+      onLongPress: onLongPress,
       child: Padding(
         padding: EdgeInsets.fromLTRB(16.w, isFirstInGroup ? 10.h : 2.h, 16.w, 10.h),
         child: isMine ? _buildMine() : _buildOther(),

@@ -24,13 +24,30 @@ rally/lib/
 │   │   │   ├── live_match_response.dart                   # 라이브 매치 단일 모델 (대회+매치+팀 비정규화 / 게임 스코어 파싱 + winnerSide/isLive/games getter) — 홈 라이브
 │   │   │   ├── get_live_matches_response.dart             # { count, matches } 래퍼 모델 — 홈 라이브
 │   │   │   ├── today_match_response.dart                  # 오늘 경기 단일 모델 (대회+매치+팀 비정규화, LiveGameScore 재사용) — TASK-007
-│   │   │   └── get_today_matches_response.dart            # { date, results_count, upcoming_count, results, upcoming } 래퍼 — TASK-007
+│   │   │   ├── get_today_matches_response.dart            # { date, results_count, upcoming_count, results, upcoming } 래퍼 — TASK-007
+│   │   │   ├── community_post_response.dart               # 커뮤니티 게시글 모델 — 뷰 `community_post_feed` 1행 (작성자 프로필 + is_liked, copyWithLike / copyWithViewCount / copyWithCommentCount) — TASK-009,010,012
+│   │   │   ├── community_comment_response.dart            # 커뮤니티 댓글 모델 — 뷰 `community_comment_feed` 1행 (삭제·숨김은 content/작성자 NULL 마스킹, isRemoved / isReply / copyWithRemoved) — TASK-012
+│   │   │   ├── create_community_comment_parameter.dart    # 댓글 작성 파라미터 (post_id/content + parent_id는 대댓글일 때만, author_id·status는 레포지토리/기본값) — TASK-012
+│   │   │   ├── create_community_post_parameter.dart       # 게시글 작성 파라미터 (category/title/content/image_paths, author_id는 레포지토리가 세션에서 주입) — TASK-011
+│   │   │   ├── update_community_post_parameter.dart       # 게시글 수정 파라미터 — null 아닌 필드만 toJson (UPDATE 허용 컬럼 5개 외 섞이면 42501) — TASK-011
+│   │   │   ├── create_community_report_parameter.dart     # 신고 파라미터 — post/comment/user 생성자별로 대상 컬럼 하나만 toJson (서버 CHECK `community_reports_target_ck`), reasonLabels 6종 — TASK-013
+│   │   │   ├── community_report_response.dart             # 신고 모델 — `community_reports` 1행 (운영자의 "신고 종결"이 미처리 목록을 읽을 때만 사용, isPending) — TASK-013
+│   │   │   └── blocked_user_response.dart                 # 차단한 사용자 모델 — `user_blocks` 1행 + `public_profiles` 클라이언트 hydrate (displayName / copyWithProfile) — TASK-013
 │   │   │
 │   │   └── repositories/
 │   │       ├── tournament_repository.dart                 # Edge Function `get-tournaments` / `get-tournament` / `get-tournament-matches` / `get-tournament-participants` 호출
 │   │       ├── player_repository.dart                     # Edge Function `get-players` / `get-player` 호출 (카테고리별 조회: MS/WS/MD/WD/XD)
 │   │       ├── live_match_repository.dart                 # Edge Function `get-live-matches` 호출 (tournament_id/event_name 선택 필터, 404→빈 목록) — 홈 라이브
-│   │       └── today_match_repository.dart                # Edge Function `get-today-matches` 호출 (404→빈 응답, KST 오늘 기준) — TASK-007
+│   │       ├── today_match_repository.dart                # Edge Function `get-today-matches` 호출 (404→빈 응답, KST 오늘 기준) — TASK-007
+│   │       ├── community_post_repository.dart             # `.from('community_post_feed')` 직접 접근 + RLS (커서 페이지네이션 / fetchById / like·unlike / community_increment_view · community_delete_post RPC / createPost·updatePost / uploadImages·removeImages) — TASK-009,010,011
+│   │       ├── community_comment_repository.dart          # `.from('community_comment_feed')` 조회 + 테이블 INSERT/UPDATE(content 컬럼만) + community_delete_comment RPC. 작성 후 뷰 재조회로 작성자 프로필 hydrate — TASK-012
+│   │       └── community_moderation_repository.dart       # 작성 자격 · 금칙어 · **신고 · 차단 · 운영자 조치** (eulaVersion/eulaAssetPath 상수 = DB community_eula_version() / hasAgreedToEula · agreeToEula · fetchBannedWords(norm) · fetchWriteEligibility · isNicknameTaken / createReport(23505→"이미 신고한 콘텐츠") · listPendingReports / blockUser·unblockUser·listBlockedUsers(public_profiles hydrate) / isAppAdmin RPC · setPostStatus · setCommentStatus · banUser · unbanUser · resolveReport ← **status 컬럼 GRANT가 없어 관리자 조치는 전부 RPC**) — TASK-011,013
+│   │
+│   ├── utils/                                             # [유틸] 화면·컨트롤러가 공유하는 순수 함수
+│   │   ├── bwf_image.dart                                 # BWF 이미지 URL 보정
+│   │   ├── country_flag.dart                              # 국가 코드 → 국기 이모지
+│   │   ├── community_error.dart                           # 서버 hint/code → 한국어 문구 (communityErrorMessage) + CommunityValidationException — TASK-009,011
+│   │   └── community_text_filter.dart                     # 금칙어 사전검증 — 서버 community_normalize_text() 와 동일한 정규화 규칙 — TASK-011
 │   │
 │   └── modules/                                           # [모듈] 기능별 MVC 패턴 구현
 │       │
@@ -65,10 +82,33 @@ rally/lib/
 │       │   ├── controllers/player_controller.dart          # 카테고리별 선수 fetch / 로딩·에러 상태 / 카테고리 전환 / race-condition 가드
 │       │   └── views/player_view.dart                      # 매거진 카드 리스트 + 카테고리 칩(MS/WS/MD/WD/XD) + Pull-to-refresh (Stitch eeae55cab3614d408743636d325e3b88)
 │       │
+│       ├── community/                                     # [커뮤니티] 바텀네비 4번 탭 — 목록 + 상세 + 작성/수정 + 온보딩 + 댓글 + 신고/차단/운영자 조치 — TASK-009,010,011,012,013
+│       │   ├── bindings/community_binding.dart            # 딥링크(/community) 전용 — 바텀네비 경로는 AppBinding이 담당
+│       │   ├── bindings/community_post_detail_binding.dart # /community/post 전용 (딥링크 대비 레포지토리 재등록 + CommunityCommentRepository) — TASK-010,012
+│       │   ├── bindings/community_compose_binding.dart    # /community/compose 전용 (작성·수정 겸용) — TASK-011
+│       │   ├── bindings/blocked_users_binding.dart         # /community/blocked-users 전용 (내정보 탭에서 진입) — TASK-013
+│       │   ├── controllers/community_controller.dart      # 카테고리 필터 / 커서 무한 스크롤 / loadIfNeeded(최초 1회) / race-condition 가드 / applyPostUpdate·removePost(상세→목록 동기화) / openCompose(게이트 통과 후 전이)
+│       │   ├── controllers/community_post_detail_controller.dart # 상세 조회 / 좋아요 낙관적 토글+롤백 / 조회수 RPC 1회 / 본인 글 삭제 RPC / openEdit(게이트 통과 후 수정 모드) **+ 댓글 상태·액션**(loadComments·submitComment·deleteComment·startReply, threadedComments 트리 빌드 = 고아 대댓글 드롭 + 자식 없는 툼스톤 제외, comment_count 낙관적 ±1) — TASK-010,011,012
+│       │   ├── controllers/community_compose_controller.dart # 작성·수정 겸용 — 카테고리/제목/본문/이미지 상태, 금칙어 사전검증, 업로드→INSERT→실패 시 고아 롤백, 수정 시 업로드→UPDATE 성공→옛 path 삭제 — TASK-011
+│       │   ├── controllers/blocked_users_controller.dart  # 차단 목록 조회 / 확인 다이얼로그 → 차단 해제 → 목록 제거 + 커뮤니티 목록 refresh — TASK-013
+│       │   ├── controllers/community_onboarding_controller.dart # 온보딩 시트 상태(닉네임 디바운스 중복검사 + 약관 동의) **+ static ensureCanWrite() 작성 게이트** (비로그인→로그인 / 정지→안내 / 닉네임·약관 미충족→시트). TASK-012 댓글도 이 게이트를 재사용한다 — TASK-011
+│       │   ├── views/community_view.dart                  # 칩 + 게시글 카드 리스트 + Pull-to-refresh + 글쓰기 FAB (Stitch 미대응, PlayerView 레이아웃 준용)
+│       │   ├── views/community_post_detail_view.dart      # 작성자 헤더 + 본문 + 이미지 그리드 + 댓글 섹션(헤더/리스트/빈 상태) + 하단 좋아요/댓글/조회 액션바 + 댓글 입력바 + 더보기(⋯) 진입점(시트·다이얼로그는 컨트롤러가 소유) — TASK-010,012,013
+│       │   ├── views/blocked_users_view.dart              # 차단한 사용자 목록 — 아바타+닉네임+"차단 해제" (Stitch 미대응, FavoritePlayersView 구조 준용) — TASK-013
+│       │   ├── views/community_terms_view.dart            # 커뮤니티 이용규칙 상시 열람 (Apple 1.2 요건, 바인딩 없음 — 애셋만 읽는다) — TASK-013
+│       │   ├── views/community_compose_view.dart          # 카테고리 칩 + 제목/본문 + 글자수 카운터 + 이미지 첨부 바 + PopScope 이탈 확인 (Stitch 미대응, SignUpView 폼 준용) — TASK-011
+│       │   └── views/widgets/                             # community_category_chips.dart, community_post_card.dart, community_image_grid.dart, community_eula_sheet.dart(온보딩 시트 — TASK-011), community_eula_markdown.dart(이용규칙 경량 렌더러 — 시트/열람 화면 공용, TASK-013), community_comment_tile.dart(댓글/대댓글/툼스톤 + 더보기 ⋯ — TASK-012,013), community_comment_input_bar.dart(pill 입력창 + 라임 전송, 답글 헤더 — TASK-012), community_more_sheet.dart(본인=수정/삭제 · 타인=신고/차단 · 운영자=숨김/복구/강제삭제/정지/신고종결 — TASK-013), community_report_sheet.dart(사유 6종 라디오 + 상세 500자 + 접수 후 "이 사용자 차단하기" CTA — TASK-013, **라이브 채팅이 targetLabel='사용자' 로 그대로 재사용 — TASK-014**)
+│       │
+│       ├── live_match_chat/                               # [라이브 채팅] 경기별 실시간 채팅방 (바텀네비 밖, 라이브 카드에서 진입)
+│       │   ├── bindings/live_match_chat_binding.dart      # ChatMessageRepository(fenix) + CommunityModerationRepository(fenix, 신고/차단 공용) + LiveMatchChatController — TASK-014
+│       │   ├── controllers/live_match_chat_controller.dart # 메시지 로드(before 커서 역방향 페이지네이션) / Realtime 구독(INSERT·DELETE·스코어 UPDATE) / Presence 접속자 dedupe / 라이브 스코어 가리기 토글 **+ 신고·차단**(reportMessage = target_type 'user' + 메시지 본문을 detail 에 인용, confirmBlockUser·blockUser, _blockedUserIds 집합으로 초기 로드·loadMore·Realtime INSERT 3경로 필터 — **RLS `lmc_select_all` 이라 서버가 걸러 주지 않는다**) — TASK-014
+│       │   ├── views/live_match_chat_view.dart            # AppBar(접속자 수 + 스코어 가리기) + reverse 리스트(데이 디바이더/버블/라이브 pill) + pill 입력바 / 롱프레스 = 본인 삭제 · 타인 신고·차단 액션시트 — TASK-014
+│       │   └── views/widgets/                             # chat_day_divider.dart, chat_live_status_pill.dart, chat_message_bubble.dart(롱프레스는 본인·타인 모두 발화, 분기는 View 가 결정 — TASK-014)
+│       │
 │       ├── my_info/                                       # [내 정보] 비로그인 상태 진입 화면 — TASK-001
 │       │   ├── bindings/my_info_binding.dart
-│       │   ├── controllers/my_info_controller.dart        # goToLogin / goToSignUp / isLoggedIn placeholder
-│       │   └── views/my_info_view.dart                    # 다크 + 라임 옐로우 안내 화면 (Stitch 8329646c315c48fdb5bfa15f9a643418)
+│       │   ├── controllers/my_info_controller.dart        # goToLogin / goToSignUp / isLoggedIn placeholder + goToBlockedUsers · goToCommunityTerms(비로그인도 열람 가능) — TASK-013 / goToHelp · goToFeedback = url_launcher mailto(제목에 PackageInfo 버전, 실패 시 주소 안내 스낵바) — Apple 1.2 개발자 연락처, TASK-014
+│       │   └── views/my_info_view.dart                    # 다크 + 라임 옐로우 안내 화면 (Stitch 8329646c315c48fdb5bfa15f9a643418) + 메뉴 "차단한 사용자" / "커뮤니티 이용규칙" — TASK-013
 │       │
 │       ├── login/                                         # [로그인] 이메일/비밀번호 폼 — TASK-002
 │       │   ├── bindings/login_binding.dart
@@ -105,6 +145,10 @@ rally/lib/
    ├── 선수(Player)              ─► BWF 랭킹 선수 리스트 (매거진, get-players Edge Function)
    │                              │
    │                              └─► [PlayerDetailView] 선수 상세
+   │
+   ├── 커뮤니티(Community)        ─► 카테고리별 게시글 목록 (community_post_feed 뷰, .from() 직접 접근) — TASK-009
+   │                              │
+   │                              └─► [CommunityPostDetailView] 게시글 상세 — 좋아요/조회수/본인 글 삭제 — TASK-010
    │
    └── 내정보(MyInfo)
             │
@@ -145,6 +189,11 @@ abstract class Routes {
   static const MATCH_PARTICIPANTS = '/match/participants';  // TASK-006
   static const PLAYER = '/player';
   static const PLAYER_DETAIL = '/player/detail';
+  static const COMMUNITY = '/community';                  // TASK-009
+  static const COMMUNITY_POST_DETAIL = '/community/post'; // TASK-010
+  static const COMMUNITY_COMPOSE = '/community/compose';  // TASK-011
+  static const COMMUNITY_BLOCKED_USERS = '/community/blocked-users'; // TASK-013
+  static const COMMUNITY_TERMS = '/community/terms';      // TASK-013
   static const MY_INFO = '/my-info';
   static const LOGIN = '/login';
   static const SIGN_UP = '/sign-up';
@@ -159,6 +208,14 @@ abstract class Routes {
 | `tournament_detail_view.dart` | 대회 상세 - 경기 리스트 | TBD |
 | `tournament_participants_view.dart` | 대회 상세 - 참가 선수 (TASK-006) | TBD |
 | `player_view.dart` | 선수 리스트 (매거진) | `eeae55cab3614d408743636d325e3b88` |
+| `community_view.dart` | (Stitch 미대응 — PlayerView 레이아웃 준용) | — |
+| `community_post_detail_view.dart` | (Stitch 미대응 — CommunityView / PlayerDetailView 톤 준용) | — |
+| `community_comment_tile.dart` | (Stitch 미대응 — CommunityPostCard 작성자 행 준용) | — |
+| `community_comment_input_bar.dart` | (Stitch 미대응 — LiveMatchChatView pill 입력창 준용) | — |
+| `community_compose_view.dart` | (Stitch 미대응 — SignUpView 입력 폼 준용) | — |
+| `blocked_users_view.dart` | (Stitch 미대응 — FavoritePlayersView 리스트 준용) | — |
+| `community_terms_view.dart` | (Stitch 미대응 — FavoritePlayersView 앱바 톤 준용) | — |
+| `community_more_sheet.dart` / `community_report_sheet.dart` | (Stitch 미대응 — CommunityEulaSheet 시트 톤 준용) | — |
 | `player_detail_view.dart` | 선수 상세 | TBD |
 | `my_info_view.dart` | 내 정보 (매거진) | `8329646c315c48fdb5bfa15f9a643418` |
 | `login_view.dart` | 로그인 (Kinetic Court) | `a7cf71e767ad4610a93373028a9c3ab0` |

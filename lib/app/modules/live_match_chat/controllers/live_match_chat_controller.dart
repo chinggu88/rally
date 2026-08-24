@@ -4,9 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../theme/app_colors.dart';
 import '../../../data/models/chat_message_response.dart';
+import '../../../data/models/create_community_report_parameter.dart';
 import '../../../data/repositories/chat_message_repository.dart';
+import '../../../data/repositories/community_moderation_repository.dart';
 import '../../../routes/app_routes.dart';
+import '../../../utils/community_error.dart';
+import '../../community/views/widgets/community_report_sheet.dart';
 
 /// 라이브 매치 채팅방 컨트롤러.
 ///
@@ -17,6 +22,12 @@ class LiveMatchChatController extends GetxController {
   static const int maxContentLen = 500;
 
   final ChatMessageRepository _repository = Get.find<ChatMessageRepository>();
+
+  /// 신고·차단은 커뮤니티와 **같은 저장소를 공유**한다(`community_reports` /
+  /// `user_blocks`). 채팅 전용 테이블을 만들면 커뮤니티에서 차단한 사용자가
+  /// 채팅에서는 다시 보이게 되므로 레포지토리를 그대로 재사용한다.
+  final CommunityModerationRepository _moderationRepository =
+      Get.find<CommunityModerationRepository>();
 
   // ── arguments 캐시 ──────────────────────────────────────────
   late final int liveMatchId;
@@ -71,6 +82,21 @@ class LiveMatchChatController extends GetxController {
 
   RealtimeChannel? _channel;
 
+  /// 내가 차단한 사용자 id 집합.
+  ///
+  /// 커뮤니티와 달리 **서버가 걸러 주지 않는다** — `live_match_chat_messages` 의
+  /// SELECT 정책은 `lmc_select_all (using true)` 라 RLS 가 차단을 반영하지
+  /// 않는다. 그래서 초기 로드 · 더 불러오기 · Realtime INSERT 세 경로 모두에서
+  /// 클라이언트가 직접 걸러야 한다.
+  final Set<String> _blockedUserIds = <String>{};
+
+  /// 차단 목록 조회 완료 future.
+  ///
+  /// 조회가 끝나기 전에 도착한 메시지가 필터를 건너뛰지 않도록 각 경로가 이
+  /// future 를 먼저 기다린다. 조회에 실패해도 완료되며(필터만 미적용) 채팅
+  /// 자체는 정상 동작한다.
+  Future<void>? _blockedReady;
+
   @override
   void onInit() {
     super.onInit();
@@ -84,6 +110,7 @@ class LiveMatchChatController extends GetxController {
       return;
     }
 
+    _blockedReady = _loadBlockedUsers();
     loadInitial();
     _subscribeRealtime();
   }
@@ -132,8 +159,11 @@ class LiveMatchChatController extends GetxController {
         liveMatchId: liveMatchId,
         limit: pageSize,
       );
+      await _blockedReady;
       // DESC로 받은 것을 ASC로 뒤집어 저장 (오래된 → 최신)
-      _messages.assignAll(list.reversed.toList());
+      _messages.assignAll(_withoutBlocked(list.reversed));
+      // hasMore 는 **걸러내기 전** 개수로 판정한다 — 차단 메시지가 많은 페이지에서
+      // 필터 후 개수로 보면 아직 남은 메시지가 있는데도 끝으로 오인한다.
       _hasMore.value = list.length >= pageSize;
     } catch (e) {
       log('LiveMatchChatController.loadInitial error: $e');
@@ -157,8 +187,9 @@ class LiveMatchChatController extends GetxController {
         _hasMore.value = false;
         return;
       }
+      await _blockedReady;
       // 새로 받은 페이지는 DESC. 앞쪽(오래된 영역)에 ASC로 prepend.
-      _messages.insertAll(0, list.reversed.toList());
+      _messages.insertAll(0, _withoutBlocked(list.reversed));
       _hasMore.value = list.length >= pageSize;
     } catch (e) {
       log('LiveMatchChatController.loadMore error: $e');
@@ -210,6 +241,170 @@ class LiveMatchChatController extends GetxController {
       Get.snackbar('삭제 실패', '잠시 후 다시 시도해주세요.',
           snackPosition: SnackPosition.BOTTOM);
     }
+  }
+
+  // ── 신고 · 차단 ─────────────────────────────────────────────
+
+  /// 내가 차단한 사용자 목록을 1회 조회한다.
+  ///
+  /// 실패해도 예외를 올리지 않는다 — 차단 필터가 없는 채팅이 채팅이 없는 것보다
+  /// 낫다. 필터만 미적용되고 신고·차단 액션 자체는 그대로 동작한다.
+  Future<void> _loadBlockedUsers() async {
+    try {
+      final blocked = await _moderationRepository.listBlockedUsers();
+      _blockedUserIds
+        ..clear()
+        ..addAll(
+          blocked
+              .map((b) => b.blockedId)
+              .whereType<String>()
+              .where((id) => id.isNotEmpty),
+        );
+    } catch (e) {
+      log('LiveMatchChatController._loadBlockedUsers error: $e');
+    }
+  }
+
+  List<ChatMessageResponse> _withoutBlocked(
+    Iterable<ChatMessageResponse> list,
+  ) {
+    if (_blockedUserIds.isEmpty) return list.toList();
+    return list.where((m) => !_blockedUserIds.contains(m.userId)).toList();
+  }
+
+  /// 신고 시트를 연다.
+  ///
+  /// 채팅 메시지 전용 신고 테이블은 만들지 않는다 — `target_type='user'` 로
+  /// **작성자를 신고**하고, 문제가 된 메시지 본문은 `detail` 에 인용해 담는다.
+  /// 커뮤니티와 같은 `community_reports` 를 쓰므로 자동 숨김·운영자 푸시
+  /// 트리거가 그대로 적용된다.
+  ///
+  /// 신고에 작성 게이트(이용규칙 동의)를 걸지 않는 것도 커뮤니티와 같다 —
+  /// 신고 창구는 누구에게나 열려 있어야 한다. 로그인만 요구한다.
+  Future<void> reportMessage(ChatMessageResponse msg) async {
+    if (!_requireLogin()) return;
+    if (msg.userId == currentUserId) return;
+
+    await CommunityReportSheet.show(
+      targetLabel: '사용자',
+      onSubmit: (reason, detail) async {
+        try {
+          await _moderationRepository.createReport(
+            CreateCommunityReportParameter.user(
+              targetUserId: msg.userId,
+              reason: reason,
+              detail: _composeReportDetail(msg.content, detail),
+            ),
+          );
+          return true;
+        } catch (e) {
+          log('LiveMatchChatController.reportMessage error: $e');
+          Get.snackbar(
+            '신고 실패',
+            communityErrorMessage(e),
+            snackPosition: SnackPosition.BOTTOM,
+          );
+          return false;
+        }
+      },
+      // 접수 완료 화면의 "이 사용자 차단하기". 이미 명시적으로 누른 CTA 라
+      // 확인 다이얼로그를 겹치지 않는다.
+      onBlock: () => blockUser(msg.userId),
+    );
+  }
+
+  /// 차단 확인 다이얼로그 → 차단.
+  Future<void> confirmBlockUser(String userId) async {
+    if (!_requireLogin()) return;
+    if (userId == currentUserId) return;
+
+    final confirmed = await Get.dialog<bool>(
+      AlertDialog(
+        backgroundColor: AppColors.cardBg,
+        title: const Text('사용자 차단', style: TextStyle(color: Colors.white)),
+        content: const Text(
+          '이 사용자의 채팅과 커뮤니티 글이 보이지 않게 됩니다.\n'
+          '차단 사실은 상대에게 알려지지 않습니다.',
+          style: TextStyle(color: AppColors.subtleText),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back<bool>(result: false),
+            child: const Text('취소', style: TextStyle(color: Colors.white)),
+          ),
+          TextButton(
+            onPressed: () => Get.back<bool>(result: true),
+            child: const Text('차단', style: TextStyle(color: AppColors.downRed)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    await blockUser(userId);
+  }
+
+  /// 차단 실행. 커뮤니티와 같은 `user_blocks` 라 여기서 차단하면 커뮤니티에서도
+  /// 즉시 적용된다(그 반대도 마찬가지).
+  ///
+  /// 커뮤니티는 RLS 가 서버에서 걸러 주므로 다시 불러오기만 하면 되지만,
+  /// 채팅은 그렇지 않다. 화면에 이미 떠 있는 메시지를 직접 걷어내고 집합에도
+  /// 넣어 이후 도착분까지 막는다.
+  Future<void> blockUser(String userId) async {
+    if (userId.isEmpty) return;
+    try {
+      await _moderationRepository.blockUser(userId);
+      _blockedUserIds.add(userId);
+      _messages.removeWhere((m) => m.userId == userId);
+      Get.snackbar(
+        '차단 완료',
+        '이 사용자의 메시지가 보이지 않습니다.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } catch (e) {
+      log('LiveMatchChatController.blockUser error: $e');
+      Get.snackbar(
+        '차단 실패',
+        communityErrorMessage(e),
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
+  }
+
+  bool _requireLogin() {
+    if (currentUserId != null) return true;
+    Get.offNamed(Routes.LOGIN);
+    return false;
+  }
+
+  /// 신고 상세 = 문제 메시지 인용 + 신고자가 쓴 사유.
+  ///
+  /// 서버 CHECK 가 `char_length(detail) <= 500` 이라 둘을 합치면 넘칠 수 있다.
+  /// 신고자가 직접 쓴 문장이 잘리면 맥락이 사라지므로 **인용문 쪽을 먼저**
+  /// 줄인다. 길이는 `char_length` 와 맞추기 위해 코드 유닛이 아니라 룬으로 센다.
+  static String? _composeReportDetail(String content, String? detail) {
+    const label = '[라이브 채팅] ';
+    const max = CreateCommunityReportParameter.maxDetailLength;
+
+    final note = detail?.trim() ?? '';
+    final quote = content.trim();
+    if (quote.isEmpty) return note.isEmpty ? null : _truncate(note, max);
+
+    // 개행 1자를 note 쪽 비용에 포함한다.
+    final tail = note.isEmpty ? 0 : note.runes.length + 1;
+    final room = max - label.runes.length - tail;
+    if (room <= 0) {
+      // 사유만으로 이미 한도를 채웠다. 인용을 포기한다.
+      return _truncate(note, max);
+    }
+    final quoted = '$label${_truncate(quote, room)}';
+    return note.isEmpty ? quoted : '$quoted\n$note';
+  }
+
+  static String _truncate(String value, int max) {
+    final runes = value.runes.toList();
+    if (runes.length <= max) return value;
+    if (max <= 1) return String.fromCharCodes(runes.take(max));
+    return '${String.fromCharCodes(runes.take(max - 1))}…';
   }
 
   // ── Realtime ────────────────────────────────────────────────
@@ -332,6 +527,8 @@ class LiveMatchChatController extends GetxController {
       // 작성자 프로필을 함께 가져오기 위해 repository로 재조회.
       final msg = await _repository.fetchById(id);
       if (msg == null) return;
+      await _blockedReady;
+      if (_blockedUserIds.contains(msg.userId)) return;
       _appendIfAbsent(msg);
     } catch (e) {
       log('LiveMatchChatController._onInsert error: $e');

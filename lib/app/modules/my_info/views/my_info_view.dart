@@ -215,6 +215,17 @@ class MyInfoView extends GetView<MyInfoController> {
         onTap: controller.goToFavoritePlayers,
       ),
       _MenuItemData(
+        icon: Icons.block,
+        title: '차단한 사용자',
+        subtitle: '차단을 확인하고 해제할 수 있어요',
+        onTap: controller.goToBlockedUsers,
+      ),
+      _MenuItemData(
+        icon: Icons.gavel_outlined,
+        title: '커뮤니티 이용규칙',
+        onTap: controller.goToCommunityTerms,
+      ),
+      _MenuItemData(
         icon: Icons.help_outline,
         title: '도움말',
         onTap: controller.goToHelp,
@@ -449,6 +460,19 @@ class MyInfoView extends GetView<MyInfoController> {
         locked: true,
       ),
       _MenuItemData(
+        icon: Icons.block,
+        title: '차단한 사용자',
+        onTap: controller.goToLogin,
+        locked: true,
+      ),
+      // 이용규칙만 잠그지 않는다 — 상시 열람이 Apple 요구사항이라
+      // 로그인 없이도 열려야 한다.
+      _MenuItemData(
+        icon: Icons.gavel_outlined,
+        title: '커뮤니티 이용규칙',
+        onTap: controller.goToCommunityTerms,
+      ),
+      _MenuItemData(
         icon: Icons.help_outline,
         title: '도움말',
         onTap: controller.goToLogin,
@@ -470,7 +494,11 @@ class MyInfoView extends GetView<MyInfoController> {
       child: Column(
         children: [
           for (var i = 0; i < items.length; i++) ...[
-            _buildMenuItem(items[i].copyWithLockedTrailing(_subtle)),
+            _buildMenuItem(
+              items[i].locked
+                  ? items[i].copyWithLockedTrailing(_subtle)
+                  : items[i],
+            ),
             if (i != items.length - 1)
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16.w),
