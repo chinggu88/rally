@@ -6,6 +6,7 @@ import '../../../data/models/community_post_response.dart';
 import '../../../data/repositories/community_post_repository.dart';
 import '../../../routes/app_routes.dart';
 import '../../../utils/community_error.dart';
+import '../views/widgets/community_profile_sheet.dart';
 import 'community_onboarding_controller.dart';
 import 'community_post_detail_controller.dart';
 
@@ -238,6 +239,23 @@ class CommunityController extends GetxController {
     Get.toNamed<dynamic>(
       Routes.COMMUNITY_POST_DETAIL,
       arguments: <String, dynamic>{CommunityPostDetailController.argPostId: id},
+    );
+  }
+
+  /// 카드의 작성자 닉네임 탭 → 프로필 시트(보기 전용).
+  ///
+  /// [authorId] 가 null 이거나 비면 **탈퇴한 사용자**다 — 시트도 스낵바도
+  /// 띄우지 않고 조용히 무시한다.
+  ///
+  /// [CommunityPostDetailController.openProfile] 과 같은 구현을 각자 둔다 —
+  /// 2곳뿐이고 꺼내 오는 모델이 서로 다르다.
+  void openProfile(String? authorId, {String? nickname, String? avatarUrl}) {
+    final id = authorId?.trim();
+    if (id == null || id.isEmpty) return;
+    CommunityProfileSheet.show(
+      userId: id,
+      fallbackNickname: nickname,
+      fallbackAvatarUrl: avatarUrl,
     );
   }
 

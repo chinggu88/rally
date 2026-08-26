@@ -38,18 +38,22 @@ class CommunityComposeView extends GetView<CommunityComposeController> {
         backgroundColor: scheme.surface,
         resizeToAvoidBottomInset: true,
         appBar: _buildAppBar(scheme),
-        body: SafeArea(
-          top: false,
-          child: Obx(() {
-            if (controller.isLoadingPost.value) {
-              return const Center(
-                child: CircularProgressIndicator(color: AppColors.accent),
-              );
-            }
-            final error = controller.loadError.value;
-            if (error != null) return _buildLoadError(error);
-            return _buildForm();
-          }),
+        body: GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
+          behavior: HitTestBehavior.opaque,
+          child: SafeArea(
+            top: false,
+            child: Obx(() {
+              if (controller.isLoadingPost.value) {
+                return const Center(
+                  child: CircularProgressIndicator(color: AppColors.accent),
+                );
+              }
+              final error = controller.loadError.value;
+              if (error != null) return _buildLoadError(error);
+              return _buildForm();
+            }),
+          ),
         ),
       ),
     );

@@ -33,18 +33,22 @@ class ProfileEditView extends GetView<ProfileEditController> {
           ),
         ),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(20.w, 24.h, 20.w, 32.h),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildAvatar(),
-              SizedBox(height: 32.h),
-              _buildNicknameField(),
-              SizedBox(height: 40.h),
-              _buildSaveButton(),
-            ],
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        behavior: HitTestBehavior.opaque,
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(20.w, 24.h, 20.w, 32.h),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildAvatar(),
+                SizedBox(height: 32.h),
+                _buildNicknameField(),
+                SizedBox(height: 40.h),
+                _buildSaveButton(),
+              ],
+            ),
           ),
         ),
       ),

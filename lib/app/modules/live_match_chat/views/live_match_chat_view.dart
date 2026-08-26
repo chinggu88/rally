@@ -24,10 +24,14 @@ class LiveMatchChatView extends GetView<LiveMatchChatController> {
       backgroundColor: AppColors.bg,
       resizeToAvoidBottomInset: true,
       appBar: _buildAppBar(),
-      body: SafeArea(
-        top: false,
-        child: Column(
-          children: [Expanded(child: _buildMessageList()), _buildComposer()],
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        behavior: HitTestBehavior.opaque,
+        child: SafeArea(
+          top: false,
+          child: Column(
+            children: [Expanded(child: _buildMessageList()), _buildComposer()],
+          ),
         ),
       ),
     );

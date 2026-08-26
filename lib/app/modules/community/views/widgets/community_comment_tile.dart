@@ -24,6 +24,7 @@ class CommunityCommentTile extends StatelessWidget {
     required this.canReply,
     this.onReply,
     this.onMore,
+    this.onAuthorTap,
   });
 
   final CommunityCommentResponse comment;
@@ -35,6 +36,10 @@ class CommunityCommentTile extends StatelessWidget {
 
   /// 더보기(⋯) — 수정/삭제 · 신고/차단 · 운영자 조치를 담은 시트를 연다.
   final VoidCallback? onMore;
+
+  /// 아바타 탭 — 작성자 프로필 시트를 연다. [onMore] 와 같은 패턴으로
+  /// nullable 이며, null 이면 탭을 걸지 않는다(툼스톤에는 아바타가 없다).
+  final VoidCallback? onAuthorTap;
 
   /// 최상위 댓글 좌측 여백
   static const double _rootIndent = 20;
@@ -135,7 +140,21 @@ class CommunityCommentTile extends StatelessWidget {
     );
   }
 
+  /// 아바타. [onAuthorTap] 이 있으면 프로필 시트 진입점이 된다.
+  ///
+  /// 상위에 `onLongPress: onMore` 가 걸려 있지만 여기서는 탭만 처리하므로
+  /// 롱프레스는 그대로 상위로 간다. 시각적 표시는 추가하지 않는다.
   Widget _buildAvatar() {
+    final avatar = _buildAvatarImage();
+    if (onAuthorTap == null) return avatar;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onAuthorTap,
+      child: avatar,
+    );
+  }
+
+  Widget _buildAvatarImage() {
     final avatarUrl = comment.authorAvatarUrl;
     return ClipOval(
       child: SizedBox(

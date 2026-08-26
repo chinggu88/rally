@@ -31,12 +31,16 @@ class SignUpView extends GetView<SignUpController> {
           onPressed: () => Get.back(),
         ),
       ),
-      body: SafeArea(
-        top: false,
-        child: Obx(
-          () => controller.isEmailSent
-              ? _buildEmailSentBody()
-              : _buildFormBody(),
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        behavior: HitTestBehavior.opaque,
+        child: SafeArea(
+          top: false,
+          child: Obx(
+            () => controller.isEmailSent
+                ? _buildEmailSentBody()
+                : _buildFormBody(),
+          ),
         ),
       ),
     );

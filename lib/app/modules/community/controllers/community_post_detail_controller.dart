@@ -19,6 +19,7 @@ import '../../../routes/app_routes.dart';
 import '../../../utils/community_error.dart';
 import '../../../utils/community_text_filter.dart';
 import '../views/widgets/community_more_sheet.dart';
+import '../views/widgets/community_profile_sheet.dart';
 import '../views/widgets/community_report_sheet.dart';
 import 'community_compose_controller.dart';
 import 'community_controller.dart';
@@ -642,6 +643,23 @@ class CommunityPostDetailController extends GetxController {
           ),
       onBanAuthor: hasAuthor ? () => _promptBanUser(authorId) : null,
       onResolveReports: () => _promptResolveReports(postId: id),
+    );
+  }
+
+  /// 작성자 아바타·닉네임 탭 → 프로필 시트(보기 전용).
+  ///
+  /// [authorId] 가 null 이거나 비면 **탈퇴한 사용자**다(`author_id` 는
+  /// `on delete set null`). 시트도 스낵바도 띄우지 않고 조용히 무시한다.
+  ///
+  /// [CommunityController.openProfile] 과 같은 구현을 각자 둔다 — 2곳뿐이고
+  /// 꺼내 오는 모델이 서로 다르다(게시글 / 댓글).
+  void openProfile(String? authorId, {String? nickname, String? avatarUrl}) {
+    final id = authorId?.trim();
+    if (id == null || id.isEmpty) return;
+    CommunityProfileSheet.show(
+      userId: id,
+      fallbackNickname: nickname,
+      fallbackAvatarUrl: avatarUrl,
     );
   }
 

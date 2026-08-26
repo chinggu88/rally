@@ -32,6 +32,7 @@ rally/lib/
 │   │   │   ├── update_community_post_parameter.dart       # 게시글 수정 파라미터 — null 아닌 필드만 toJson (UPDATE 허용 컬럼 5개 외 섞이면 42501) — TASK-011
 │   │   │   ├── create_community_report_parameter.dart     # 신고 파라미터 — post/comment/user 생성자별로 대상 컬럼 하나만 toJson (서버 CHECK `community_reports_target_ck`), reasonLabels 6종 — TASK-013
 │   │   │   ├── community_report_response.dart             # 신고 모델 — `community_reports` 1행 (운영자의 "신고 종결"이 미처리 목록을 읽을 때만 사용, isPending) — TASK-013
+│   │   │   ├── public_profile_response.dart               # 타인 프로필 모델 — 뷰 `public_profiles` 1행 (id/nickname/avatar_url/created_at 4컬럼, displayName 폴백은 CommunityPostResponse 와 동일 규칙). `ProfileRepository.fetchPublicProfile(userId)` 가 `.from('public_profiles').maybeSingle()` 로 읽는다 — 뷰가 RLS 를 우회하고 anon 에도 열려 있어 비로그인·차단 상태에서도 조회된다 — TASK-017
 │   │   │   └── blocked_user_response.dart                 # 차단한 사용자 모델 — `user_blocks` 1행 + `public_profiles` 클라이언트 hydrate (displayName / copyWithProfile) — TASK-013
 │   │   │
 │   │   └── repositories/
@@ -39,7 +40,7 @@ rally/lib/
 │   │       ├── player_repository.dart                     # Edge Function `get-players` / `get-player` 호출 (카테고리별 조회: MS/WS/MD/WD/XD)
 │   │       ├── live_match_repository.dart                 # Edge Function `get-live-matches` 호출 (tournament_id/event_name 선택 필터, 404→빈 목록) — 홈 라이브
 │   │       ├── today_match_repository.dart                # Edge Function `get-today-matches` 호출 (404→빈 응답, KST 오늘 기준) — TASK-007
-│   │       ├── community_post_repository.dart             # `.from('community_post_feed')` 직접 접근 + RLS (커서 페이지네이션 / fetchById / like·unlike / community_increment_view · community_delete_post RPC / createPost·updatePost / uploadImages·removeImages) — TASK-009,010,011
+│   │       ├── community_post_repository.dart             # `.from('community_post_feed')` 직접 접근 + RLS (커서 페이지네이션 / fetchById / like·unlike / community_increment_view · community_delete_post RPC / createPost·updatePost / uploadImages·removeImages) — TASK-009,010,011. **listPosts 는 `.neq('status','deleted')` 로 삭제 글을 거른다** — 본인·운영자 행은 RLS 를 통과하므로. fetchById 는 필터 없음(운영자 숨김 글 진입 경로) — TASK-015
 │   │       ├── community_comment_repository.dart          # `.from('community_comment_feed')` 조회 + 테이블 INSERT/UPDATE(content 컬럼만) + community_delete_comment RPC. 작성 후 뷰 재조회로 작성자 프로필 hydrate — TASK-012
 │   │       └── community_moderation_repository.dart       # 작성 자격 · 금칙어 · **신고 · 차단 · 운영자 조치** (eulaVersion/eulaAssetPath 상수 = DB community_eula_version() / hasAgreedToEula · agreeToEula · fetchBannedWords(norm) · fetchWriteEligibility · isNicknameTaken / createReport(23505→"이미 신고한 콘텐츠") · listPendingReports / blockUser·unblockUser·listBlockedUsers(public_profiles hydrate) / isAppAdmin RPC · setPostStatus · setCommentStatus · banUser · unbanUser · resolveReport ← **status 컬럼 GRANT가 없어 관리자 조치는 전부 RPC**) — TASK-011,013
 │   │
@@ -87,22 +88,23 @@ rally/lib/
 │       │   ├── bindings/community_post_detail_binding.dart # /community/post 전용 (딥링크 대비 레포지토리 재등록 + CommunityCommentRepository) — TASK-010,012
 │       │   ├── bindings/community_compose_binding.dart    # /community/compose 전용 (작성·수정 겸용) — TASK-011
 │       │   ├── bindings/blocked_users_binding.dart         # /community/blocked-users 전용 (내정보 탭에서 진입) — TASK-013
-│       │   ├── controllers/community_controller.dart      # 카테고리 필터 / 커서 무한 스크롤 / loadIfNeeded(최초 1회) / race-condition 가드 / applyPostUpdate·removePost(상세→목록 동기화) / openCompose(게이트 통과 후 전이)
-│       │   ├── controllers/community_post_detail_controller.dart # 상세 조회 / 좋아요 낙관적 토글+롤백 / 조회수 RPC 1회 / 본인 글 삭제 RPC / openEdit(게이트 통과 후 수정 모드) **+ 댓글 상태·액션**(loadComments·submitComment·deleteComment·startReply, threadedComments 트리 빌드 = 고아 대댓글 드롭 + 자식 없는 툼스톤 제외, comment_count 낙관적 ±1) — TASK-010,011,012
-│       │   ├── controllers/community_compose_controller.dart # 작성·수정 겸용 — 카테고리/제목/본문/이미지 상태, 금칙어 사전검증, 업로드→INSERT→실패 시 고아 롤백, 수정 시 업로드→UPDATE 성공→옛 path 삭제 — TASK-011
+│       │   ├── controllers/community_controller.dart      # 카테고리 필터 / 커서 무한 스크롤 / loadIfNeeded(최초 1회) / race-condition 가드 / applyPostUpdate·removePost(상세→목록 동기화) / openCompose(게이트 통과 후 전이) / openProfile(작성자 닉네임 탭 → 프로필 시트, authorId 없으면 무시 — TASK-017)
+│       │   ├── controllers/community_post_detail_controller.dart # 상세 조회 / 좋아요 낙관적 토글+롤백 / 조회수 RPC 1회 / 본인 글 삭제 RPC / openEdit(게이트 통과 후 수정 모드) **+ 댓글 상태·액션**(loadComments·submitComment·deleteComment·startReply, threadedComments 트리 빌드 = 고아 대댓글 드롭 + 자식 없는 툼스톤 제외, comment_count 낙관적 ±1) **+ openProfile**(작성자·댓글 아바타 탭 → 프로필 시트, 탈퇴 사용자면 무시 — TASK-017) — TASK-010,011,012
+│       │   ├── controllers/community_compose_controller.dart # 작성·수정 겸용 — 카테고리/제목/본문/이미지 상태, 금칙어 사전검증, 업로드→INSERT→실패 시 고아 롤백, 수정 시 업로드→UPDATE 성공→옛 path 삭제 — TASK-011. **작성 모드 카테고리 기본값 `defaultCategory='free'`**(목록이 「전체」라 물려받은 값이 null 이거나 CommunityController 미등록 딥링크일 때) — 수정 모드 `_applyPost` 는 원본 카테고리를 그대로 쓴다, TASK-018
+│       │   ├── controllers/community_profile_controller.dart # 작성자 프로필 시트 상태(보기 전용) — userId + fallback 닉네임/아바타로 즉시 그린 뒤 onInit 에서 조회. **바인딩 없음**(라우트가 없는 시트라 CommunityProfileSheet.show 가 Get.put/Get.delete 를 소유) — TASK-017
 │       │   ├── controllers/blocked_users_controller.dart  # 차단 목록 조회 / 확인 다이얼로그 → 차단 해제 → 목록 제거 + 커뮤니티 목록 refresh — TASK-013
 │       │   ├── controllers/community_onboarding_controller.dart # 온보딩 시트 상태(닉네임 디바운스 중복검사 + 약관 동의) **+ static ensureCanWrite() 작성 게이트** (비로그인→로그인 / 정지→안내 / 닉네임·약관 미충족→시트). TASK-012 댓글도 이 게이트를 재사용한다 — TASK-011
 │       │   ├── views/community_view.dart                  # 칩 + 게시글 카드 리스트 + Pull-to-refresh + 글쓰기 FAB (Stitch 미대응, PlayerView 레이아웃 준용)
-│       │   ├── views/community_post_detail_view.dart      # 작성자 헤더 + 본문 + 이미지 그리드 + 댓글 섹션(헤더/리스트/빈 상태) + 하단 좋아요/댓글/조회 액션바 + 댓글 입력바 + 더보기(⋯) 진입점(시트·다이얼로그는 컨트롤러가 소유) — TASK-010,012,013
+│       │   ├── views/community_post_detail_view.dart      # 작성자 헤더 + 본문 + 이미지 그리드 + 댓글 섹션(헤더/리스트/빈 상태) + 하단 좋아요/댓글/조회 액션바 + 댓글 입력바 + 더보기(⋯) 진입점(시트·다이얼로그는 컨트롤러가 소유) — TASK-010,012,013. **body 탭 unfocus + 본문 `SelectableText.onTap` unfocus**(선택 텍스트가 탭을 소비해 body 래핑이 닿지 않는 유일한 위젯) — TASK-018
 │       │   ├── views/blocked_users_view.dart              # 차단한 사용자 목록 — 아바타+닉네임+"차단 해제" (Stitch 미대응, FavoritePlayersView 구조 준용) — TASK-013
 │       │   ├── views/community_terms_view.dart            # 커뮤니티 이용규칙 상시 열람 (Apple 1.2 요건, 바인딩 없음 — 애셋만 읽는다) — TASK-013
-│       │   ├── views/community_compose_view.dart          # 카테고리 칩 + 제목/본문 + 글자수 카운터 + 이미지 첨부 바 + PopScope 이탈 확인 (Stitch 미대응, SignUpView 폼 준용) — TASK-011
-│       │   └── views/widgets/                             # community_category_chips.dart, community_post_card.dart, community_image_grid.dart, community_eula_sheet.dart(온보딩 시트 — TASK-011), community_eula_markdown.dart(이용규칙 경량 렌더러 — 시트/열람 화면 공용, TASK-013), community_comment_tile.dart(댓글/대댓글/툼스톤 + 더보기 ⋯ — TASK-012,013), community_comment_input_bar.dart(pill 입력창 + 라임 전송, 답글 헤더 — TASK-012), community_more_sheet.dart(본인=수정/삭제 · 타인=신고/차단 · 운영자=숨김/복구/강제삭제/정지/신고종결 — TASK-013), community_report_sheet.dart(사유 6종 라디오 + 상세 500자 + 접수 후 "이 사용자 차단하기" CTA — TASK-013, **라이브 채팅이 targetLabel='사용자' 로 그대로 재사용 — TASK-014**)
+│       │   ├── views/community_compose_view.dart          # 카테고리 칩 + 제목/본문 + 글자수 카운터 + 이미지 첨부 바 + PopScope 이탈 확인 (Stitch 미대응, SignUpView 폼 준용) — TASK-011. body 탭 unfocus — TASK-018
+│       │   └── views/widgets/                             # community_category_chips.dart, community_post_card.dart, community_image_grid.dart(1장은 원본 비율 실측 후 3/4~16/9 clamp · 모든 타일/`+N` 오버레이가 뷰어 진입점 — TASK-016), community_image_viewer.dart(전체화면 뷰어 — PageView + InteractiveViewer, 확대 중 페이지 스크롤 차단 · 페이지 전환 시 배율 리셋, 신규 패키지 없음 — TASK-016), community_eula_sheet.dart(온보딩 시트 — TASK-011, `Scaffold` 가 없어 시트 `Container` 를 unfocus 로 감쌌다 — TASK-018), community_eula_markdown.dart(이용규칙 경량 렌더러 — 시트/열람 화면 공용, TASK-013), community_comment_tile.dart(댓글/대댓글/툼스톤 + 더보기 ⋯ — TASK-012,013), community_comment_input_bar.dart(pill 입력창 + 라임 전송, 답글 헤더 — TASK-012), community_more_sheet.dart(본인=수정/삭제 · 타인=신고/차단 · 운영자=숨김/복구/강제삭제/정지/신고종결 — TASK-013), community_profile_sheet.dart(작성자 프로필 — 아바타 72 + 닉네임 + `2026년 6월 가입`, **액션 없음**. 진입점 3곳: 상세 작성자 행 · 댓글 아바타 · 목록 카드 닉네임(카드 InkWell 과 겹치지 않게 opaque 로 탭 소비) — TASK-017), community_report_sheet.dart(사유 6종 라디오 + 상세 500자 + 접수 후 "이 사용자 차단하기" CTA — TASK-013, **라이브 채팅이 targetLabel='사용자' 로 그대로 재사용 — TASK-014**)
 │       │
 │       ├── live_match_chat/                               # [라이브 채팅] 경기별 실시간 채팅방 (바텀네비 밖, 라이브 카드에서 진입)
 │       │   ├── bindings/live_match_chat_binding.dart      # ChatMessageRepository(fenix) + CommunityModerationRepository(fenix, 신고/차단 공용) + LiveMatchChatController — TASK-014
 │       │   ├── controllers/live_match_chat_controller.dart # 메시지 로드(before 커서 역방향 페이지네이션) / Realtime 구독(INSERT·DELETE·스코어 UPDATE) / Presence 접속자 dedupe / 라이브 스코어 가리기 토글 **+ 신고·차단**(reportMessage = target_type 'user' + 메시지 본문을 detail 에 인용, confirmBlockUser·blockUser, _blockedUserIds 집합으로 초기 로드·loadMore·Realtime INSERT 3경로 필터 — **RLS `lmc_select_all` 이라 서버가 걸러 주지 않는다**) — TASK-014
-│       │   ├── views/live_match_chat_view.dart            # AppBar(접속자 수 + 스코어 가리기) + reverse 리스트(데이 디바이더/버블/라이브 pill) + pill 입력바 / 롱프레스 = 본인 삭제 · 타인 신고·차단 액션시트 — TASK-014
+│       │   ├── views/live_match_chat_view.dart            # AppBar(접속자 수 + 스코어 가리기) + reverse 리스트(데이 디바이더/버블/라이브 pill) + pill 입력바 / 롱프레스 = 본인 삭제 · 타인 신고·차단 액션시트 — TASK-014. body 탭 unfocus — TASK-018
 │       │   └── views/widgets/                             # chat_day_divider.dart, chat_live_status_pill.dart, chat_message_bubble.dart(롱프레스는 본인·타인 모두 발화, 분기는 View 가 결정 — TASK-014)
 │       │
 │       ├── my_info/                                       # [내 정보] 비로그인 상태 진입 화면 — TASK-001
@@ -113,12 +115,12 @@ rally/lib/
 │       ├── login/                                         # [로그인] 이메일/비밀번호 폼 — TASK-002
 │       │   ├── bindings/login_binding.dart
 │       │   ├── controllers/login_controller.dart          # TextEditingController 관리 + 이메일/비밀번호 유효성
-│       │   └── views/login_view.dart                      # Stitch a7cf71e767ad4610a93373028a9c3ab0
+│       │   └── views/login_view.dart                      # Stitch a7cf71e767ad4610a93373028a9c3ab0 / body 탭 unfocus — TASK-018
 │       │
 │       └── sign_up/                                       # [회원가입] 이메일 인증 화면 — TASK-003
 │           ├── bindings/sign_up_binding.dart
 │           ├── controllers/sign_up_controller.dart        # 이메일/인증코드 입력 + 타이머 placeholder
-│           └── views/sign_up_view.dart                    # Stitch 3616350c62da4e95906ab4d458eb7ebc
+│           └── views/sign_up_view.dart                    # Stitch 3616350c62da4e95906ab4d458eb7ebc / body 탭 unfocus — TASK-018
 │
 ├── services/                                              # [글로벌 서비스] GetxService 기반 싱글톤
 │   └── supabase_service.dart                              # Supabase 클라이언트 부팅 (.env의 URL/anon key 로드 + Get.put)
@@ -154,6 +156,14 @@ rally/lib/
             │
             └── 로그인 버튼 ─► [LoginView] ─► "회원가입" ─► [SignUpView (이메일 인증)]
 ```
+
+## 공통 UX 규칙
+
+- **키보드 내리기 (TASK-018)**: 텍스트 입력이 있는 화면은 `Scaffold` 의 **body 를** `GestureDetector(onTap: () => FocusScope.of(context).unfocus(), behavior: HitTestBehavior.opaque)` 로 감싼다. `Scaffold` 자체를 감싸면 AppBar 탭이 먹지 않고, 공용 헬퍼 위젯은 만들지 않는다(3줄 래핑).
+  - 적용 화면 7종: `community_post_detail_view` · `community_compose_view` · `community_eula_sheet`(Scaffold 가 없어 시트 `Container` 를 감싼다) · `live_match_chat_view` · `profile_edit_view` · `login_view` · `sign_up_view`
+  - `HitTestBehavior.opaque` 는 자식 제스처를 삼키지 않는다 — 히트테스트가 깊은 자식부터 등록되므로 아레나에서 안쪽 `GestureDetector`/`InkWell` 이 이긴다. 기존 중첩 `GestureDetector` 를 통합하지 않는다.
+  - **주의**: `SelectableText` 처럼 자체 탭 인식기를 가진 위젯은 부모 래핑이 닿지 않으므로 그 위젯의 `onTap` 에 unfocus 를 직접 붙인다(현재 게시글 상세 본문 1곳).
+  - `resizeToAvoidBottomInset` 은 화면별 기존 설정을 그대로 둔다.
 
 ## 데이터 레이어 / 외부 의존성
 
@@ -216,6 +226,8 @@ abstract class Routes {
 | `blocked_users_view.dart` | (Stitch 미대응 — FavoritePlayersView 리스트 준용) | — |
 | `community_terms_view.dart` | (Stitch 미대응 — FavoritePlayersView 앱바 톤 준용) | — |
 | `community_more_sheet.dart` / `community_report_sheet.dart` | (Stitch 미대응 — CommunityEulaSheet 시트 톤 준용) | — |
+| `community_profile_sheet.dart` | (Stitch 미대응 — CommunityMoreSheet 시트 톤 준용) | — |
+| `community_image_viewer.dart` / `community_image_grid.dart` | (Stitch 미대응 — 표준 풀스크린 갤러리 패턴 / 기존 그리드 디자인 유지) | — |
 | `player_detail_view.dart` | 선수 상세 | TBD |
 | `my_info_view.dart` | 내 정보 (매거진) | `8329646c315c48fdb5bfa15f9a643418` |
 | `login_view.dart` | 로그인 (Kinetic Court) | `a7cf71e767ad4610a93373028a9c3ab0` |

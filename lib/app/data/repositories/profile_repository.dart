@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/profile_response.dart';
+import '../models/public_profile_response.dart';
 
 /// 사용자 프로필(`profiles` 테이블)과 아바타(`avatars` 스토리지 버킷)를
 /// 다루는 레포지토리.
@@ -14,6 +15,11 @@ class ProfileRepository {
   SupabaseClient get _client => Supabase.instance.client;
 
   static const String _table = 'profiles';
+
+  /// 타인 프로필 조회용 뷰. 본인 행만 다루는 [_table] 과 달리 노출 컬럼이
+  /// 4개로 제한돼 있고 `anon` 에도 열려 있다.
+  static const String _publicView = 'public_profiles';
+
   static const String _bucket = 'avatars';
 
   /// 현재 로그인 사용자의 프로필을 조회한다.
@@ -39,6 +45,25 @@ class ProfileRepository {
       return ProfileResponse.fromJson(created);
     } on PostgrestException catch (e) {
       log('ProfileRepository.fetchMyProfile Postgrest: ${e.message}');
+      rethrow;
+    }
+  }
+
+  /// 타인 프로필(`public_profiles` 뷰) 조회 — 없는 사용자면 null.
+  ///
+  /// 읽기 전용이며 RPC 를 쓰지 않는다. 뷰가 RLS 를 우회하므로 차단 여부와
+  /// 무관하게 조회되고, 비로그인 상태에서도 성공한다.
+  Future<PublicProfileResponse?> fetchPublicProfile(String userId) async {
+    final id = userId.trim();
+    if (id.isEmpty) return null;
+
+    try {
+      final row =
+          await _client.from(_publicView).select().eq('id', id).maybeSingle();
+      if (row == null) return null;
+      return PublicProfileResponse.fromJson(row);
+    } on PostgrestException catch (e) {
+      log('ProfileRepository.fetchPublicProfile Postgrest: ${e.message}');
       rethrow;
     }
   }

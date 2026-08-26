@@ -16,10 +16,21 @@ import '../../controllers/community_controller.dart';
 /// ♥51 💬17 👁240
 /// ```
 class CommunityPostCard extends StatelessWidget {
-  const CommunityPostCard({super.key, required this.post, required this.onTap});
+  const CommunityPostCard({
+    super.key,
+    required this.post,
+    required this.onTap,
+    this.onAuthorTap,
+  });
 
   final CommunityPostResponse post;
   final VoidCallback onTap;
+
+  /// 작성자 닉네임 탭 — 프로필 시트를 연다.
+  ///
+  /// 이 카드에는 아바타가 없다(썸네일은 게시글 첨부 이미지다). 그래서
+  /// 닉네임 텍스트가 유일한 작성자 요소이자 탭 타겟이다.
+  final VoidCallback? onAuthorTap;
 
   static const double _thumbSize = 72;
 
@@ -113,18 +124,7 @@ class CommunityPostCard extends StatelessWidget {
             ),
           ),
         if (category != null) SizedBox(width: 8.w),
-        Flexible(
-          child: Text(
-            post.authorDisplayName,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: AppTypography.labelLg.copyWith(
-              fontSize: 12.sp,
-              letterSpacing: 0.2,
-              color: Colors.white,
-            ),
-          ),
-        ),
+        Flexible(child: _buildAuthorName()),
         SizedBox(width: 6.w),
         Text(
           '· ${_formatRelativeTime(post.createdAt)}',
@@ -135,6 +135,34 @@ class CommunityPostCard extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  /// 작성자 닉네임. 카드 전체가 `InkWell` 이므로 탭을 여기서 **소비**해
+  /// 상세 진입이 함께 발동하지 않게 한다(중첩된 탭 제스처는 더 깊은 쪽이
+  /// 아레나에서 이긴다). 히트 영역이 글자 폭뿐이라 상하로만 여유를 준다 —
+  /// 여백을 2.h 로 잡아 같은 행의 카테고리 칩(수직 3.h + 11sp)보다 낮게
+  /// 유지했다. 이보다 키우면 메타 행 높이가 밀려 카드 레이아웃이 바뀐다.
+  /// 탭 가능하다는 시각적 표시는 넣지 않는다.
+  Widget _buildAuthorName() {
+    final label = Padding(
+      padding: EdgeInsets.symmetric(vertical: 2.h),
+      child: Text(
+        post.authorDisplayName,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: AppTypography.labelLg.copyWith(
+          fontSize: 12.sp,
+          letterSpacing: 0.2,
+          color: Colors.white,
+        ),
+      ),
+    );
+    if (onAuthorTap == null) return label;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onAuthorTap,
+      child: label,
     );
   }
 

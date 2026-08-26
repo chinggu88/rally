@@ -168,6 +168,12 @@ class _CommunityViewState extends State<CommunityView> {
           return CommunityPostCard(
             post: post,
             onTap: () => controller.openPostDetail(post),
+            onAuthorTap:
+                () => controller.openProfile(
+                  post.authorId,
+                  nickname: post.authorNickname,
+                  avatarUrl: post.authorAvatarUrl,
+                ),
           );
         },
         separatorBuilder: (_, __) => SizedBox(height: 12.h),

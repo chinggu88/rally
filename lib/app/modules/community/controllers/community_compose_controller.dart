@@ -26,6 +26,9 @@ class CommunityComposeController extends GetxController {
   /// arguments 키 — 있으면 수정 모드 (`community_posts.id`)
   static const String argPostId = 'post_id';
 
+  /// 작성 모드 기본 카테고리 — 서버 CHECK 제약의 `free`(자유)다.
+  static const String defaultCategory = 'free';
+
   /// 서버 CHECK 제약과 같은 값 (`community_posts`)
   static const int maxTitleLength = 100;
   static const int maxContentLength = 5000;
@@ -108,10 +111,14 @@ class CommunityComposeController extends GetxController {
       _loadOriginalPost();
     } else {
       // 목록에서 특정 카테고리를 보던 중이면 그 카테고리로 시작한다.
-      // "전체"를 보고 있었다면 미선택 상태로 두고 사용자가 고르게 한다.
-      if (Get.isRegistered<CommunityController>()) {
-        selectedCategory.value = CommunityController.to.selectedCategory;
-      }
+      // "전체"를 보고 있었으면 목록 쪽 값이 null 이라 아무것도 선택되지 않는데,
+      // 그러면 등록 버튼을 누르고 나서야 "카테고리를 선택해주세요."를 만난다.
+      // 그래서 미선택 대신 [defaultCategory]("자유")로 시작한다.
+      // 딥링크 등으로 목록을 거치지 않고 들어온 경우도 같다.
+      selectedCategory.value =
+          Get.isRegistered<CommunityController>()
+              ? (CommunityController.to.selectedCategory ?? defaultCategory)
+              : defaultCategory;
     }
   }
 

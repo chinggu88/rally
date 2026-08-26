@@ -16,7 +16,11 @@ import '../models/update_community_post_parameter.dart';
 /// 라운드트립 1회로 가져오기 위해서다.
 ///
 /// 뷰는 `security_invoker = on` 이라 `community_posts` 의 RLS(공개 여부·차단)가
-/// 그대로 적용된다. 클라이언트에서 `status` 를 따로 거를 필요가 없다.
+/// 그대로 적용된다. 다만 `cp_select` 정책은 **작성자 본인과 운영자** 행을
+/// `status` 가 `visible` 이 아니어도 통과시키므로, 이들에게는 삭제·숨김 글까지
+/// 내려온다. 그래서 목록 조회에서만 `deleted` 를 따로 제외한다([listPosts]).
+/// `hidden` 은 거르지 않는다 — 작성자는 자기 글이 숨김된 사실을 알아야 하고
+/// 운영자는 그 화면에서 복구 조치를 한다.
 class CommunityPostRepository {
   SupabaseClient get _client => Supabase.instance.client;
 
@@ -51,7 +55,8 @@ class CommunityPostRepository {
     int limit = 20,
   }) async {
     try {
-      var query = _client.from(_feedView).select();
+      // 본인·운영자 행은 RLS 를 그대로 통과하므로 삭제된 글을 여기서 거른다.
+      var query = _client.from(_feedView).select().neq('status', 'deleted');
       if (category != null && category.isNotEmpty) {
         query = query.eq('category', category);
       }
