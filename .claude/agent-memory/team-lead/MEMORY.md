@@ -2,7 +2,7 @@
 - [Edge Function module pattern](edge_function_module_pattern.md) — rally에서 Supabase Edge Function 매거진 화면을 추가할 때의 정형 패턴 (data 모델 2개 + 레포 1개 + 모듈 3파일 수정)
 - [Bottom-nav tab binding pattern](bottom_nav_tab_binding_pattern.md) — AppBinding 이중 등록 + 탭 진입 로딩 정책(loadIfNeeded vs reloadFromTab) + 5탭 라벨 12pt
 - [Stitch MCP unavailable](stitch_mcp_unavailable.md) — Stitch 호출은 인증 오류로 실패한다. PlayerView 레이아웃으로 폴백하고 screenId를 지어내지 않는다
-- [flutter analyze crashes here](flutter_analyze_crashes.md) — `dart analyze lib/` 로 검증한다. 기준선 169 issues / error 2 / warning 4 는 전부 선행 이슈
+- [flutter analyze crashes here](flutter_analyze_crashes.md) — `dart analyze lib/` 로 검증한다(error 2 는 선행 이슈, warning 0). 수정 파일에 `dart format` 금지
 - [Community writes are RPC-only](community_write_path_rpc_only.md) — 컬럼 단위 GRANT 때문에 status/카운터 직접 UPDATE 는 42501. 삭제·조회수는 RPC
 - [Community write gate](community_write_gate.md) — ensureCanWrite() 단일 진입점 + EULA/정규화 상수 동기화 + 이미지 업로드 순서 규칙
 - [Community moderation surface](community_moderation_surface.md) — 23505 문구 충돌 · 운영자 화면 없음 · 차단 후 화면 분기 · 신고 완료 CTA

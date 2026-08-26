@@ -32,46 +32,50 @@ class CommunityEulaSheet extends GetView<CommunityOnboardingController> {
       padding: EdgeInsets.only(bottom: bottomInset),
       child: ConstrainedBox(
         constraints: BoxConstraints(maxHeight: maxHeight),
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppColors.cardBg,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-            border: Border.all(color: AppColors.cardBorder),
-          ),
-          child: SafeArea(
-            top: false,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _buildGrabber(),
-                _buildHeader(),
-                Flexible(
-                  child: SingleChildScrollView(
-                    padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 8.h),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        if (controller.needsNickname) ...[
-                          _buildNicknameLabel(),
-                          SizedBox(height: 4.h),
-                          _buildNicknameField(),
-                          SizedBox(height: 8.h),
-                          _buildNicknameStatus(),
-                          SizedBox(height: 20.h),
+        child: GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
+          behavior: HitTestBehavior.opaque,
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppColors.cardBg,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+              border: Border.all(color: AppColors.cardBorder),
+            ),
+            child: SafeArea(
+              top: false,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildGrabber(),
+                  _buildHeader(),
+                  Flexible(
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 8.h),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (controller.needsNickname) ...[
+                            _buildNicknameLabel(),
+                            SizedBox(height: 4.h),
+                            _buildNicknameField(),
+                            SizedBox(height: 8.h),
+                            _buildNicknameStatus(),
+                            SizedBox(height: 20.h),
+                          ],
+                          _buildEulaBox(),
+                          SizedBox(height: 12.h),
+                          if (controller.needsAgreement) _buildAgreeCheckbox(),
                         ],
-                        _buildEulaBox(),
-                        SizedBox(height: 12.h),
-                        if (controller.needsAgreement) _buildAgreeCheckbox(),
-                      ],
+                      ),
                     ),
                   ),
-                ),
-                Padding(
-                  padding: EdgeInsets.fromLTRB(20.w, 4.h, 20.w, 16.h),
-                  child: _buildSubmitButton(),
-                ),
-              ],
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(20.w, 4.h, 20.w, 16.h),
+                    child: _buildSubmitButton(),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

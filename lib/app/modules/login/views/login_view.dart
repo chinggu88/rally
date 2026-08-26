@@ -24,47 +24,51 @@ class LoginView extends GetView<LoginController> {
     return Scaffold(
       backgroundColor: _bg,
       resizeToAvoidBottomInset: true,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(24.w, 48.h, 24.w, 32.h),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildHeader(),
-              SizedBox(height: 64.h),
-              _buildEmailField(),
-              SizedBox(height: 24.h),
-              _buildPasswordField(),
-              SizedBox(height: 48.h),
-              _buildLoginButton(),
-              SizedBox(height: 32.h),
-              _buildDivider(),
-              SizedBox(height: 24.h),
-              _buildSocialButton(
-                label: 'Apple로 계속하기',
-                iconWidget:
-                    Icon(Icons.apple, size: 22.sp, color: Colors.black),
-                bg: Colors.white,
-                fg: Colors.black,
-                onTap: controller.signInWithAppleNative,
-              ),
-              SizedBox(height: 12.h),
-              _buildSocialButton(
-                label: 'Google로 계속하기',
-                iconWidget: Image.asset(
-                  'assets/images/google_logo.png',
-                  width: 20.sp,
-                  height: 20.sp,
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        behavior: HitTestBehavior.opaque,
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(24.w, 48.h, 24.w, 32.h),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildHeader(),
+                SizedBox(height: 64.h),
+                _buildEmailField(),
+                SizedBox(height: 24.h),
+                _buildPasswordField(),
+                SizedBox(height: 48.h),
+                _buildLoginButton(),
+                SizedBox(height: 32.h),
+                _buildDivider(),
+                SizedBox(height: 24.h),
+                _buildSocialButton(
+                  label: 'Apple로 계속하기',
+                  iconWidget:
+                      Icon(Icons.apple, size: 22.sp, color: Colors.black),
+                  bg: Colors.white,
+                  fg: Colors.black,
+                  onTap: controller.signInWithAppleNative,
                 ),
-                bg: Colors.white,
-                fg: Colors.black,
-                onTap: controller.signInWithGoogle,
-              ),
-              SizedBox(height: 24.h),
-              _buildSignUpRow(),
-              SizedBox(height: 12.h),
-              _buildForgotPassword(),
-            ],
+                SizedBox(height: 12.h),
+                _buildSocialButton(
+                  label: 'Google로 계속하기',
+                  iconWidget: Image.asset(
+                    'assets/images/google_logo.png',
+                    width: 20.sp,
+                    height: 20.sp,
+                  ),
+                  bg: Colors.white,
+                  fg: Colors.black,
+                  onTap: controller.signInWithGoogle,
+                ),
+                SizedBox(height: 24.h),
+                _buildSignUpRow(),
+                SizedBox(height: 12.h),
+                _buildForgotPassword(),
+              ],
+            ),
           ),
         ),
       ),

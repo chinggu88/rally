@@ -30,38 +30,42 @@ class CommunityPostDetailView extends GetView<CommunityPostDetailController> {
     return Scaffold(
       backgroundColor: scheme.surface,
       appBar: _buildAppBar(scheme),
-      body: SafeArea(
-        top: false,
-        child: Column(
-          children: [
-            Expanded(
-              child: Obx(() {
-                if (controller.isLoading) {
-                  return const Center(
-                    child: CircularProgressIndicator(color: AppColors.accent),
-                  );
-                }
-                final error = controller.errorMessage;
-                if (error != null) return _buildErrorState(error);
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        behavior: HitTestBehavior.opaque,
+        child: SafeArea(
+          top: false,
+          child: Column(
+            children: [
+              Expanded(
+                child: Obx(() {
+                  if (controller.isLoading) {
+                    return const Center(
+                      child: CircularProgressIndicator(color: AppColors.accent),
+                    );
+                  }
+                  final error = controller.errorMessage;
+                  if (error != null) return _buildErrorState(error);
+                  final post = controller.post;
+                  if (post == null) {
+                    return _buildErrorState('게시글을 찾을 수 없습니다.');
+                  }
+                  return _buildBody(context, post);
+                }),
+              ),
+              Obx(() {
                 final post = controller.post;
-                if (post == null) {
-                  return _buildErrorState('게시글을 찾을 수 없습니다.');
-                }
-                return _buildBody(post);
+                if (post == null) return const SizedBox.shrink();
+                return _buildActionBar(scheme, post);
               }),
-            ),
-            Obx(() {
-              final post = controller.post;
-              if (post == null) return const SizedBox.shrink();
-              return _buildActionBar(scheme, post);
-            }),
-            // 입력바는 글을 못 읽는 상태(삭제·차단·조회 실패)에서는 숨긴다.
-            // 어차피 서버가 `cc_insert` 정책으로 막는다.
-            Obx(() {
-              if (controller.post == null) return const SizedBox.shrink();
-              return const CommunityCommentInputBar();
-            }),
-          ],
+              // 입력바는 글을 못 읽는 상태(삭제·차단·조회 실패)에서는 숨긴다.
+              // 어차피 서버가 `cc_insert` 정책으로 막는다.
+              Obx(() {
+                if (controller.post == null) return const SizedBox.shrink();
+                return const CommunityCommentInputBar();
+              }),
+            ],
+          ),
         ),
       ),
     );
@@ -107,7 +111,7 @@ class CommunityPostDetailView extends GetView<CommunityPostDetailController> {
 
   // ── 본문 ──────────────────────────────────────────────────────────────
 
-  Widget _buildBody(CommunityPostResponse post) {
+  Widget _buildBody(BuildContext context, CommunityPostResponse post) {
     final imageUrls = post.imageUrls;
 
     return CustomScrollView(
@@ -134,8 +138,13 @@ class CommunityPostDetailView extends GetView<CommunityPostDetailController> {
                 ),
               ),
               SizedBox(height: 14.h),
+              // 본문은 `SelectableText` 라 자체 탭 인식기가 탭을 소비한다.
+              // 화면에서 가장 넓은 영역이므로 body 래핑만으로는 여기를 눌러도
+              // 키보드가 내려가지 않는다 — onTap 으로 직접 unfocus 한다.
+              // 텍스트 선택(롱프레스 드래그) 동작은 그대로 유지된다.
               SelectableText(
                 (post.content ?? '').trim(),
+                onTap: () => FocusScope.of(context).unfocus(),
                 style: AppTypography.bodyMd.copyWith(
                   fontSize: 15.sp,
                   height: 1.6,
@@ -233,6 +242,15 @@ class CommunityPostDetailView extends GetView<CommunityPostDetailController> {
               controller.canOpenCommentMoreSheet(comment)
                   ? () => controller.showCommentMoreSheet(comment)
                   : null,
+          // 툼스톤에는 아바타 자체가 없다 — 마스킹된 작성자는 넘기지 않는다.
+          onAuthorTap:
+              comment.isRemoved
+                  ? null
+                  : () => controller.openProfile(
+                    comment.authorId,
+                    nickname: comment.authorNickname,
+                    avatarUrl: comment.authorAvatarUrl,
+                  ),
         );
       }, childCount: items.length),
     );
@@ -269,58 +287,72 @@ class CommunityPostDetailView extends GetView<CommunityPostDetailController> {
   }
 
   /// 아바타 + 닉네임 + 작성 시각(수정됨 표기 포함)
+  ///
+  /// 행 전체가 프로필 시트 진입점이다. 더보기(⋯)는 이 행이 아니라 AppBar에
+  /// 있으므로 겹치지 않는다. 탭 가능하다는 시각적 표시는 넣지 않는다.
+  /// `behavior: opaque` 로 이벤트를 확실히 소비해, 나중에 body 를 감쌀
+  /// 상위 제스처가 이 탭을 가로채지 않게 한다.
   Widget _buildAuthorRow(CommunityPostResponse post) {
     final avatarUrl = post.authorAvatarUrl;
     final edited = post.editedAt != null;
 
-    return Row(
-      children: [
-        ClipOval(
-          child: SizedBox(
-            width: 36.w,
-            height: 36.w,
-            child:
-                (avatarUrl != null && avatarUrl.trim().isNotEmpty)
-                    ? CachedNetworkImage(
-                      imageUrl: avatarUrl,
-                      fit: BoxFit.cover,
-                      placeholder: (_, __) => _avatarPlaceholder(),
-                      errorWidget: (_, __, ___) => _avatarPlaceholder(),
-                    )
-                    : _avatarPlaceholder(),
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap:
+          () => controller.openProfile(
+            post.authorId,
+            nickname: post.authorNickname,
+            avatarUrl: avatarUrl,
           ),
-        ),
-        SizedBox(width: 10.w),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                post.authorDisplayName,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AppTypography.labelLg.copyWith(
-                  fontSize: 14.sp,
-                  letterSpacing: 0.2,
-                  color: Colors.white,
-                ),
-              ),
-              SizedBox(height: 2.h),
-              Text(
-                edited
-                    ? '${_formatRelativeTime(post.createdAt)} · 수정됨'
-                    : _formatRelativeTime(post.createdAt),
-                style: AppTypography.labelLg.copyWith(
-                  fontSize: 12.sp,
-                  letterSpacing: 0.2,
-                  color: AppColors.subtleText,
-                ),
-              ),
-            ],
+      child: Row(
+        children: [
+          ClipOval(
+            child: SizedBox(
+              width: 36.w,
+              height: 36.w,
+              child:
+                  (avatarUrl != null && avatarUrl.trim().isNotEmpty)
+                      ? CachedNetworkImage(
+                        imageUrl: avatarUrl,
+                        fit: BoxFit.cover,
+                        placeholder: (_, __) => _avatarPlaceholder(),
+                        errorWidget: (_, __, ___) => _avatarPlaceholder(),
+                      )
+                      : _avatarPlaceholder(),
+            ),
           ),
-        ),
-      ],
+          SizedBox(width: 10.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  post.authorDisplayName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.labelLg.copyWith(
+                    fontSize: 14.sp,
+                    letterSpacing: 0.2,
+                    color: Colors.white,
+                  ),
+                ),
+                SizedBox(height: 2.h),
+                Text(
+                  edited
+                      ? '${_formatRelativeTime(post.createdAt)} · 수정됨'
+                      : _formatRelativeTime(post.createdAt),
+                  style: AppTypography.labelLg.copyWith(
+                    fontSize: 12.sp,
+                    letterSpacing: 0.2,
+                    color: AppColors.subtleText,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 

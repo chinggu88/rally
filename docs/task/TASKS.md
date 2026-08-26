@@ -1336,3 +1336,942 @@ TASK-013에서 신고/차단 항목이 추가된다. **이 태스크에서는 �
 #### UI/UX 테스트
 - [ ] 롱프레스 반응 영역이 기존 삭제 동작과 충돌하지 않음
 - [x] `dart analyze` 통과 (이 환경에서 `flutter analyze` 는 code 255 로 크래시한다. 본 태스크 파일 error·warning 0건, 전체 error 2 / warning 4 로 선행 수치 그대로)
+
+---
+---
+
+# 커뮤니티 실기기 QA 후속 (TASK-015 ~ TASK-018)
+
+TASK-008~014 완료(`done`) 후 실기기 QA에서 나온 결함·개선 요청 6건을 4개 태스크로 묶었다.
+
+| QA 요청 | 태스크 | 개발 유형 |
+|---------|--------|-----------|
+| ① 삭제 기능 체크 | TASK-015 | 조사 → 판정 후 확정 (유지보수 유력) |
+| ③ 본문 사진 짤림 / ④ 사진 클릭 시 확대 | TASK-016 | 혼합 (③ 유지보수 + ④ 신규개발) |
+| ② 프로필 사진 클릭 시 프로필 상세보기 | TASK-017 | 신규개발 |
+| ⑤ 키보드 내리기 / ⑥ 카테고리 기본값 | TASK-018 | 유지보수 |
+
+범위가 불명확했던 2건은 사용자 확인을 거쳐 확정했다.
+- **② 프로필 상세** → **최소안**. 바텀시트 · 아바타/닉네임/가입일만 · **보기 전용**(신고·차단·작성 글 목록 없음).
+- **⑤ 키보드 내리기** → **앱 전체**. 커뮤니티 3곳 + `live_match_chat` · `profile_edit` · `login` · `sign_up`.
+
+## 실행 순서와 선행 조건
+
+```
+TASK-015 (삭제 조사) ── 독립. 사람이 먼저 재현 확인
+
+[사람] 20260826000100 마이그레이션 원격 적용
+   └─▶ TASK-016 (이미지) ──▶ TASK-017 (프로필) ──▶ TASK-018 (키보드+카테고리)
+```
+
+- **TASK-016 · 017 · 018은 세 태스크 모두 `community_post_detail_view.dart`를 건드린다.**
+  (016은 `CommunityImageGrid` 호출부, 017은 `_buildAuthorRow` 탭 타겟, 018은 `body` 래핑)
+  상태는 전부 `pending`으로 두었지만 **반드시 위 순서대로 하나씩 실행하고, 하나가 끝난 뒤 다음 team-lead를 돌린다.** 동시에 돌리면 같은 파일에서 충돌한다.
+- **TASK-017은 마이그레이션 선행이 필수다.** `public_profiles` 뷰에 `created_at`을 추가하는 `20260826000100`을 **사람이 원격에 먼저 적용해야 한다.** TASK-008과 같은 이유로 마이그레이션을 담당하는 에이전트가 없다. 적용 전에 team-lead를 돌리면 API Agent가 존재하지 않는 컬럼을 조회하는 코드를 만든다.
+- TASK-015는 서브 에이전트 분배 대상이 아니다(`manual`). 재현 절차로 증상을 특정한 뒤 개발 유형과 상태를 확정한다.
+- TASK-016 · 018은 마이그레이션이 없다.
+
+> **Stitch**: 이 프로젝트에서 Stitch MCP는 인증 오류(`Incompatible auth server: does not support dynamic client registration`)로 호출이 실패한다. TASK-015~018 작성 시에도 `list_screens`를 1회 시도해 동일 오류를 확인했다. 화면 매핑은 전부 `없음 (Stitch 미대응 — 기존 View 준용)`이다.
+
+> **커뮤니티 쓰기는 RPC 경유가 강제된다** (컬럼 단위 GRANT, `20260823000200`). 아래 태스크들은 새 쓰기 경로를 만들지 않으므로 신규 RPC가 필요 없다.
+
+---
+
+## TASK-015: 게시글·댓글 삭제 결함 재현 확인 및 수정
+
+- **상태**: `done` (2026-08-26) — 후보 A만 수정. 후보 B·C는 범위 밖으로 남겨 둔다
+- **개발 유형**: **유지보수**
+- **생성일**: 2026-08-26
+- **설명**: 삭제한 게시글이 작성자 본인에게 되살아나는 결함을 고친다. 목록 쿼리에 `deleted` 제외 필터가 없다.
+- **선행**: 없음
+- **기획서 참조**: §6-1(더보기 시트), §7(소프트 삭제)
+
+> **범위 확정 (2026-08-26)**
+> 1단계 재현 확인을 실기기 대신 **정적 검증으로 대체했다.** 아래 3가지를 코드·마이그레이션에서 직접 확인해 후보 A를 원인으로 확정했다.
+> 1. `cp_select`(`20260823000200_community_core.sql:370`)가 `author_id = (select auth.uid())`로 **작성자 본인 행을 `status`와 무관하게 통과**시킨다.
+> 2. `community_post_feed`는 `security_invoker = on`(`20260823000400:25`)이라 위 정책이 그대로 적용된다.
+> 3. `CommunityPostRepository.listPosts`(54행)에 `status` 필터가 **없다.**
+>
+> → 삭제 직후에는 `_removeFromList`의 메모리 제거로 사라져 보이지만, **pull-to-refresh 또는 앱 재시작 시 되살아난다.** 운영자 계정은 타인의 삭제 글까지 목록에 섞여 보인다.
+>
+> **이번 태스크 범위는 후보 A뿐이다.** 아래 후보 B·C는 사용자 판정 전이므로 **손대지 않는다.**
+> - **후보 B**(목록 카드에 더보기 ⋯ 추가) — 설계 의도인지 미정. 요청받지 않은 UI 추가이므로 제외. Controller/UI Agent 작업 없음.
+> - **후보 C**(삭제 시 스토리지 고아 파일) — 소프트 삭제 설계상 의도일 수 있음. 정리가 필요하다고 판정되면 배치/Edge Function 별도 태스크로 분리.
+> - 후보 D·E는 후보 A 확정으로 해당 없음.
+>
+> **댓글은 해당 없다.** `cc_select`도 같은 구조지만 `community_comment_feed`가 삭제 댓글을 툼스톤(내용 NULL 마스킹)으로 내려주는 것이 의도된 동작이다(대댓글 고아 방지). 댓글 쪽 코드는 건드리지 않는다.
+
+---
+
+### 개발 유형 분류
+
+| 항목 | 내용 |
+|------|------|
+| 유형 | **미확정 — 재현 확인 전까지 코드를 고치지 않는다** |
+| 판단 근거 | 삭제 경로(UI → 컨트롤러 → 레포지토리 → RPC)는 이미 전부 구현돼 있다. 신규 기능이 아니라 기존 동작의 결함 조사다 |
+| 영향 범위 | 후보 A 확정 시 `community_post_repository.dart` 1파일. 후보 B 확정 시 `community_view.dart` + `community_post_card.dart`. 후보 C 확정 시 마이그레이션 1건 |
+
+---
+
+### 현재 구현 상태 (조사 전 확인 완료 — 재조사 불필요)
+
+정적 분석으로 확인한 사실이다. 아래는 **이미 정상 구현돼 있다.**
+
+| 계층 | 위치 | 상태 |
+|------|------|------|
+| 진입점 | `community_more_sheet.dart` — `isMine && onDelete != null`일 때만 '삭제' 항목 렌더 | 정상 |
+| 호출부 | `community_post_detail_controller.dart:627` `onDelete: mine ? confirmDeletePost : null` | 정상 |
+| 게시글 | `confirmDeletePost()`(252) → 확인 다이얼로그 → `deletePost()`(268) → `_removeFromList` → `Get.back()` → 스낵바 | 정상 |
+| 댓글 | `confirmDeleteComment()`(533) → `deleteComment()` → 툼스톤 교체 | 정상 |
+| 레포지토리 | `CommunityPostRepository.deletePost:282` → RPC `community_delete_post(p_id)` / `CommunityCommentRepository.deleteComment` → RPC `community_delete_comment(p_id)` | 정상 |
+| RPC | `20260823000400_community_feed_views.sql:123,142` — `security definer`, `author_id = auth.uid() or is_app_admin()` + `status <> 'deleted'`, 미매칭 시 `hint='forbidden'` 예외 | 정상 |
+| 권한 | 두 RPC 모두 `authenticated`에 execute grant 있음 | 정상 |
+
+**즉 "삭제가 아예 동작하지 않는다"는 코드상 근거가 없다.** 아래 재현 절차로 실제 증상을 특정하는 것이 이 태스크의 첫 단계다.
+
+---
+
+### 1단계 — 재현 확인 (사람이 실기기에서 수행)
+
+아래 표를 채운 뒤에야 2단계로 넘어간다. **채우기 전에 코드를 수정하지 않는다.**
+
+| # | 확인 항목 | 기록 |
+|---|-----------|------|
+| Q1 | 어느 삭제인가 — 게시글 / 댓글 / 대댓글 / 둘 다 | |
+| Q2 | 어느 진입점에서 시도했나 — 상세 화면 더보기(⋯) / 목록 화면 / 다른 곳 | |
+| Q3 | 증상은 무엇인가 — ⓐ '삭제' 항목이 아예 안 보임 / ⓑ 눌러도 무반응 / ⓒ "삭제 실패" 스낵바 / ⓓ "삭제 완료" 후에도 목록에 남음 / ⓔ 스토리지 이미지가 남음 | |
+| Q4 | 본인 글인가, 남의 글인가, 운영자 계정인가 | |
+| Q5 | ⓓ라면 — 앱을 껐다 켜거나 pull-to-refresh 한 뒤에도 남아 있나 | |
+| Q6 | ⓒ라면 — 스낵바 문구와 `CommunityPostDetailController.deletePost error:` 로그 원문 | |
+
+---
+
+### 2단계 — 증상별 대응 분기
+
+#### 후보 A — 증상 ⓓ "삭제 완료 후 새로고침하면 다시 나타남" (**가장 유력**)
+
+정적 분석 중 **실제 결함을 확인했다.** 원인이 확정된 유일한 후보다.
+
+- `20260823000200_community_core.sql:370` `cp_select` 정책:
+  ```sql
+  using (
+    (status = 'visible'
+      or author_id = (select auth.uid())     -- ← 본인 글은 status 무관하게 통과
+      or public.is_app_admin())
+    and not public.community_is_blocked(author_id)
+  );
+  ```
+- `community_post_feed`는 `security_invoker = on`이라 이 정책이 그대로 적용된다 → **작성자 본인에게는 `status = 'deleted'`인 자기 글이 피드에 계속 반환된다.**
+- `CommunityPostRepository.listPosts`(54행)는 `status` 필터를 붙이지 않는다. 파일 상단 19행 주석 *"클라이언트에서 `status`를 따로 거를 필요가 없다"* 는 **타인 기준으로만 맞는 서술이며 본인 행에는 성립하지 않는다.**
+- `_removeFromList`는 메모리상 `RxList`에서만 지운다. 그래서 **삭제 직후에는 사라져 보이지만, pull-to-refresh 하거나 앱을 재시작하면 삭제한 글이 되살아난다.** 사용자가 "삭제가 안 된다"고 느끼기에 충분한 증상이다.
+- 운영자 계정은 `is_app_admin()` 때문에 **모든 사용자의 삭제된 글**이 피드에 섞여 보인다.
+
+**수정 방향** (`community_post_repository.dart` 1파일, `listPosts` 쿼리)
+- [x] 목록 쿼리에 `.neq('status', 'deleted')` 추가.
+- [x] **`.eq('status', 'visible')`이 아니라 `.neq('status', 'deleted')`인 이유**: `hidden`은 작성자 본인과 운영자가 봐야 한다(작성자는 자기 글이 숨김 처리된 사실을 알아야 하고, 운영자는 그 화면에서 복구 조치를 한다 — `community_more_sheet.dart` 문서 참조). `visible`만 남기면 이 두 동작이 죽는다.
+- [x] 상세 조회(`fetchPost`)에는 필터를 **넣지 않는다.** 운영자가 알림을 눌러 숨김 글 상세로 바로 진입하는 경로가 있다.
+- [x] 파일 상단 19행 주석을 사실에 맞게 고친다 — "본인·운영자 행은 `status`가 `visible`이 아니어도 통과하므로 목록 쿼리에서만 `deleted`를 제외한다".
+
+#### 후보 B — 증상 ⓐ "목록에서는 삭제할 방법이 없다"
+
+- `CommunityView` / `CommunityPostCard`에는 더보기(⋯) 진입점이 **없다**(grep 확인: `CommunityMoreSheet` 호출은 `community_post_detail_controller.dart` 두 곳뿐). 카드 전체가 상세 진입 `InkWell`이다.
+- 즉 **상세 화면에 들어가야만 삭제할 수 있다.** 사용자가 목록에서 지우려다 실패했다면 이것이 증상이다.
+- **판정 필요**: 설계 의도인지 결함인지. 목록 카드에 더보기 버튼을 추가하면 카드 탭(상세 진입)과 탭 타겟이 겹치므로 TASK-016의 제스처 충돌 체크와 같은 주의가 필요하다.
+- 대응 시: `community_post_card.dart`에 `onMore` 콜백 추가 + `CommunityController`에 `showPostMore(post)` 추가. **`CommunityMoreSheet`는 수정하지 않는다** (상태를 갖지 않고 호출부가 플래그를 넘기는 구조라 그대로 재사용 가능).
+
+#### 후보 C — 증상 ⓔ "스토리지 이미지가 그대로 남음"
+
+- `community_delete_post` RPC는 `status`만 `'deleted'`로 바꾸고 `image_paths`는 건드리지 않는다. 스토리지 파일도 지우지 않는다 → **고아 파일이 누적된다.**
+- **판정 필요**: 소프트 삭제 설계상 의도(신고 대응·복구 여지)인지, 정리 대상인지.
+- 의도라면 **아무것도 고치지 않고** 이 사실만 문서에 남긴다.
+- 정리 대상이라면 클라이언트에서 지우면 안 된다(삭제 후 복구 불가 + 권한 경계). Edge Function 또는 배치로 `status='deleted' and updated_at < now() - interval '30 days'`인 글의 `image_paths`를 정리하는 **별도 태스크**로 분리한다. 이 태스크 범위 밖이다.
+
+#### 후보 D — 증상 ⓒ "삭제 실패" 스낵바
+
+- `communityErrorMessage`가 `hint='forbidden'`을 "권한이 없습니다."로 변환한다. 이 문구가 떴다면 RPC의 `not found` 분기다 = `author_id`가 `auth.uid()`와 다르거나 이미 `deleted`다.
+- 확인 순서: ① 로그인 세션의 uid와 글의 `author_id` 일치 여부 ② 이미 삭제된 글을 다시 삭제하려 한 것은 아닌지(더보기 시트가 열린 채 다른 기기에서 삭제된 경우) ③ 그 외 문구라면 `code`/`hint` 원문을 로그에서 확보.
+
+#### 후보 E — 증상 ⓑ "눌러도 무반응"
+
+- `deletePost()`는 `if (!isMine) return;` / `if (_isDeleting.value) return;`로 **조용히 반환**한다. 스낵바도 로그도 남기지 않는다.
+- 재현되면 이 두 조기 반환에 `log()`를 추가해 어느 쪽인지 먼저 특정한다.
+
+---
+
+### API Agent 작업
+
+> 1단계 재현 확인 전에는 착수하지 않는다. 후보 A 확정 시에만 아래를 수행한다.
+
+#### 수정 파일
+- `lib/app/data/repositories/community_post_repository.dart` — `listPosts` 쿼리에 `.neq('status', 'deleted')` 추가 + 상단 19행 주석 정정
+
+#### 기능 정의
+- [x] `listPosts`에만 필터 추가. `fetchPost`(상세)는 변경하지 않는다
+- [x] 모델·마이그레이션 변경 없음
+
+---
+
+### Controller Agent 작업
+
+> 후보 B 또는 E 확정 시에만 수행한다. 후보 A만 확정되면 **작업 없음.**
+
+#### 수정 파일 (후보 B)
+- `lib/app/modules/community/controllers/community_controller.dart` — `showPostMore(CommunityPostResponse post)` 추가
+
+#### 기능 정의
+- [ ] `CommunityMoreSheet.show(...)`를 목록에서도 호출. `isMine` 판정은 상세 컨트롤러(622행 부근)와 동일 규칙을 쓴다 — **미수행** (후보 B는 이번 범위 밖)
+- [ ] 삭제 성공 시 `removePost(id)` 호출 — `Get.back()`은 **부르지 않는다**(목록에서는 닫을 화면이 없다) — **미수행** (후보 B는 이번 범위 밖)
+
+---
+
+### UI Agent 작업
+
+> 후보 B 확정 시에만 수행한다.
+
+#### 수정 파일
+- `lib/app/modules/community/views/widgets/community_post_card.dart` — 우상단 더보기(⋯) 버튼 + `onMore` 콜백
+- `lib/app/modules/community/views/community_view.dart` — `onMore` 연결
+
+#### UI 구성
+- 카드 헤더 우측에 `Icons.more_horiz`, 히트 영역 40×40 이상
+- **카드 전체 `InkWell`(상세 진입)과 탭 타겟이 겹치므로** 더보기 버튼을 `InkWell` 자식으로 두되 자체 `GestureDetector`가 이벤트를 소비하게 한다
+
+#### Stitch 화면 매핑
+| 화면(View) | Stitch 화면명 | Stitch screenId | resource name |
+|------------|---------------|-----------------|----------------|
+| `community_post_card.dart` | 없음 (Stitch 미대응 — 기존 View 준용) | — | — |
+
+#### 참조 이미지
+| 화면(View) | 이미지 경로 | 설명 |
+|------------|-------------|------|
+| — | 없음 | — |
+
+#### Figma 참조
+- 없음
+
+---
+
+### QA 체크리스트
+
+#### 재현 확인 (1단계 — 수정 전 필수)
+- [ ] Q1~Q6 표를 실기기에서 채웠다 — **미수행.** 1단계를 정적 검증으로 대체했다(§범위 확정)
+- [ ] 본인 글 삭제 → **pull-to-refresh** → 목록에 남아 있는지 확인 (후보 A 판정) — **미검증** (실기기 필요). 후보 A는 `cp_select` 정책 · 뷰 `security_invoker` · `listPosts` 쿼리 3건을 코드에서 직접 읽어 확정했다
+- [ ] 본인 글 삭제 → **앱 완전 종료 후 재시작** → 목록에 남아 있는지 확인 (후보 A 판정) — **미검증** (실기기 필요). 후보 A는 `cp_select` 정책 · 뷰 `security_invoker` · `listPosts` 쿼리 3건을 코드에서 직접 읽어 확정했다
+- [ ] 운영자 계정으로 목록 진입 → 남의 삭제된 글이 섞여 보이는지 확인 (후보 A 판정) — **미검증** (실기기 필요). 후보 A는 `cp_select` 정책 · 뷰 `security_invoker` · `listPosts` 쿼리 3건을 코드에서 직접 읽어 확정했다
+- [ ] 목록 화면에 더보기(⋯)가 없어 상세로 들어가야만 삭제 가능한 점이 사용자가 말한 증상인지 확인 (후보 B 판정) — **미판정** (후보 B는 이번 범위 밖)
+- [ ] 삭제된 글의 스토리지 파일이 남아 있는지 Supabase Storage에서 확인 (후보 C 판정) — **미판정** (후보 C는 이번 범위 밖)
+
+#### 기능 테스트 (후보 A 수정 후)
+- [ ] 본인 글 삭제 → 새로고침·재시작 후에도 목록에 나타나지 않음 — **미검증** (실기기 필요: 이 워크트리에 `firebase_options.dart`·`.env` 가 없어 빌드·실행 불가)
+- [ ] 삭제한 글의 상세를 딥링크로 열면 접근 불가 또는 적절한 안내 — **미검증** (실기기 필요: 이 워크트리에 `firebase_options.dart`·`.env` 가 없어 빌드·실행 불가)
+- [ ] 댓글 삭제 → "삭제된 댓글입니다" 툼스톤 유지, 대댓글 스레드 구조 보존 — **미검증**. 댓글 코드는 이번 태스크에서 건드리지 않았다(툼스톤은 의도된 동작)
+- [ ] 대댓글 삭제 → 부모 댓글의 `reply_count` 정합 — **미검증**. 댓글 코드는 이번 태스크에서 건드리지 않았다(툼스톤은 의도된 동작)
+
+#### 예외 처리 / 엣지 케이스
+- [ ] 남의 글 더보기에 '삭제'가 노출되지 않음 — **미검증** (실기기 필요: 이 워크트리에 `firebase_options.dart`·`.env` 가 없어 빌드·실행 불가)
+- [ ] 이미 삭제된 글을 다시 삭제 시도 → "권한이 없습니다." 스낵바 (앱 크래시 없음) — **미검증** (실기기 필요: 이 워크트리에 `firebase_options.dart`·`.env` 가 없어 빌드·실행 불가)
+- [ ] 삭제 중 연속 탭 → 중복 RPC 호출 없음 (`_isDeleting` 가드) — **미검증** (실기기 필요: 이 워크트리에 `firebase_options.dart`·`.env` 가 없어 빌드·실행 불가)
+- [ ] 네트워크 끊김 상태에서 삭제 → 실패 스낵바, 목록은 그대로 유지 — **미검증** (실기기 필요: 이 워크트리에 `firebase_options.dart`·`.env` 가 없어 빌드·실행 불가)
+
+#### 유지보수 전용 (후보 A 수정 시)
+- [x] **운영자 계정 회귀** — 숨김(`hidden`) 글이 목록에 **여전히 보인다** (`.eq('status','visible')`로 잘못 고치면 여기서 깨진다) — 정적 확인 (2026-08-26) — 필터는 `.neq('status', 'deleted')` 뿐이라 `hidden` 행은 그대로 통과한다
+- [x] **작성자 본인 회귀** — 운영자가 숨긴 내 글이 내 목록에 여전히 보인다 — 정적 확인 (2026-08-26) — 위와 동일한 근거
+- [ ] 일반 사용자 목록 조회 결과 건수가 수정 전후 동일 — **미검증** (실기기 필요: 이 워크트리에 `firebase_options.dart`·`.env` 가 없어 빌드·실행 불가)
+- [ ] 카테고리 필터 / 무한 스크롤 / pull-to-refresh 정상 — **미검증** (실기기 필요). 필터는 `category`/`before`/`order`/`limit` 앞에 붙어 기존 쿼리 조합을 바꾸지 않는다
+- [ ] 비로그인 상태 목록 조회 정상 (`auth.uid()` NULL 경로) — **미검증** (실기기 필요: 이 워크트리에 `firebase_options.dart`·`.env` 가 없어 빌드·실행 불가)
+- [x] 마이그레이션 0건 — 기존 사용자 데이터 영향 없음 — 정적 확인 (2026-08-26) — `supabase/migrations/` 에 추가한 파일 없음
+
+#### UI/UX 테스트
+- [x] `dart analyze` 통과 (이 환경에서 `flutter analyze`는 code 255로 크래시한다) — 정적 확인 (2026-08-26) — `dart analyze lib/` 결과 201 issues / error 2 / warning 4 (전부 선행 이슈, 수정 파일 0건)
+
+---
+
+## TASK-016: 본문 이미지 비율 유지 · 이미지 확대 뷰어
+
+- **상태**: `done` (2026-08-26) — 마이그레이션 없이 (a)안(클라이언트 실측)으로 구현. 신규 패키지 없음
+- **개발 유형**: **혼합** — 비율 유지는 유지보수, 뷰어는 신규개발
+- **생성일**: 2026-08-26
+- **설명**: 게시글 상세의 본문 이미지가 위아래로 잘리는 문제를 고치고, 이미지를 탭하면 전체화면으로 확대·스와이프해 볼 수 있는 뷰어를 추가한다.
+- **선행**: 없음 (TASK-017·018보다 **먼저** 실행한다 — 실행 순서 참조)
+- **기획서 참조**: §3 S-2
+
+---
+
+### 개발 유형 분류
+
+| 항목 | 내용 |
+|------|------|
+| 유형 (QA ③ 비율 유지) | 유지보수 — 기존 `CommunityImageGrid`의 레이아웃 규칙 변경 |
+| 유형 (QA ④ 확대 뷰어) | 신규개발 — 뷰어 위젯이 존재하지 않는다 |
+| 판단 근거 | 두 건 모두 `community_image_grid.dart` **같은 파일**을 건드린다. 분리하면 두 태스크가 동일 파일에서 충돌하므로 한 태스크로 묶는다 |
+| 영향 범위 | `community_image_grid.dart`(수정), 뷰어 위젯 1종(신규). 호출부는 `community_post_detail_view.dart:147` 한 곳뿐 — 목록 카드의 썸네일은 **별도 코드**(`community_post_card.dart:180`)라 영향 없다 |
+
+---
+
+### 현재 구현 상태 (확인 완료)
+
+- `community_image_grid.dart`
+  - 1장: `AspectRatio(aspectRatio: 16 / 9)` + `BoxFit.cover` → **세로 사진이 위아래로 잘린다. 이것이 QA ③의 원인이다.**
+  - 2장: `AspectRatio(aspectRatio: 1)` 정사각 2칸
+  - 3장 이상: 2열 그리드, 앞 4장만 그리고 마지막 칸에 `+N` 오버레이
+  - 모든 타일이 `_tile()`의 `CachedNetworkImage(fit: BoxFit.cover)`
+  - 클래스 문서 주석 12행에 *"(뷰어는 이 태스크 범위가 아니다)"* 라고 명시 — **처음부터 미구현이며, 이 태스크에서 그 서술이 무효가 되므로 주석도 함께 고친다.**
+- `+N` 오버레이는 현재 **탭해도 나머지 이미지를 볼 방법이 없다.** 뷰어가 생기면 이 오버레이가 진입점이 된다.
+- **이미지 비율 메타데이터가 DB에 없다.** `community_posts.image_paths`는 경로 `text[]`뿐이다(`20260823000200_community_core.sql`).
+- 새 패키지가 필요 없다. `InteractiveViewer` / `PageView`는 Flutter 기본 위젯이고 `cached_network_image`는 `pubspec.yaml`에 이미 있다.
+
+---
+
+### 비율 유지 방식 결정 (③)
+
+DB에 비율이 없으므로 세 갈래가 있다. **(a)를 채택한다.**
+
+| 안 | 방식 | 마이그레이션 | 문제 |
+|----|------|--------------|------|
+| **(a) 채택** | 클라이언트에서 `ImageStream`으로 실측 후 `AspectRatio`에 반영 | 불필요 | 첫 로드 시 레이아웃 점프 가능 → **비율을 clamp하고 placeholder 비율을 고정해 완화한다** |
+| (b) | 업로드 시 width/height를 DB에 저장 | **필요** | 정확하지만 기존 게시글에는 값이 없어 백필이 필요하고, 쓰기 경로가 RPC 강제라 작업량이 크다 |
+| (c) | `BoxFit.contain` + 최대 높이 제한 | 불필요 | 잘리지는 않지만 상하좌우에 레터박스 여백이 생겨 카드 디자인이 깨진다 |
+
+**(a) 구현 규칙**
+- **1장일 때만 실측 비율을 적용한다.** 2장 이상은 정사각 그리드를 유지한다 — 칸마다 비율이 다르면 격자가 어긋나고, 회귀 위험이 커진다. QA에서 지적된 것도 본문 대표 이미지(1장) 케이스다.
+- 실측 비율은 **`3/4` ~ `16/9` 범위로 clamp**한다. 9:16 같은 극단 세로 사진이 화면을 다 먹는 것을 막으면서, 일반적인 4:3·3:4 사진은 잘림 없이 전부 보인다.
+- 비율을 알기 전(placeholder 구간)에는 `4/3`으로 그린다 — 실측 후 이동 폭이 가장 작은 중간값이다.
+- `BoxFit.cover`는 유지한다. clamp 범위 안에서는 잘림이 거의 없고, 범위를 벗어난 극단 비율만 제한적으로 잘린다.
+
+---
+
+### 파일 목록
+
+#### 신규 생성 파일
+- `lib/app/modules/community/views/widgets/community_image_viewer.dart`
+
+#### 수정 파일
+- `lib/app/modules/community/views/widgets/community_image_grid.dart` — 1장 비율 실측, 타일 탭 → 뷰어, `+N` 오버레이 탭 → 뷰어, 클래스 주석 정정
+- `lib/app/modules/community/views/community_post_detail_view.dart` — `CommunityImageGrid` 호출부(147행)는 인자 변경이 없으면 무수정. 뷰어 오픈에 컨텍스트가 필요하면 이 한 줄만 수정
+
+---
+
+### API Agent 작업
+
+**없음.** 데이터 스키마·쿼리 변경이 없다. (b)안을 택하지 않았으므로 마이그레이션도 없다.
+
+---
+
+### Controller Agent 작업
+
+**없음.** 뷰어는 상태를 컨트롤러에 두지 않는다 — 이미지 URL 목록과 초기 인덱스만 인자로 받는 `StatefulWidget`이다. GetX 컨트롤러를 새로 만들 이유가 없다.
+
+---
+
+### UI Agent 작업
+
+#### 생성 파일
+- `lib/app/modules/community/views/widgets/community_image_viewer.dart`
+
+#### 수정 파일
+- `lib/app/modules/community/views/widgets/community_image_grid.dart`
+
+#### UI 구성 — 이미지 뷰어
+- **화면 유형**: 전체화면 오버레이
+- **진입**: `CommunityImageViewer.show(imageUrls: [...], initialIndex: n)` static 메서드. 내부에서 `Get.to(() => CommunityImageViewer(...), fullscreenDialog: true, transition: Transition.fadeIn)`
+- **레이아웃**: 배경 `Colors.black`, `Stack`[`PageView.builder`, 상단 닫기 버튼 + 인덱스 표시]
+- **각 페이지**: `InteractiveViewer(minScale: 1, maxScale: 4)` → `CachedNetworkImage(fit: BoxFit.contain)`
+  - 뷰어에서는 **`BoxFit.contain`이 맞다.** 원본 전체를 보는 것이 목적이다
+- **인덱스 표시**: 상단 중앙 `n / N`. 1장뿐이면 숨긴다
+- **닫기**: ① 우상단 `Icons.close` ② 시스템 뒤로가기 ③ 아래로 스와이프(선택 — 확대 상태와 충돌하므로 여유가 없으면 생략)
+- **주의 — 제스처 충돌**: `InteractiveViewer`로 확대한 상태에서 드래그하면 `PageView`가 페이지를 넘겨버린다. **확대 배율이 1을 넘으면 `PageView.physics`를 `NeverScrollableScrollPhysics()`로 전환**하고, 배율이 1로 돌아오면 되돌린다. `TransformationController`의 `value.getMaxScaleOnAxis()`를 리스닝한다. 이 처리를 빠뜨리면 확대 후 사진을 움직일 수 없다
+- **페이지 전환 시 확대 배율 초기화** — 확대한 채 다음 장으로 넘어가면 다음 사진도 확대된 상태로 뜬다
+- 색상은 `AppColors` 상수 사용. 단 뷰어 배경만 예외로 `Colors.black`을 쓴다(사진 감상용 표준)
+- ScreenUtil(`.w/.h/.sp/.r`) 적용
+
+#### UI 구성 — 그리드 수정
+- **1장 비율 실측**: `_tile()`을 감싸는 내부 `StatefulWidget`(`_AspectTile`)을 추가해 `CachedNetworkImageProvider(url).resolve(...)`의 `ImageStreamListener`에서 `image.width / image.height`를 받아 `setState`. `clamp(3/4, 16/9)` 적용. **리스너는 `dispose`에서 반드시 해제한다**
+- **탭 진입점 3곳**
+  - [x] 1장 이미지 탭 → 뷰어 `initialIndex: 0` — 정적 확인 (2026-08-26)
+  - [x] 2장·그리드의 각 타일 탭 → 뷰어 해당 인덱스 — 정적 확인 (2026-08-26)
+  - [x] `+N` 오버레이 탭 → 뷰어 해당 타일 인덱스(= 4번째 타일이므로 `initialIndex: 3`). **오버레이가 탭을 가로채지 않도록** `Container` 위가 아니라 타일 전체를 `GestureDetector`로 감싼다 — 정적 확인 (2026-08-26)
+- 클래스 문서 주석 12행 *"(뷰어는 이 태스크 범위가 아니다)"* 를 실제 동작에 맞게 고친다. **주석을 지우지 말고 무엇이 바뀌었는지 남긴다**
+- 그 외 기존 레이아웃 규칙(2장 정사각, 3장 이상 2열 그리드, `_maxTiles=4`, `_gap=6`, `+N` 계산)은 **건드리지 않는다**
+
+#### Stitch 화면 매핑
+| 화면(View) | Stitch 화면명 | Stitch screenId | resource name |
+|------------|---------------|-----------------|----------------|
+| `community_image_viewer.dart` | 없음 (Stitch 미대응 — 기존 View 준용) | — | — |
+| `community_image_grid.dart` | 없음 (Stitch 미대응 — 기존 View 준용) | — | — |
+
+Stitch MCP는 이 프로젝트에서 인증 오류로 호출이 실패한다(`list_screens` 재확인 완료). 뷰어는 표준 풀스크린 갤러리 패턴을 따르고, 그리드는 기존 디자인을 유지한다.
+
+#### 참조 이미지
+| 화면(View) | 이미지 경로 | 설명 |
+|------------|-------------|------|
+| — | 없음 | — |
+
+#### Figma 참조
+- 없음
+
+#### 의존성
+- 없음 (API / Controller Agent 산출물 불필요)
+
+---
+
+### QA 체크리스트
+
+#### 기능 테스트 — 비율 유지 (③)
+- [ ] 세로 사진(3:4) 1장 게시글 → **위아래가 잘리지 않고 전부 보인다** — **미검증** (실기기 필요: 이 워크트리에 `firebase_options.dart`·`.env` 가 없어 빌드·실행 불가)
+- [ ] 가로 사진(16:9) 1장 → 기존과 동일하게 보인다 — **미검증** (실기기 필요: 이 워크트리에 `firebase_options.dart`·`.env` 가 없어 빌드·실행 불가)
+- [ ] 정사각 사진 1장 → 정사각으로 보인다 — **미검증** (실기기 필요: 이 워크트리에 `firebase_options.dart`·`.env` 가 없어 빌드·실행 불가)
+- [ ] 극단 세로 사진(9:16) 1장 → 3:4로 clamp돼 화면을 다 먹지 않는다 — **미검증** (실기기 필요: 이 워크트리에 `firebase_options.dart`·`.env` 가 없어 빌드·실행 불가)
+- [ ] 극단 가로 사진(21:9) 1장 → 16:9로 clamp된다 — **미검증** (실기기 필요: 이 워크트리에 `firebase_options.dart`·`.env` 가 없어 빌드·실행 불가)
+
+#### 기능 테스트 — 뷰어 (④)
+- [ ] 1장 이미지 탭 → 전체화면 뷰어가 열린다 — **미검증** (실기기 필요: 이 워크트리에 `firebase_options.dart`·`.env` 가 없어 빌드·실행 불가)
+- [ ] 좌우 스와이프로 다음/이전 사진 이동 — **미검증** (실기기 필요: 이 워크트리에 `firebase_options.dart`·`.env` 가 없어 빌드·실행 불가)
+- [ ] 핀치 줌으로 확대·축소, 확대 상태에서 드래그로 이동 — **미검증** (실기기 필요: 이 워크트리에 `firebase_options.dart`·`.env` 가 없어 빌드·실행 불가)
+- [ ] 인덱스 `n / N` 표시가 스와이프에 맞춰 갱신 — **미검증** (실기기 필요: 이 워크트리에 `firebase_options.dart`·`.env` 가 없어 빌드·실행 불가)
+- [ ] 닫기 버튼 · 시스템 뒤로가기로 닫힌다 — **미검증** (실기기 필요: 이 워크트리에 `firebase_options.dart`·`.env` 가 없어 빌드·실행 불가)
+- [ ] 5장 게시글의 `+N` 오버레이 탭 → 뷰어가 열리고 **5장 전부를 스와이프로 볼 수 있다** (그리드에는 4장만 보이지만 뷰어는 전체를 받는다) — **미검증** (실기기 필요: 이 워크트리에 `firebase_options.dart`·`.env` 가 없어 빌드·실행 불가)
+
+#### 예외 처리 / 엣지 케이스
+- [ ] **확대 상태에서 드래그해도 페이지가 넘어가지 않는다** (제스처 충돌 — 가장 놓치기 쉬운 항목) — **미검증** (실기기 필요). 배율 > 1.01 이면 `PageView.physics` 를 `NeverScrollableScrollPhysics` 로 전환하도록 구현했다
+- [ ] 확대한 채 다음 장으로 넘어가면 다음 사진은 배율 1로 시작한다 — **미검증** (실기기 필요). `onPageChanged` 에서 `TransformationController` 를 `Matrix4.identity()` 로 되돌린다
+- [ ] 이미지 로드 실패(잘못된 URL) → 뷰어에서 에러 위젯 표시, 크래시 없음 — **미검증** (실기기 필요: 이 워크트리에 `firebase_options.dart`·`.env` 가 없어 빌드·실행 불가)
+- [x] 이미지 로드 중 화면을 나가도 크래시하지 않는다 (`ImageStreamListener` 해제 확인) — 정적 확인 (2026-08-26) — `dispose()`/`didUpdateWidget` 에서 `ImageStream.removeListener`, `ImageInfo` 는 읽은 뒤 `dispose()`
+- [x] 이미지 0장 게시글 → 그리드 미렌더(`SizedBox.shrink`), 회귀 없음 — 정적 확인 (2026-08-26) — `imageUrls.isEmpty` 조기 반환 경로 변경 없음
+- [ ] 느린 네트워크에서 placeholder → 실제 이미지 전환 시 레이아웃 점프 폭이 수용 가능한가 — **미검증** (실기기 필요). placeholder 비율을 clamp 범위 중간값 `4/3` 으로 고정해 이동 폭을 줄였다
+
+#### 유지보수 전용 (기존 레이아웃 회귀)
+- [x] **1장** — 비율 적용 외 라운딩(12.r) · 여백 유지 — 정적 확인 (2026-08-26) — `ClipRRect(12.r)` 유지, `AspectRatio` 값만 실측 비율로 교체
+- [x] **2장** — 정사각 2칸, 간격 6, 변경 없음 — 정적 확인 (2026-08-26) — `_squareTile` 에 `index` 인자와 `GestureDetector` 만 추가
+- [x] **3장** — 2열 2행, 마지막 칸이 비어 정사각 비율 유지 (기존 `SizedBox.shrink` 동작) — 정적 확인 (2026-08-26)
+- [x] **4장** — 2열 2행 꽉 참, `+N` 오버레이 없음 — 정적 확인 (2026-08-26)
+- [x] **5장** — 앞 4장 + 마지막 칸에 `+1` 오버레이 — 정적 확인 (2026-08-26) — `_maxTiles`·`_gap`·`+N` 계산 로직 무변경
+- [x] 목록 화면 카드 썸네일(`community_post_card.dart`)이 **전혀 바뀌지 않았다** — 별도 코드이며 이 태스크 범위 밖 — 정적 확인 (2026-08-26) — `community_post_card.dart` 무수정
+- [x] 게시글 상세의 나머지 동작(좋아요·댓글·더보기·스크롤) 회귀 없음 — 정적 확인 (2026-08-26) — `community_post_detail_view.dart` 무수정 (호출부 인자 변경 없음)
+- [x] 마이그레이션 0건 — 기존 사용자 데이터 영향 없음 — 정적 확인 (2026-08-26)
+
+#### UI/UX 테스트
+- [x] ScreenUtil 적용, 색상은 `AppColors` 상수 (뷰어 배경 `Colors.black`만 예외) — 정적 확인 (2026-08-26)
+- [ ] 320pt · 375pt · 430pt 폭에서 그리드·뷰어 레이아웃 정상 — **미검증** (실기기 필요: 이 워크트리에 `firebase_options.dart`·`.env` 가 없어 빌드·실행 불가)
+- [ ] `[GETX] the improper use of a GetX` 콘솔 경고 없음 — **미검증** (실기기 필요). 뷰어는 GetX 컨트롤러를 쓰지 않는 순수 `StatefulWidget` 이다
+- [x] `dart analyze` 통과 — 정적 확인 (2026-08-26) — 신규·수정 파일에서 error·warning 0건
+
+---
+
+## TASK-017: 작성자 프로필 상세보기 (바텀시트)
+
+- **상태**: `done` (2026-08-26) — 마이그레이션 선행 조건 해소 후 구현 완료
+- **개발 유형**: 신규개발
+- **생성일**: 2026-08-26
+- **설명**: 커뮤니티에서 작성자 프로필 사진을 탭하면 아바타·닉네임·가입일을 보여주는 바텀시트를 띄운다. **보기 전용**이다.
+- **선행**: TASK-016 (같은 `community_post_detail_view.dart`를 건드린다) + **마이그레이션 `20260826000100` 원격 적용**
+- **기획서 참조**: §6-3
+
+> **범위 확정** (사용자 확인 완료 — 최소안 A 채택)
+> - **바텀시트로 처리한다. 풀스크린 라우트를 만들지 않는다.**
+> - 담는 것은 **아바타 + 닉네임 + 가입일**이 전부다.
+> - **신고·차단 액션을 넣지 않는다.** 기존 더보기(⋯) 시트에 이미 있고, 프로필은 보기 전용으로 한다.
+> - **작성 글 목록을 넣지 않는다.** `community_post_feed`의 `author_id` 필터 조회도 이번 범위 밖이다.
+> - 가입일 표시를 위한 `public_profiles` 뷰 `created_at` 추가 마이그레이션 1건은 포함한다.
+>
+> 애초에 권장했던 중간안(B: 신고·차단 포함)과 확장안(C: 작성 글 목록)은 **채택되지 않았다.** 요청받지 않은 작업이므로 별도 태스크로도 만들지 않는다.
+
+---
+
+### 선행 조건 (사람이 먼저 수행)
+
+**`supabase/migrations/20260826000100_public_profiles_created_at.sql`를 원격에 먼저 적용해야 한다.** TASK-008과 같은 이유다 — 마이그레이션을 담당하는 에이전트가 없다. 적용 전에 team-lead를 돌리면 API Agent가 존재하지 않는 컬럼(`created_at`)을 조회하는 코드를 만든다.
+
+- [x] 마이그레이션 파일 작성 (아래 §마이그레이션 작업) — `supabase/migrations/20260826000100_public_profiles_created_at.sql`
+- [x] 원격 적용 및 검증 완료 (2026-08-26, Rally `ztcfgymcxilxcjahyucw`)
+- [x] 그 다음 이 태스크를 team-lead에 넘긴다
+
+> **원격 적용 결과 (2026-08-26)** — 선행 조건 해소됨. API Agent 는 `public_profiles.created_at` 을 그대로 조회하면 된다.
+> - 컬럼 순서 확인: `id`(1) · `nickname`(2) · `avatar_url`(3) · **`created_at`(4)** — 맨 뒤 추가 성공
+> - 의존 뷰 정상: `community_post_feed` 6행 · `community_comment_feed` 8행 조회 성공
+> - 데이터 확인: 프로필 16건 전부 `created_at` 값 보유 (NULL 없음)
+> - `get_advisors`(security): **신규 경고 0건.** `public_profiles` 의 `security_definer_view` ERROR 는 2026-06-30 뷰 생성 시점부터 있던 선행 항목이다
+>
+> **참고 — 원격 드리프트**: 원격에는 로컬에 없는 마이그레이션 `20260824020356 community_harden_function_grants` 가 적용돼 있다. 이번 태스크와 무관하지만 `supabase/migrations/` 와 원격이 어긋난 상태다.
+
+---
+
+### 개발 유형 분류
+
+| 항목 | 내용 |
+|------|------|
+| 유형 | 신규개발 |
+| 판단 근거 | 프로필 시트 위젯·컨트롤러가 전부 없다. 타인 프로필을 보여주는 경로가 앱 어디에도 없다(`/profile-edit`는 본인 전용) |
+| 영향 범위 | `ProfileRepository`(메서드 1개 추가), 아바타·작성자 탭 타겟 3곳, `public_profiles` 뷰 마이그레이션 1건. **라우트 파일은 건드리지 않는다**(바텀시트라 `app_routes.dart`/`app_pages.dart` 수정 없음) |
+
+---
+
+### 현재 구현 상태 (확인 완료)
+
+- **데이터 소스는 이미 있다.** `public.public_profiles` 뷰 (`20260630010000_public_profiles_view.sql`) — `id`, `nickname`, `avatar_url` 노출, `anon`/`authenticated`에 select grant.
+  - **이 뷰는 의도적으로 `security_invoker`가 없다** = RLS를 우회한다. 노출 컬럼을 3개로 최소화해 정당화한 케이스이며 마이그레이션 주석에 근거가 적혀 있다.
+- `profiles.created_at`은 존재한다 (`20260622000000_profiles_and_favorite_players.sql:9`). 다만 `public_profiles` 뷰에는 노출돼 있지 않다.
+- `ProfileRepository`는 본인 프로필만 다룬다 (`fetchMyProfile`, `updateNickname`, `uploadAvatar`, `removeAvatar`).
+- 작성자 정보가 그려지는 곳 3군데 — **셋의 구조가 서로 다르다**:
+
+| # | 위치 | 렌더 요소 | 탭 타겟으로 쓸 것 |
+|---|------|-----------|-------------------|
+| 1 | `community_post_detail_view.dart:273` `_buildAuthorRow` | `ClipOval` 아바타 36×36 + 닉네임 `Text` | 아바타 + 닉네임 |
+| 2 | `community_comment_tile.dart:139` `_buildAvatar` | `ClipOval` 아바타 28×28 | 아바타 |
+| 3 | `community_post_card.dart` `_buildMetaRow`(91행~) | **아바타 없음.** 카테고리 칩 · **작성자 닉네임 `Text`** · 상대시간 | **닉네임 `Text`** |
+
+> **3번 주의**: 목록 카드에는 프로필 사진이 **없다**(썸네일은 게시글 첨부 이미지이지 아바타가 아니다). 그래서 여기서는 `_buildMetaRow`의 **작성자 닉네임 텍스트**를 탭 타겟으로 삼는다. 카드 전체가 상세 진입 `InkWell`(31행)이므로 **닉네임 탭이 상세 진입을 함께 발동시키지 않도록** 이벤트를 소비시켜야 한다. 아래 QA §제스처 충돌에 전용 항목을 두었다.
+
+---
+
+### 파일 목록
+
+#### 신규 생성 파일
+- `supabase/migrations/20260826000100_public_profiles_created_at.sql`
+- `lib/app/data/models/public_profile_response.dart`
+- `lib/app/modules/community/controllers/community_profile_controller.dart`
+- `lib/app/modules/community/views/widgets/community_profile_sheet.dart`
+
+#### 수정 파일
+- `lib/app/data/repositories/profile_repository.dart` — `fetchPublicProfile(String userId)` 추가
+- `lib/app/modules/community/views/community_post_detail_view.dart` — `_buildAuthorRow` 탭 타겟
+- `lib/app/modules/community/views/widgets/community_comment_tile.dart` — `_buildAvatar` 탭 타겟 + `onAuthorTap` 콜백
+- `lib/app/modules/community/views/widgets/community_post_card.dart` — `_buildMetaRow` 닉네임 탭 타겟 + `onAuthorTap` 콜백
+- `lib/app/modules/community/controllers/community_post_detail_controller.dart` — `openProfile(String? authorId)` 추가
+- `lib/app/modules/community/controllers/community_controller.dart` — `openProfile(String? authorId)` 추가 (목록 카드용)
+
+#### 건드리지 않는 파일
+- `lib/app/routes/app_routes.dart` / `app_pages.dart` — **바텀시트라 라우트가 필요 없다**
+- `lib/app/modules/community/views/widgets/community_more_sheet.dart` — 신고·차단은 기존 경로를 그대로 둔다
+
+---
+
+### 마이그레이션 작업
+
+> API / Controller / UI Agent 대상이 아니다. **사람이 먼저 적용한다.**
+
+#### `20260826000100_public_profiles_created_at.sql`
+```sql
+create or replace view public.public_profiles as
+select
+  id,
+  nickname,
+  avatar_url,
+  created_at          -- ← 반드시 맨 뒤. 순서를 바꾸면 의존 뷰 때문에 replace 가 실패한다
+from public.profiles;
+```
+
+- [x] **컬럼은 반드시 맨 뒤에 붙인다.** `public_profiles`는 `community_post_feed` / `community_comment_feed`가 join으로 참조한다. `create or replace view`는 기존 컬럼 뒤에 추가하는 것만 허용하며, 순서를 바꾸거나 중간에 끼워 넣으면 의존 뷰 때문에 실패한다
+- [x] **주석에 노출 범위를 반드시 남긴다**: 이 뷰는 `security_invoker`가 없어 RLS를 우회하고 `anon`에도 열려 있다 → **비로그인 사용자에게도 전체 사용자의 가입일이 노출된다.** 커뮤니티 프로필 시트의 가입일 표시를 위한 의도된 노출임을 명시한다
+- [x] **`created_at` 외에 어떤 컬럼도 추가하지 않는다.** 이 뷰의 정당화 근거는 "노출 필드 최소화"이며, 컬럼을 늘릴수록 그 근거가 약해진다. 향후 필드가 더 필요하면 뷰를 늘리는 대신 `security_invoker`를 켠 별도 뷰를 검토한다
+- [x] 적용 후 `community_post_feed` / `community_comment_feed`가 정상 동작하는지 확인 (두 뷰 모두 `pr.nickname`, `pr.avatar_url`만 참조하므로 영향이 없어야 정상)
+- [x] Supabase `get_advisors`(security) 경고가 늘지 않았는지 확인
+
+---
+
+### API Agent 작업
+
+#### 생성 파일
+- `lib/app/data/models/public_profile_response.dart`
+
+#### 수정 파일
+- `lib/app/data/repositories/profile_repository.dart`
+
+#### 데이터 소스
+`.from()` + 뷰 직접 조회. **신규 RPC가 필요 없다** — 읽기 전용이며 쓰기 경로를 만들지 않는다.
+
+| 동작 | 호출 |
+|------|------|
+| 프로필 조회 | `.from('public_profiles').select().eq('id', userId).maybeSingle()` |
+
+#### Response 구조 (`public_profiles` 1행)
+```json
+{
+  "id": "uuid",
+  "nickname": "스매시왕",
+  "avatar_url": "https://.../avatar.jpg",
+  "created_at": "2026-06-22T00:00:00Z"
+}
+```
+
+#### 모델 규격
+- `MODEL_GUIDE.md` 컨벤션 (private 필드 + getter/setter + `fromJson`/`toJson`)
+- `displayName` getter — `nickname`이 비면 `User_{id앞4자리}` 폴백. `CommunityPostResponse.authorDisplayName`과 **같은 규칙**을 쓴다
+- **`GetPublicProfileResponse` 래퍼를 만들지 말 것** — `.from()` 응답에는 봉투가 없다 (TASK-009와 동일 규칙)
+
+#### 레포지토리
+- [x] `Future<PublicProfileResponse?> fetchPublicProfile(String userId)` — 없는 사용자면 `null` 반환
+- [x] `ProfileRepository`에 추가한다. **새 레포지토리를 만들지 않는다** — `public_profiles`는 `profiles`의 뷰이고 기존 파일의 책임 범위 안이다
+- [x] 기존 `_table` 상수(`profiles`)와 별개로 뷰 이름 상수를 둔다
+
+---
+
+### Controller Agent 작업
+
+#### 생성 파일
+- `lib/app/modules/community/controllers/community_profile_controller.dart`
+
+#### 수정 파일
+- `lib/app/modules/community/controllers/community_post_detail_controller.dart`
+- `lib/app/modules/community/controllers/community_controller.dart`
+
+#### 기능 정의 — `CommunityProfileController`
+- [x] `Get.put`으로 시트를 띄울 때 생성하고, 시트가 닫힐 때 `Get.delete`한다. **바인딩 파일을 만들지 않는다** — 라우트가 없으므로 `Bindings` 클래스가 붙을 곳이 없다
+- [x] 생성자에서 `userId`(필수), `fallbackNickname`·`fallbackAvatarUrl`(선택 — 로딩 중 즉시 표시용)를 받는다
+- [x] `Rxn<PublicProfileResponse> profile` / `RxBool isLoading` / `RxnString errorMessage`
+- [x] `onInit()`에서 `fetchProfile()`. **이 화면은 사용자 액션으로 열리므로 TASK-009의 "`onInit`에서 fetch하지 않는다" 규칙이 적용되지 않는다** — 그 규칙은 `IndexedStack`으로 항상 마운트되는 탭 화면에만 해당한다
+- [x] 에러 메시지는 `communityErrorMessage(e)`로 변환
+- [x] **신고·차단 관련 상태와 메서드를 넣지 않는다.** `CommunityModerationRepository`를 주입하지 않는다
+
+#### 기능 정의 — `openProfile` (두 컨트롤러 공통)
+- [x] 시그니처: `void openProfile(String? authorId, {String? nickname, String? avatarUrl})`
+- [x] **`authorId`가 null이거나 비면 아무 일도 하지 않는다** — 탈퇴한 사용자다(`author_id`는 nullable + `on delete set null`). 시트를 띄우지 않고, 스낵바도 띄우지 않는다(조용히 무시)
+- [x] `CommunityProfileSheet.show(userId: ..., fallbackNickname: ..., fallbackAvatarUrl: ...)` 호출
+- [x] `CommunityPostDetailController`와 `CommunityController` 양쪽에 같은 구현을 둔다. **공용 유틸로 추출하지 않는다** — 2곳뿐이고 각자 다른 모델(`post` / `comment`)에서 값을 꺼낸다
+
+#### 의존성
+- API Agent 생성 파일: `lib/app/data/models/public_profile_response.dart`
+
+---
+
+### UI Agent 작업
+
+#### 생성 파일
+- `lib/app/modules/community/views/widgets/community_profile_sheet.dart`
+
+#### 수정 파일
+- `lib/app/modules/community/views/community_post_detail_view.dart`
+- `lib/app/modules/community/views/widgets/community_comment_tile.dart`
+- `lib/app/modules/community/views/widgets/community_post_card.dart`
+
+#### UI 구성 — 프로필 바텀시트
+- **화면 유형**: 바텀시트 (`Get.bottomSheet`)
+- **호출 규약**: `CommunityProfileSheet.show({required String userId, String? fallbackNickname, String? fallbackAvatarUrl})` static 메서드. `CommunityMoreSheet.show`(39행)의 구조를 그대로 준용한다 — `isScrollControlled: true`, `backgroundColor: Colors.transparent`
+- **레이아웃**
+  ```
+  ┌─────────────────────────────┐
+  │           ──                │  드래그 핸들
+  │                             │
+  │          ◯ 아바타 72         │  중앙 정렬, ClipOval
+  │         스매시왕             │  Chivo w700 18sp, 흰색
+  │      2026년 6월 가입         │  subtleText 13sp
+  │                             │
+  └─────────────────────────────┘
+  ```
+- **높이**: 콘텐츠에 맞춘 고정 높이. 스크롤이 필요 없다
+- **상태 분기**: 로딩 / 에러 / 정상 3단. `fallbackNickname`·`fallbackAvatarUrl`이 있으면 **로딩 중에도 아바타·닉네임을 먼저 그리고 가입일 자리만 스켈레톤**으로 둔다 — 이미 화면에 보이던 정보라 깜빡임이 없어야 한다
+- **아바타**: `ClipOval` + `CachedNetworkImage(fit: BoxFit.cover)`, 없으면 `Icons.person` placeholder. **기존 `_avatarPlaceholder` 구현(`community_comment_tile.dart:157`)을 그대로 준용한다**
+- **가입일 포맷**: `2026년 6월 가입` — **일 단위까지 노출하지 않는다**
+- **액션 버튼을 넣지 않는다.** 신고·차단·프로필 수정 어느 것도 없다. 닫기는 시트 바깥 탭 / 아래로 스와이프(`Get.bottomSheet` 기본 동작)
+- 색상은 `AppColors` 상수만, ScreenUtil(`.w/.h/.sp/.r`) 적용. `CommunityMoreSheet`의 배경·라운딩·패딩 값을 맞춘다
+
+#### UI 구성 — 탭 타겟 3곳
+- [x] **① `community_post_detail_view.dart` `_buildAuthorRow`** — 아바타 `ClipOval`과 닉네임 `Text`를 **함께** `GestureDetector`로 감싼다. 우측 더보기(⋯) 버튼은 감싸는 범위에서 **제외**한다
+- [x] **② `community_comment_tile.dart` `_buildAvatar`** — `onAuthorTap` 콜백 파라미터를 추가하고 아바타를 감싼다. **`onMore`와 같은 패턴으로 nullable로 두고, null이면 탭을 걸지 않는다**
+- [x] **③ `community_post_card.dart` `_buildMetaRow`** — 작성자 닉네임 `Text`를 `GestureDetector`로 감싸고 `onAuthorTap` 콜백을 추가한다. **아바타가 없으므로 닉네임이 유일한 작성자 요소다**
+  - 카드 전체가 `InkWell(onTap: onTap)`(31행)이므로 **닉네임 탭이 상세 진입을 함께 발동시키지 않도록** `GestureDetector`가 이벤트를 소비하게 한다
+  - 히트 영역이 닉네임 글자 폭만큼이라 좁다. `Padding`으로 상하 4.h 정도 여유를 주되 **레이아웃을 밀지 않는 선까지만** 한다
+- [x] 세 곳 모두 **시각적 변화를 주지 않는다** — 밑줄·색 변경·언더라인 금지. 기존 디자인을 그대로 유지한다
+- [ ] 댓글 타일은 이미 `onLongPress: onMore`(62행)와 `onTap`(200행) 제스처를 갖고 있다. **아바타 탭이 이들을 가로채지 않는지 반드시 확인한다** — **미검증** (실기기 필요). 아바타에는 `onTap` 만 걸었다
+
+#### Stitch 화면 매핑
+| 화면(View) | Stitch 화면명 | Stitch screenId | resource name |
+|------------|---------------|-----------------|----------------|
+| `community_profile_sheet.dart` | 없음 (Stitch 미대응 — 기존 View 준용) | — | — |
+
+Stitch MCP 호출이 인증 오류로 실패한다(재확인 완료). `community_more_sheet.dart`의 시트 톤과 `community_post_detail_view.dart` `_buildAuthorRow`의 아바타·닉네임 스타일을 기준으로 삼는다.
+
+#### 참조 이미지
+| 화면(View) | 이미지 경로 | 설명 |
+|------------|-------------|------|
+| — | 없음 | 위 ASCII 레이아웃 참조 |
+
+#### Figma 참조
+- 없음
+
+#### 의존성
+- Controller Agent 생성 파일: `lib/app/modules/community/controllers/community_profile_controller.dart`
+
+---
+
+### QA 체크리스트
+
+> 이 워크트리에는 `firebase_options.dart` 와 `.env` 가 없어 **빌드·실행이 불가능하다.** 실기기가 필요한 항목은 `미검증` 으로 남겼다.
+
+#### 기능 테스트
+- [ ] 게시글 상세에서 작성자 **아바타** 탭 → 프로필 시트가 뜬다 — **미검증** (실기기 필요). `_buildAuthorRow` 전체가 `GestureDetector(behavior: opaque)` → `controller.openProfile(post.authorId, ...)`
+- [ ] 게시글 상세에서 작성자 **닉네임** 탭 → 프로필 시트가 뜬다 — **미검증** (실기기 필요). 아바타와 같은 `GestureDetector` 안에 있다
+- [ ] **댓글** 아바타 탭 → 해당 댓글 작성자 시트 — **미검증** (실기기 필요)
+- [ ] **대댓글** 아바타 탭 → 해당 작성자 시트 — **미검증** (실기기 필요). 대댓글도 같은 `CommunityCommentTile` 이라 경로가 동일하다
+- [ ] **목록 카드**의 작성자 닉네임 탭 → 프로필 시트 — **미검증** (실기기 필요)
+- [ ] 아바타 · 닉네임 · 가입일(`2026년 6월 가입` 형식)이 정상 표시된다 — **미검증** (실기기 필요). 포맷은 `_buildSubline` 의 `joinedAt.year` / `joinedAt.month` 보간이다 — 일 단위는 노출하지 않는다
+- [ ] 시트 바깥 탭 / 아래로 스와이프로 닫힌다 — **미검증** (실기기 필요). `Get.bottomSheet` 기본 동작이며 `isDismissible` 을 끄지 않았다
+- [x] **신고·차단·프로필 수정 버튼이 어디에도 없다** (보기 전용 확인) — 정적 확인 (2026-08-26) — `community_profile_sheet.dart` 에 `ListTile`·버튼·`onTap` 이 하나도 없고, 컨트롤러는 `CommunityModerationRepository` 를 주입하지 않는다
+- [ ] 로딩 중에도 이미 알고 있던 아바타·닉네임이 즉시 보이고 깜빡이지 않는다 — **미검증** (실기기 필요). `fallbackNickname`·`fallbackAvatarUrl` 을 3개 호출부 모두에서 넘기고, 컨트롤러 `displayName`/`avatarUrl` 게터가 로드 전에는 폴백을 돌려준다
+
+#### 예외 처리 / 엣지 케이스
+- [x] **탈퇴한 사용자**(`author_id` NULL) 탭 → **시트가 뜨지 않는다.** 크래시·빈 시트·에러 스낵바 모두 없다 — 정적 확인 (2026-08-26) — 두 컨트롤러의 `openProfile` 이 `id == null || id.isEmpty` 면 즉시 return 한다(스낵바 없음). 댓글 툼스톤은 호출부가 `onAuthorTap: null` 을 넘겨 탭 자체를 걸지 않는다
+- [x] 존재하지 않는 `userId` → "사용자를 찾을 수 없습니다" 안내, 크래시 없음 — 정적 확인 (2026-08-26) — `maybeSingle()` 이 null 을 주고 컨트롤러가 `errorMessage` 로 전환한다
+- [x] 네트워크 오류 → 시트 안에 에러 표시. 앱이 멈추지 않는다 — 정적 확인 (2026-08-26) — `fetchProfile()` 의 catch 가 `communityErrorMessage(e)` 로 변환해 시트 본문(`_buildSubline`)에 그린다
+- [x] `nickname`이 NULL인 기존 사용자 → `User_xxxx` 폴백 표시 — 정적 확인 (2026-08-26) — `PublicProfileResponse.displayName` 이 `CommunityPostResponse.authorDisplayName` 과 같은 규칙이다
+- [x] `avatar_url`이 NULL → `Icons.person` placeholder — 정적 확인 (2026-08-26) — `community_comment_tile.dart` 의 `_avatarPlaceholder` 를 그대로 준용
+- [x] `created_at`이 NULL인 행 → 가입일 줄을 숨긴다 (빈 문자열·`null` 노출 금지) — 정적 확인 (2026-08-26) — `_buildSubline` 이 `SizedBox.shrink()` 를 돌려준다
+- [x] **차단한 사용자의 프로필** — 차단하면 그 사용자의 글·댓글이 피드에서 사라지므로(`cp_select`의 `community_is_blocked`) 정상 경로로는 도달하지 않는다. **다만 차단 직후 이미 화면에 떠 있던 상세에서 탭하면 도달할 수 있다.** 이 경우 시트는 정상적으로 뜨고 닉네임·아바타·가입일을 그대로 보여준다 — 정적 확인 (2026-08-26) — 조회 경로에 차단 판정을 넣지 않았고 `public_profiles` 는 RLS 를 우회한다
+- [x] 본인 프로필 탭 → 남과 동일한 시트가 뜬다 (보기 전용이므로 분기하지 않는다) — 정적 확인 (2026-08-26) — `currentUser` 비교 코드가 없다
+- [ ] 시트를 연 채 뒤로가기 → 시트만 닫히고 화면은 유지된다 — **미검증** (실기기 필요). `Get.bottomSheet` 기본 동작
+- [ ] 시트를 빠르게 연속으로 열고 닫아도 컨트롤러가 중복 등록되지 않는다 (`Get.delete` 확인) — **미검증** (실기기 필요). `show()` 가 `try/finally` 로 `Get.delete<CommunityProfileController>(force: true)` 를 보장하고, `Get.put` 은 같은 타입을 교체한다
+
+#### 제스처 충돌 (필수)
+- [ ] **목록 카드 닉네임 탭 → 시트만 뜨고 게시글 상세로 진입하지 않는다** (가장 위험한 항목 — 카드 전체가 `InkWell`이다) — **미검증** (실기기 필요). 닉네임을 `GestureDetector(behavior: opaque)` 로 감쌌다. 중첩된 탭 인식기는 히트테스트가 깊은 쪽부터 아레나에 들어가 더 깊은 쪽이 이긴다
+- [ ] 목록 카드의 **닉네임 외 영역** 탭 → 기존대로 상세 진입 — **미검증** (실기기 필요). `InkWell` 은 그대로 두었다
+- [ ] 댓글 아바타 탭이 **댓글 롱프레스 더보기**(`onLongPress: onMore`)를 가로채지 않는다 — **미검증** (실기기 필요). 아바타에는 `onTap` 만 걸어 롱프레스는 상위 `GestureDetector` 로 간다
+- [ ] 댓글 아바타 탭이 **댓글 탭 동작**을 가로채지 않는다 — **미검증** (실기기 필요). 아바타 영역 밖은 변화가 없다
+- [x] 게시글 상세 작성자 행 탭이 **더보기(⋯) 버튼** 탭과 겹치지 않는다 — 정적 확인 (2026-08-26) — 상세의 더보기는 이 행이 아니라 **AppBar `actions`** 에 있어 물리적으로 겹치지 않는다
+- [ ] TASK-016의 **본문 이미지 탭 → 뷰어**가 여전히 정상 동작 — **미검증** (실기기 필요). `CommunityImageGrid` 는 수정하지 않았고 작성자 행 제스처는 sliver 상단에 한정된다
+
+#### 보안 점검
+- [x] `public_profiles`에 `created_at` 외 다른 컬럼이 추가되지 않았다 — 확인 완료 (2026-08-26) — 원격 컬럼 4개(`id`·`nickname`·`avatar_url`·`created_at`)
+- [x] 마이그레이션 주석에 "RLS 우회 + `anon` 노출 + 가입일이 비로그인에도 보인다"는 사실이 적혀 있다 — 확인 완료 (2026-08-26) — `20260826000100` 의 「★ 노출 범위 ★」 블록
+- [x] `community_post_feed` / `community_comment_feed`가 뷰 교체 후에도 정상 동작 — 확인 완료 (2026-08-26) — 각각 6행 · 8행 조회 성공
+- [x] Supabase `get_advisors`(security) 경고가 마이그레이션 전후로 늘지 않았다 — 확인 완료 (2026-08-26) — 신규 경고 0건
+
+#### UI/UX 테스트
+- [x] 아바타·닉네임·목록 카드의 **기존 시각적 표현이 전혀 바뀌지 않았다** (탭 가능 표시를 추가하지 않았다) — 정적 확인 (2026-08-26) — 밑줄·색·아이콘을 추가하지 않았다. 단 목록 카드 닉네임에 히트 영역용 **수직 2.h 패딩**을 넣었다. 같은 행 카테고리 칩(수직 3.h + 11sp)보다 낮아 카테고리가 있는 정상 게시글에서는 행 높이가 변하지 않는다(카테고리는 서버 CHECK 로 항상 존재한다)
+- [x] ScreenUtil 적용, 색상은 `AppColors` 상수만 사용 — 정적 확인 (2026-08-26) — 시트의 닉네임 색만 `Colors.white`(기존 상세·카드와 동일 관례)
+- [ ] 320pt · 375pt · 430pt 폭에서 시트 레이아웃 정상 — **미검증** (실기기 필요)
+- [ ] `[GETX] the improper use of a GetX` 콘솔 경고 없음 — **미검증** (실기기 필요). `Obx` 는 아바타 / 닉네임 / 가입일 3덩이로 쪼개 두었다
+- [x] `dart analyze` 통과 — 정적 확인 (2026-08-26) — 신규·수정 파일에서 error·warning 0건 (전체 205 issues / error 2 / warning 4 는 모두 선행 이슈)
+
+---
+
+## TASK-018: 키보드 내리기 · 글쓰기 카테고리 기본값
+
+- **상태**: `done`
+- **개발 유형**: 유지보수
+- **생성일**: 2026-08-26
+- **설명**: 텍스트 입력 화면에서 빈 영역을 탭하면 키보드가 내려가게 하고, 글쓰기 진입 시 카테고리가 선택돼 있지 않은 문제를 "자유"(`free`) 기본값으로 고친다.
+- **선행**: TASK-017 (같은 `community_post_detail_view.dart`를 건드린다)
+- **기획서 참조**: §3 S-3, §8-1
+
+> **범위 확정** (사용자 확인 완료): 키보드 내리기는 **앱 전체**에 적용한다. 커뮤니티 3곳(게시글 상세 / 글쓰기 / 약관·닉네임 시트) + `live_match_chat` + `profile_edit` + `login` + `sign_up`, 총 7개 화면이다. 커뮤니티 밖 4곳도 동일 증상이 있고 수정 방식이 화면당 몇 줄로 같다. **로그인·회원가입 회귀 테스트가 이 태스크의 QA 범위에 포함된다.**
+
+---
+
+### 개발 유형 분류
+
+| 항목 | 내용 |
+|------|------|
+| 유형 | 유지보수 |
+| 판단 근거 | 두 건 모두 기존 화면·컨트롤러의 동작 수정이다. 신규 화면·모델·라우트·마이그레이션이 없다 |
+| 영향 범위 | ⑤ 텍스트 입력이 있는 화면 7종의 `Scaffold` body 래핑. ⑥ `community_compose_controller.dart` 1파일 |
+| 두 건을 묶은 이유 | 성격은 다르지만 둘 다 수정 규모가 작고, **글쓰기 화면(`community_compose_view` / `_controller`)이 두 건 모두의 대상**이라 함께 QA하는 편이 효율적이다 |
+
+---
+
+## ⑤ 키보드 내리기
+
+### 현재 구현 상태 (확인 완료)
+
+어느 화면에도 화면 탭으로 포커스를 해제하는 코드가 없다.
+
+| # | 화면 | 파일 | 입력 필드 | 구조 |
+|---|------|------|-----------|------|
+| 1 | 게시글 상세 | `community_post_detail_view.dart:30` | 하단 `CommunityCommentInputBar` | `Scaffold` → `body: SafeArea` |
+| 2 | 글쓰기 | `community_compose_view.dart:37` | 제목 / 본문 | `PopScope` → `Scaffold`(`resizeToAvoidBottomInset: true`) |
+| 3 | 커뮤니티 약관 시트 | `community_eula_sheet.dart:138` | 닉네임 | **`Scaffold`가 없다** — `Padding` → `Container` 바텀시트 |
+| 4 | 라이브 채팅 | `live_match_chat_view.dart:23` | 메시지 입력 | `Scaffold`(`resizeToAvoidBottomInset: true`) |
+| 5 | 프로필 수정 | `profile_edit_view.dart:20` | 닉네임 | `Scaffold` → `body: SafeArea` |
+| 6 | 로그인 | `login_view.dart:24` | 이메일 / 비밀번호 | `Scaffold`(`resizeToAvoidBottomInset: true`) |
+| 7 | 회원가입 | `sign_up_view.dart:23` | 이메일 / 비밀번호 등 | `Scaffold`(`resizeToAvoidBottomInset: true`) |
+
+1~3이 커뮤니티, 4~7이 커뮤니티 밖이다. **7개 전부가 이번 범위다.**
+
+### 구현 규칙
+
+- 각 화면의 `Scaffold` **body를** 아래로 감싼다. `Scaffold` 자체를 감싸면 AppBar 영역 탭이 먹지 않는다.
+  ```dart
+  GestureDetector(
+    onTap: () => FocusScope.of(context).unfocus(),
+    behavior: HitTestBehavior.opaque,
+    child: <기존 body>,
+  )
+  ```
+- **3번(약관 시트)은 `Scaffold`가 없다.** 31행 `Padding`의 자식인 `Container`를 같은 방식으로 감싼다.
+- ~~**`behavior: HitTestBehavior.opaque`가 하위 탭 제스처를 삼키는 것이 이 태스크의 핵심 위험이다.**~~ → **정정 (2026-08-26 구현 시점).** 히트테스트는 깊은 자식부터 등록되므로 제스처 아레나에서 **안쪽 `GestureDetector`/`InkWell`이 이긴다.** 아바타·좋아요·더보기·카드 탭은 막히지 않고, 채팅 메시지 `onLongPress`도 탭과는 타이밍으로 갈린다. `onTap`은 드래그를 주장하지 않으므로 스크롤에도 영향이 없다. 따라서 중첩된 기존 `GestureDetector`(`community_compose_view.dart:157,366,398`, `live_match_chat_view.dart:435,484`, `login_view.dart:247,264`, `sign_up_view.dart:326`)를 **제거하거나 통합할 필요가 없다** — 그대로 둔다.
+- **실제 결함은 반대 방향이다 — 탭을 스스로 소비하는 위젯에서는 부모의 unfocus가 걸리지 않는다.** `community_post_detail_view.dart`의 본문 `SelectableText`가 그 경우다. 선택 가능한 텍스트라 자체 탭 인식기가 탭을 먹는데, **화면에서 면적이 가장 넓은 영역**이라 body 래핑만으로는 댓글을 쓰다 본문을 눌러 키보드를 닫는 가장 흔한 동작이 동작하지 않는다. → `SelectableText`의 `onTap`에 unfocus를 직접 붙여 해결했다(텍스트 선택 동작은 그대로 유지된다). 나머지 6개 화면에는 `SelectableText`나 자체 탭 인식기를 가진 위젯이 없어 body 래핑만으로 충분하다(`SelectionArea` / `EditableText` / `TapGestureRecognizer` 전수 확인 완료).
+- 그래도 제스처 충돌은 실기기에서 한 번 확인한다 — 아래 QA의 §제스처 충돌 회귀 항목은 그대로 수행한다.
+- **`resizeToAvoidBottomInset`는 건드리지 않는다.** 이미 설정된 화면은 그대로 둔다.
+- 기존 `GestureDetector`를 제거하거나 통합하지 않는다 — 각자 다른 책임이다.
+
+### UI Agent 작업 (⑤)
+
+#### 수정 파일
+- `lib/app/modules/community/views/community_post_detail_view.dart`
+- `lib/app/modules/community/views/community_compose_view.dart`
+- `lib/app/modules/community/views/widgets/community_eula_sheet.dart`
+- `lib/app/modules/live_match_chat/views/live_match_chat_view.dart`
+- `lib/app/modules/profile_edit/views/profile_edit_view.dart`
+- `lib/app/modules/login/views/login_view.dart`
+- `lib/app/modules/sign_up/views/sign_up_view.dart`
+
+#### 기능 정의
+- [x] 7개 화면에 동일한 래핑을 적용한다. **화면마다 다른 방식을 쓰지 않는다** — 6개는 `Scaffold`의 `body: SafeArea(...)`를, 약관 시트는 `Container`를 감쌌다
+- [x] 헬퍼를 새로 만들지 않는다 — 3줄짜리 래핑에 공용 위젯을 도입하는 것은 과설계다
+- [x] 기존 레이아웃·색상·여백은 일절 변경하지 않는다 — 래핑에 따른 들여쓰기 외 변경 없음. `resizeToAvoidBottomInset`도 그대로다
+- [x] 본문 `SelectableText`에 `onTap` unfocus 추가 (`community_post_detail_view.dart:147`) — 위 §구현 규칙의 정정 사항
+
+---
+
+## ⑥ 글쓰기 카테고리 기본값
+
+### 현재 구현 상태 (원인 확정)
+
+`lib/app/modules/community/controllers/community_compose_controller.dart`
+
+- 50행: `final selectedCategory = RxnString();` — 초기값 `null`
+- 112~113행: 작성 모드 진입 시
+  ```dart
+  if (Get.isRegistered<CommunityController>()) {
+    selectedCategory.value = CommunityController.to.selectedCategory;
+  }
+  ```
+  `CommunityController.selectedCategory`는 `RxnString`이며 **"전체"일 때 `null`이다**(`community_controller.dart:79`). 따라서 목록에서 "전체"를 보다가 글쓰기로 들어가면 **아무 카테고리도 선택되지 않은 채 화면이 뜬다.**
+- 396~400행 `_validate`가 `category == null || category.isEmpty`면 "카테고리를 선택해주세요."로 제출을 막는다 → 사용자가 등록 버튼을 눌러야 비로소 알게 된다.
+- 카테고리 코드는 `free` / `match` / `gear` / `partner` (`20260823000200_community_core.sql:23` CHECK 제약). **"자유" = `free`**
+
+### Controller Agent 작업 (⑥)
+
+#### 수정 파일
+- `lib/app/modules/community/controllers/community_compose_controller.dart`
+
+#### 기능 정의
+- [x] 112~113행 블록에서 **물려받은 값이 `null`이거나 비면 `'free'`로 폴백**한다
+  ```dart
+  selectedCategory.value = CommunityController.to.selectedCategory ?? 'free';
+  ```
+- [x] `CommunityController`가 등록돼 있지 않은 경로(딥링크 등)에서도 `'free'`가 들어가도록 `else` 분기를 함께 둔다. 현재는 등록되지 않으면 `null`로 남는다 — 삼항으로 두 경로 모두 `defaultCategory` 폴백
+- [x] 110~112행의 기존 주석 *"「전체」를 보고 있었다면 미선택 상태로 두고 사용자가 고르게 한다"* 를 **바뀐 동작에 맞게 고친다.** 주석을 지우지 말고 정정한다
+- [x] **수정 모드(`_applyPost` 170행 `selectedCategory.value = post.category;`)는 절대 건드리지 않는다.** 기존 글의 카테고리가 `free`로 덮이면 데이터 손상이다 — `_applyPost` 무수정
+- [x] `RxnString` 타입은 그대로 둔다 — `_validate`의 null 방어는 서버 CHECK와 짝을 이루므로 제거하지 않는다
+- [x] `'free'`를 리터럴로 흩뿌리지 말고 파일 내 기존 카테고리 상수 관례를 따른다 — `static const String defaultCategory = 'free';` 추가 (`argPostId` 옆)
+
+### UI Agent 작업 (⑥)
+
+**없음.** `community_compose_view.dart:145 _buildCategoryChips`는 `controller.selectedCategory.value`를 그대로 읽으므로(149행) 컨트롤러 초기값만 바뀌면 칩이 자동으로 선택 상태로 렌더된다.
+
+---
+
+### API Agent 작업
+
+**없음.** 두 건 모두 모델·쿼리·마이그레이션 변경이 없다.
+
+---
+
+### Stitch 화면 매핑
+
+| 화면(View) | Stitch 화면명 | Stitch screenId | resource name |
+|------------|---------------|-----------------|----------------|
+| 전체 | 없음 (Stitch 미대응 — 기존 View 준용) | — | — |
+
+Stitch MCP 호출이 인증 오류로 실패한다(재확인 완료). **이 태스크는 디자인을 변경하지 않는다** — 제스처 래핑과 초기값 변경뿐이다.
+
+### 참조 이미지
+| 화면(View) | 이미지 경로 | 설명 |
+|------------|-------------|------|
+| — | 없음 | — |
+
+### Figma 참조
+- 없음
+
+---
+
+### QA 체크리스트
+
+#### 기능 테스트 — 키보드 내리기 (⑤)
+- [ ] 게시글 상세 — 댓글 입력 중 본문·댓글 영역 탭 → 키보드가 내려간다 — **미검증** (실기기 필요)
+- [ ] 글쓰기 — 제목/본문 입력 중 빈 영역 탭 → 키보드가 내려간다 — **미검증** (실기기 필요)
+- [ ] 커뮤니티 약관 시트 — 닉네임 입력 중 시트 빈 영역 탭 → 키보드가 내려간다 — **미검증** (실기기 필요)
+- [ ] 라이브 채팅 — 메시지 입력 중 채팅 영역 탭 → 키보드가 내려간다 — **미검증** (실기기 필요)
+- [ ] 프로필 수정 — 닉네임 입력 중 빈 영역 탭 → 키보드가 내려간다 — **미검증** (실기기 필요)
+- [ ] 로그인 — 이메일/비밀번호 입력 중 빈 영역 탭 → 키보드가 내려간다 — **미검증** (실기기 필요)
+- [ ] 회원가입 — 입력 중 빈 영역 탭 → 키보드가 내려간다 — **미검증** (실기기 필요)
+- [ ] **iOS · Android 양쪽에서 확인** (포커스 처리 동작이 다르다) — **미검증** (실기기 필요)
+
+#### 기능 테스트 — 카테고리 기본값 (⑥)
+- [ ] 목록에서 **"전체"**를 보던 중 글쓰기 진입 → 카테고리 칩이 **"자유"로 선택된 상태**로 뜬다 — **미검증** (실기기 필요)
+- [ ] 목록에서 "장비"를 보던 중 글쓰기 진입 → **"장비"가 선택된 상태**로 뜬다 (기존 동작 유지) — **미검증** (실기기 필요)
+- [ ] 기본값 그대로 제목·본문만 채워 등록 → "카테고리를 선택해주세요." 없이 정상 등록되고 `category = 'free'`로 저장된다 — **미검증** (실기기 필요)
+- [ ] 기본값에서 다른 카테고리로 바꿔 등록 → 바꾼 값으로 저장된다 — **미검증** (실기기 필요)
+
+#### 제스처 충돌 회귀 (⑤ — 이 태스크의 최대 위험)
+> `behavior: HitTestBehavior.opaque`가 하위 탭 제스처를 삼키면 여기서 드러난다. **화면별로 전부 확인한다.**
+
+**게시글 상세** — 제스처가 가장 많이 겹치는 화면이다
+- [ ] 카드/본문 스크롤이 정상 동작한다 — **미검증** (실기기 필요)
+- [ ] **좋아요 버튼** 탭 → 토글되고 카운트가 갱신된다 — **미검증** (실기기 필요)
+- [ ] **더보기(⋯)** 탭 → 시트가 뜬다 — **미검증** (실기기 필요)
+- [ ] **댓글 롱프레스 → 더보기 시트**가 뜬다 (`community_comment_tile.dart:62`) — **미검증** (실기기 필요)
+- [ ] **댓글 탭 동작**(`community_comment_tile.dart:200`)이 정상 동작 — **미검증** (실기기 필요)
+- [ ] **답글 달기 / 답글 접기** 탭이 정상 동작 — **미검증** (실기기 필요)
+- [ ] **본문 이미지 탭 → 확대 뷰어**가 열린다 (TASK-016 산출물) — **미검증** (실기기 필요)
+- [ ] **`+N` 오버레이 탭 → 뷰어**가 열린다 (TASK-016 산출물) — **미검증** (실기기 필요)
+- [ ] **작성자 아바타 탭 → 프로필 시트**가 뜬다 (TASK-017 산출물) — **미검증** (실기기 필요)
+- [ ] **작성자 닉네임 탭 → 프로필 시트**가 뜬다 (TASK-017 산출물) — **미검증** (실기기 필요)
+- [ ] **댓글 아바타 탭 → 프로필 시트**가 뜬다 (TASK-017 산출물) — **미검증** (실기기 필요)
+- [ ] 댓글 입력창 탭 → 키보드가 **올라온다** (unfocus가 포커스 획득을 막지 않는지) — **미검증** (실기기 필요)
+
+**글쓰기** — 기존 `GestureDetector`가 3개 있다 (`community_compose_view.dart:157,366,398`)
+- [ ] **카테고리 칩** 탭 → 선택이 바뀐다 — **미검증** (실기기 필요)
+- [ ] **이미지 추가** 탭 → 피커가 열린다 — **미검증** (실기기 필요)
+- [ ] **이미지 삭제(×)** 탭 → 해당 이미지가 제거된다 — **미검증** (실기기 필요)
+- [ ] **등록 버튼** 탭 → 제출된다 — **미검증** (실기기 필요)
+- [ ] 제목 → 본문으로 포커스 이동이 정상 동작한다 — **미검증** (실기기 필요)
+
+**커뮤니티 약관·닉네임 시트**
+- [ ] **동의 체크박스 / 약관 링크 / 확인 버튼**이 정상 동작 — **미검증** (실기기 필요)
+- [ ] 시트 바깥 탭 → 시트가 닫힌다 (unfocus가 닫기를 가로채지 않는지) — **미검증** (실기기 필요)
+
+**라이브 채팅** — 위험도 높음
+- [ ] **메시지 롱프레스 → 신고 / 이 사용자 차단**이 정상 동작 (타인 메시지) — **미검증** (실기기 필요)
+- [ ] **메시지 롱프레스 → 삭제**가 정상 동작 (본인 메시지) — **미검증** (실기기 필요)
+- [ ] **스코어 가리기 토글**이 정상 동작 — **미검증** (실기기 필요)
+- [ ] 기존 `GestureDetector`(`live_match_chat_view.dart:435,484`)가 걸린 요소들이 정상 동작 — **미검증** (실기기 필요)
+- [ ] 메시지 전송 버튼 탭 → 전송된다 — **미검증** (실기기 필요)
+- [ ] 스크롤 및 Realtime 수신 중 탭이 오작동을 만들지 않는다 — **미검증** (실기기 필요)
+
+**프로필 수정**
+- [ ] 아바타 변경 / 저장 버튼 탭이 정상 동작 — **미검증** (실기기 필요)
+
+**로그인 / 회원가입** — 기존 `GestureDetector`가 있다 (`login_view.dart:247,264`, `sign_up_view.dart:326`)
+- [ ] 로그인 버튼 · 소셜 로그인 · "회원가입" 링크 탭이 정상 동작 — **미검증** (실기기 필요)
+- [ ] 회원가입 버튼 · 약관 체크박스 · 링크 탭이 정상 동작 — **미검증** (실기기 필요)
+- [ ] 이메일 → 비밀번호 포커스 이동이 정상 동작 — **미검증** (실기기 필요)
+
+**영향이 없어야 하는 곳**
+- [ ] 커뮤니티 목록 카드 탭 → 상세 진입 (이 화면은 수정 대상이 아니다) — **미검증** (실기기 필요)
+
+#### 예외 처리 / 엣지 케이스
+- [ ] 키보드가 올라오지 않은 상태에서 화면 탭 → 아무 일도 일어나지 않는다 (오작동 없음) — **미검증** (실기기 필요)
+- [ ] 스크롤 중 손가락을 떼도 키보드가 임의로 내려가지 않는다 (탭과 스크롤 구분) — **미검증** (실기기 필요)
+- [ ] 글쓰기 **수정 모드** 진입 → 카테고리가 **원래 글의 카테고리**로 뜬다 (`free`로 덮이지 않는다) — **미검증** (실기기 필요)
+- [ ] 수정 모드에서 카테고리를 바꾸지 않고 저장 → 카테고리가 그대로 유지된다 — **미검증** (실기기 필요)
+- [ ] `CommunityController` 미등록 경로(딥링크)로 글쓰기 진입 → `free`가 선택돼 있다 — **미검증** (실기기 필요)
+
+#### 유지보수 전용
+- [ ] **수정 전 기존 기능 회귀** — 댓글 작성·수정·삭제, 게시글 작성·수정·이미지 업로드, 채팅 송수신·Realtime·Presence 접속자 수 — **미검증** (실기기 필요)
+- [ ] **로그인 전체 플로우 회귀** — 이메일 로그인 성공/실패, 자동 로그인, 로그아웃 — **미검증** (실기기 필요)
+- [ ] **회원가입 전체 플로우 회귀** — 가입 성공, 중복 이메일 오류, 약관 동의 검증 — **미검증** (실기기 필요)
+- [x] 기존 사용자 데이터 영향 없음 — **마이그레이션 0건** (정적 확인 2026-08-26: 이번 태스크에 SQL 파일 추가·수정 없음)
+- [ ] 이미 작성된 게시글의 `category` 값이 변경되지 않았다 — **미검증** (실기기 필요)
+- [ ] `resizeToAvoidBottomInset` 설정이 있던 화면에서 키보드 올라올 때 레이아웃이 기존과 동일 — **미검증** (실기기 필요)
+
+#### UI/UX 테스트
+- [ ] 레이아웃·색상·여백이 수정 전과 동일 (디자인 변경 없음) — **미검증** (실기기 필요). 코드상 변경은 래핑에 따른 들여쓰기뿐이다
+- [ ] 320pt · 375pt · 430pt 폭에서 정상 — **미검증** (실기기 필요)
+- [ ] `[GETX] the improper use of a GetX` 콘솔 경고 없음 — **미검증** (실기기 필요)
+- [x] `dart analyze` 통과 — 정적 확인 (2026-08-26). 아래 §정적 검증 참조
+
+#### 정적 검증 (2026-08-26)
+- [x] `dart analyze lib/` — **205 issues / error 2 / warning 0**, TASK-017 완료 시점 기준선과 동일. error 2건은 `lib/main.dart`의 `firebase_options.dart` 누락(`.gitignore`된 생성 파일)으로 선행 이슈다
+- [x] 7개 화면 + 컨트롤러 1개 수정 후 신규 error·warning 0건
+- [x] `SelectableText` / `SelectionArea` / `EditableText` / `TapGestureRecognizer` 전수 검색 — 7개 화면 중 탭을 소비하는 위젯은 게시글 상세 본문 `SelectableText` 하나뿐
+- **빌드·실행 불가**: 워크트리에 `firebase_options.dart`와 `.env`가 없다. 위 실기기 항목은 전부 **미검증**이며, 통과로 표시하지 않았다
