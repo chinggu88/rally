@@ -14,6 +14,8 @@ Endpoint chain per tournament:
 from typing import Any, Iterator
 
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 USER_AGENT = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
@@ -26,6 +28,13 @@ EXTRANET_BASE = "https://extranet-lv.bwfbadminton.com"
 # matching the existing calendar job. The calendar API splits these into
 # results/remaining/completed monthly groups.
 CATEGORY_IDS = [20, 21, 22, 23, 24, 25, 26, 27]
+
+# The extranet API intermittently read-times-out or 5xx's under load; without a
+# retry those draws were dropped outright (failed_draws). Backoff waits
+# 1s / 2s / 4s between attempts.
+RETRY_TOTAL = 3
+RETRY_BACKOFF_FACTOR = 1.0
+RETRY_STATUS_FORCELIST = (429, 500, 502, 503, 504)
 
 
 def api_session() -> requests.Session:
@@ -40,6 +49,15 @@ def api_session() -> requests.Session:
             "User-Agent": USER_AGENT,
         }
     )
+    retry = Retry(
+        total=RETRY_TOTAL,
+        backoff_factor=RETRY_BACKOFF_FACTOR,
+        status_forcelist=RETRY_STATUS_FORCELIST,
+        # All three endpoints are GETs, so retrying them is safe.
+        allowed_methods=frozenset(["GET"]),
+        raise_on_status=False,
+    )
+    s.mount("https://", HTTPAdapter(max_retries=retry))
     return s
 
 
