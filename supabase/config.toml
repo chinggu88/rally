@@ -425,3 +425,9 @@ verify_jwt = false
 [functions.get-player]
 enabled = true
 verify_jwt = false
+
+# Live Activity APNs 푸시. live_activity_events INSERT를 DB Webhook이 호출한다.
+# 웹훅은 Authorization 헤더를 보내지 않으므로 verify_jwt를 끈다
+# (send-push와 동일한 이유 — anon 키 iat 문제도 함께 회피).
+[functions.send-live-activity]
+verify_jwt = false

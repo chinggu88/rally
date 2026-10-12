@@ -13,6 +13,7 @@ import '../../../data/repositories/live_match_repository.dart';
 import '../../../data/repositories/news_card_repository.dart';
 import '../../../data/repositories/today_match_repository.dart';
 import '../../../data/repositories/tournament_repository.dart';
+import '../../../../services/favorite_match_service.dart';
 
 /// 홈(뉴스) 화면 컨트롤러.
 ///
@@ -267,6 +268,9 @@ class HomeController extends GetxController {
       _todayUpcoming.assignAll(
         response.upcoming ?? const <TodayMatchResponse>[],
       );
+
+      // 관심 경기 스냅샷 최신화 → 홈스크린 위젯 갱신.
+      FavoriteMatchService.to.syncFromToday(todayMerged);
     } catch (e) {
       if (token != _todayInflightToken) return;
       log('HomeController.fetchTodayMatches error: $e');
@@ -496,6 +500,10 @@ class HomeController extends GetxController {
     if (newRow.isEmpty) return;
     final id = _extractId(newRow);
     if (id == null) return;
+
+    // 관심 경기 스냅샷 반영 (match_code로 매칭). 라이브 종료 전환도 받아야
+    // 하므로 아래 early return보다 먼저 호출한다.
+    FavoriteMatchService.to.applyLiveScore(newRow);
 
     // 서버가 DELETE 대신 status 변경(예: tournament_status='completed')으로
     // 라이브를 끝내는 경우, UPDATE에서 이 케이스를 잡아 리스트에서 제거한다.

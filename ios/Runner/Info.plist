@@ -87,5 +87,9 @@
 	</array>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>프로필 사진을 변경하려면 사진 보관함 접근 권한이 필요합니다.</string>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
+	<key>NSSupportsLiveActivitiesFrequentUpdates</key>
+	<true/>
 </dict>
 </plist>

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
 
+import '../../../../../services/favorite_match_service.dart';
 import '../../../../../theme/app_colors.dart';
 import '../../../../../theme/app_typography.dart';
 import '../../../../data/models/today_match_response.dart';
@@ -101,6 +103,8 @@ class TodayMatchCard extends StatelessWidget {
                         fontSize: 11.sp,
                       ),
                     ),
+                  SizedBox(width: 4.w),
+                  _favoriteStar(),
                 ],
               ),
               SizedBox(height: 12.h),
@@ -208,6 +212,30 @@ class TodayMatchCard extends StatelessWidget {
     final c = match.courtName?.trim();
     if (c != null && c.isNotEmpty) parts.add(c);
     return parts.join(' · ');
+  }
+
+  /// 관심 경기 토글 별. 지정 시 홈스크린 위젯에 이 경기가 표시된다.
+  ///
+  /// 카드가 이미 빽빽하고 리스트가 높이를 고정하므로 헤더 행 끝에 붙인다.
+  Widget _favoriteStar() {
+    final code = match.matchCode;
+    if (code == null || code.isEmpty) return const SizedBox.shrink();
+
+    return Obx(() {
+      final on = FavoriteMatchService.to.favoriteCodes.contains(code);
+      return GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => FavoriteMatchService.to.toggle(match),
+        child: Padding(
+          padding: EdgeInsets.all(2.w),
+          child: Icon(
+            on ? Icons.star_rounded : Icons.star_border_rounded,
+            size: 16.sp,
+            color: on ? _accent : _subtleText,
+          ),
+        ),
+      );
+    });
   }
 
   /// 한국 선수 포함 경기 표식(🇰🇷 KR).

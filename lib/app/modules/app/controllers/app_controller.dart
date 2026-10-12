@@ -3,11 +3,13 @@ import 'dart:developer';
 
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
+import 'package:home_widget/home_widget.dart';
 import 'package:rally/app/data/repositories/auth_repository.dart';
 import 'package:rally/app/modules/home/controllers/home_controller.dart';
 import 'package:rally/app/routes/app_routes.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../services/favorite_match_service.dart';
 import '../../community/controllers/community_controller.dart';
 import '../../match/controllers/match_controller.dart';
 import '../../player/controllers/player_controller.dart';
@@ -37,6 +39,7 @@ class AppController extends GetxController with WidgetsBindingObserver {
 
   final AuthRepository _authRepository = Get.find<AuthRepository>();
   StreamSubscription<AuthState>? _authSub;
+  StreamSubscription<Uri?>? _widgetSub;
 
   void changeTab(int index) {
     currentIndex = index;
@@ -68,16 +71,36 @@ class AppController extends GetxController with WidgetsBindingObserver {
     // 이메일/소셜 모두 동일하게 SIGNED_IN 이벤트로 처리되도록 단일 진실 공급원 구독.
     _authSub = _authRepository.authStateChanges.listen((state) {
       if (state.event == AuthChangeEvent.signedIn) {
+        FavoriteMatchService.to.load();
         Get.offAllNamed(Routes.APP);
-      } else {
-        // Get.offAllNamed(Routes.APP);
+      } else if (state.event == AuthChangeEvent.signedOut) {
+        FavoriteMatchService.to.clear();
       }
     });
+
+    // 관심 경기 초기 로드 + 홈스크린 위젯 갱신.
+    FavoriteMatchService.to.load();
+    _listenWidgetLaunch();
+  }
+
+  /// 홈스크린 위젯 탭으로 앱이 열렸을 때 홈 탭으로 이동한다.
+  ///
+  /// 콜드 스타트(`initiallyLaunchedFromHomeWidget`)와 웜 스타트
+  /// (`widgetClicked`) 경로가 별개라 **둘 다** 필요하다.
+  void _listenWidgetLaunch() {
+    HomeWidget.initiallyLaunchedFromHomeWidget().then(_onWidgetLaunch);
+    _widgetSub = HomeWidget.widgetClicked.listen(_onWidgetLaunch);
+  }
+
+  void _onWidgetLaunch(Uri? uri) {
+    if (uri == null) return;
+    currentIndex = 0; // 홈 탭
   }
 
   @override
   void onClose() {
     _authSub?.cancel();
+    _widgetSub?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.onClose();
   }
@@ -100,6 +123,8 @@ class AppController extends GetxController with WidgetsBindingObserver {
       case AppLifecycleState.paused:
         // 앱이 백그라운드로 갔을 때 필요한 작업 수행
         HomeController.to.unsubscribeRealtime();
+        // 디바운스 대기 중인 관심 경기 스냅샷을 DB에 반영한다.
+        FavoriteMatchService.to.flushSnapshots();
         break;
       case AppLifecycleState.detached:
         // 앱이 완전히 종료되었을 때 필요한 작업 수행

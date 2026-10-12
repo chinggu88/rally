@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 홈스크린 위젯 (관심 경기) -->
+    <string name="rally_widget_label">Rally 관심 경기</string>
+    <string name="rally_widget_description">지정한 관심 경기의 스코어를 홈 화면에서 확인하세요.</string>
+    <string name="rally_widget_empty">관심 경기를 지정하세요</string>
+</resources>

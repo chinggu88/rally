@@ -6,6 +6,9 @@ import UserNotifications
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate, MessagingDelegate {
+  /// Live Activity 브리지. 채널이 살아있으려면 강한 참조가 필요하다.
+  private var liveActivityBridge: AnyObject?
+
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
@@ -80,5 +83,13 @@ import UserNotifications
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+
+    // Live Activity(잠금화면 + 다이나믹 아일랜드) 브리지.
+    // iOS 16.1 미만에서는 등록하지 않는다 — Dart는 isSupported로 먼저 확인한다.
+    if #available(iOS 16.1, *) {
+      liveActivityBridge = LiveActivityBridge(
+        messenger: engineBridge.applicationRegistrar.messenger()
+      )
+    }
   }
 }

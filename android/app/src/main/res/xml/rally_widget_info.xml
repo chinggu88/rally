@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  updatePeriodMillis 최소값은 30분이며 그보다 작게 적어도 OS가 무시한다.
+  실질 갱신은 앱에서 HomeWidget.updateWidget()으로 푸시한다.
+-->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:minWidth="110dp"
+    android:minHeight="110dp"
+    android:targetCellWidth="2"
+    android:targetCellHeight="2"
+    android:resizeMode="horizontal|vertical"
+    android:widgetCategory="home_screen"
+    android:updatePeriodMillis="1800000"
+    android:initialLayout="@layout/rally_widget_medium"
+    android:previewLayout="@layout/rally_widget_medium"
+    android:description="@string/rally_widget_description" />

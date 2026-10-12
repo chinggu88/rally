@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  관심 경기 위젯 (small) — 레퍼런스 디자인의 "Compact / Minimal" 카드.
+  KOR 18 · 14 JPN 한 줄.
+
+  id는 medium과 공유한다(live_dot / t1_country / score / t2_country).
+  빈 상태에서는 score TextView를 안내 문구로 재활용한다.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:background="@drawable/rally_widget_bg"
+    android:padding="12dp">
+
+    <View
+        android:id="@+id/live_dot"
+        android:layout_width="5dp"
+        android:layout_height="5dp"
+        android:layout_marginBottom="6dp"
+        android:background="@drawable/rally_dot_lime" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/t1_country"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="6dp"
+            android:textColor="#9CA3A1"
+            android:textSize="10sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/score"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#FFFFFF"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:maxLines="3" />
+
+        <TextView
+            android:id="@+id/t2_country"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:textColor="#9CA3A1"
+            android:textSize="10sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+</LinearLayout>
