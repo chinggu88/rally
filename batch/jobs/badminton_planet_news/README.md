@@ -7,8 +7,10 @@
 
 1. `badminton_planet_news` 테이블의 기존 `url` 집합을 조회.
 2. 최신 목록 페이지(`/page/N`)를 1페이지부터 순회하며 기사 카드를 파싱.
-   - 카드: `h3.entry-title > a` (url·title), `.td-post-author-name`(author),
-     `.td-post-category`(category), `time[datetime]`(published_at).
+   - 카드: `article.card h3.card-title > a` (url·title),
+     `.card-meta a[href*="/author/"]`(author), `time[datetime]`(published_at).
+     2026-09 테마 교체 전의 `h3.entry-title` / `.td-post-author-name` 도 함께 지원.
+   - **1페이지에서 기사가 0건 파싱되면 마크업 변경으로 보고 실패 처리.**
 3. 기존에 없는 신규 기사만 모은다. **신규가 0건인 페이지를 만나면 따라잡은 것으로 보고 종료.**
 4. `url` 충돌 기준으로 upsert.
 

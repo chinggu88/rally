@@ -77,6 +77,10 @@ def run() -> int:
             articles = parse_articles(html)
             pages_crawled = page
             if not articles:
+                if page == 1:
+                    # 첫 페이지에 기사가 하나도 없으면 사이트 마크업이 바뀐 것.
+                    # 조용히 success 로 끝나지 않도록 실패로 처리한다.
+                    raise RuntimeError("page 1: 0 articles parsed (layout changed?)")
                 log.info(f"page {page}: 0 articles parsed, stopping")
                 break
 
